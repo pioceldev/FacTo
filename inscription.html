@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="csrf-token" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créer votre compte - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/auth.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body class="auth-page">
+
+
+<!-- Auth Split -->
+<section class="auth-split auth-split--register">
+<div class="auth-register__right">
+<img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=900&fit=crop" alt="Abstract 3D" class="auth-register__right-img">
+<div class="auth-register__overlay">
+<div class="auth-register__overlay-badge">
+<i class="bi bi-check-circle-fill"></i>
+<span>Configuration instantanée</span>
+</div>
+<p class="auth-register__overlay-text">"FacTo a transformé notre gestion commerciale. Nous avons réduit notre temps de facturation de 40% dès le premier mois."</p>
+<div class="auth-register__overlay-author">
+<img src="https://i.pravatar.cc/150?img=12" alt="Marc Lefebvre">
+<div>
+<div class="auth-register__overlay-name">Marc Lefebvre</div>
+<div class="auth-register__overlay-role">CEO @ Techflow Solutions</div>
+</div>
+</div>
+</div>
+<div class="auth-register__dots">
+<span class="auth-register__dot is-active"></span><span class="auth-register__dot"></span><span class="auth-register__dot"></span><span class="auth-register__dot"></span><span class="auth-register__dot"></span>
+</div>
+<h3 class="auth-register__right-title">Prêt à propulser votre entreprise ?</h3>
+<p class="auth-register__right-desc">Accédez à une suite complète d'outils de facturation, stock et rapports financiers.</p>
+</div>
+
+<div class="auth-register__left">
+<a href="index.html" class="auth-register__back">
+<i class="bi bi-arrow-left"></i>
+<span>Retour à l'accueil</span>
+</a>
+
+<h1 class="auth-register__title">Créer votre compte</h1>
+<p class="auth-register__sub">Rejoignez des milliers d'entreprises qui simplifient leur gestion avec FacTo.</p>
+<div id="selectedPlanBanner" class="auth-plan-banner" style="display:none;margin-bottom:16px;padding:12px;border-radius:12px;background:var(--primary-light);color:var(--primary-dark);font-weight:600;"></div>
+
+<form class="auth-form" action="backend/auth.php?action=register" method="POST">
+<div class="auth-form__alert" id="authAlert" role="alert" aria-live="polite"></div>
+<input type="hidden" name="plan" id="selectedPlanInput" value="">
+<div class="auth-form__group">
+	<label class="auth-form__label">Nom de l'entreprise</label>
+	<div class="auth-form__input-wrap">
+<i class="bi bi-building"></i>
+<input type="text" name="company" class="auth-form__input" placeholder="Ex: FacTo SARL" required>
+</div>
+</div>
+
+<div class="auth-form__group">
+<label class="auth-form__label">Nom du manager</label>
+<div class="auth-form__input-wrap">
+<i class="bi bi-person"></i>
+<input type="text" name="name" class="auth-form__input" placeholder="Ex: Jean Dupont" required>
+</div>
+</div>
+
+<div class="auth-form__group">
+<label class="auth-form__label">Télèphone</label>
+<div class="auth-form__input-wrap">
+<i class="bi bi-telephone"></i>
+<input type="tel" name="phone" class="auth-form__input" placeholder="+33 6 00 00 00 00" required>
+</div>
+</div>
+
+<div class="auth-form__group">
+<label class="auth-form__label">Adresse Email professionnel</label>
+<div class="auth-form__input-wrap">
+<i class="bi bi-envelope"></i>
+<input type="email" name="email" class="auth-form__input" placeholder="nom@entreprise.fr" required>
+</div>
+</div>
+
+<div class="auth-form__group">
+<label class="auth-form__label">Mot de passe</label>
+<div class="auth-form__input-wrap">
+<i class="bi bi-lock"></i>
+<input type="password" name="password" class="auth-form__input" placeholder="Min. 8 caractères" required>
+<button type="button" class="auth-form__input-wrap__toggle"><i class="bi bi-eye"></i></button>
+</div>
+<p class="auth-form__hint">Min. 8 caractères avec au moins un chiffre.</p>
+</div>
+
+<button type="submit" class="auth-form__btn">Commencer l'essai gratuit <i class="bi bi-arrow-right"></i></button>
+
+<p class="auth-legal">En vous inscrivant, vous acceptez nos <a href="#">Conditions Générales</a> et notre <a href="#">Politique de Confidentialité</a>.</p>
+</form>
+
+<p class="auth-footer">Vous avez déjà un compte ? <a href="connexion.html" class="text-primary fw-medium">Connectez-vous ici</a></p>
+</div>
+</section>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/auth.js"></script>
+<script src="scripts/inscription.js"></script>
+</body>
+</html>

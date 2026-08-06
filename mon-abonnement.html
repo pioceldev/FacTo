@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="csrf-token" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon abonnement - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/sidebar.css">
+<link rel="stylesheet" href="styles/abonnement.css">
+<link rel="stylesheet" href="styles/animations.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<nav class="sidebar__nav">
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
+<a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
+<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
+<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
+<a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
+<a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
+<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Invoices</a>
+<a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
+<a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
+<a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
+<hr class="sidebar__divider">
+<a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
+<a href="choix-abonnement.html" class="sidebar__item is-active"><i class="bi bi-crown"></i> Subscription</a>
+<a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
+</nav>
+<div class="sidebar__footer">
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-gear"></i> Settings</a>
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-person"></i> Profile</a>
+<a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+</div>
+</aside>
+
+<div class="app-layout">
+<header class="topbar">
+<div class="d-flex align-items-center">
+<button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+<div class="topbar__breadcrumb d-none d-md-flex align-items-center gap-1">
+        <a href="dashboard.html">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
+        <span>Mon abonnement</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="topbar__actions">
+        <a href="notifications.html" class="topbar__icon-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span class="topbar__badge" id="notificationBadge" style="display:none;"></span></a>
+        <div class="topbar__user">
+          <div class="topbar__avatar" id="topbarAvatar"><i class="bi bi-person"></i></div>
+          <span class="topbar__username d-none d-lg-block" id="topbarUsername">Utilisateur</span>
+        </div>
+      </div>
+    </div>
+</header>
+
+<main class="app-content">
+
+<div class="page-header">
+<div>
+<h1 class="page-header__title">Mon abonnement</h1>
+<p class="page-header__subtitle">Gérez votre offre FacTo, consultez vos factures et mettez à jour vos informations de paiement.</p>
+</div>
+</div>
+
+<div class="row g-4">
+<div class="col-lg-8">
+<div class="plan-current">
+<div class="plan-current__header">
+<div class="plan-current__icon"><i class="bi bi-star-fill"></i></div>
+<div>
+<div style="display:flex;align-items:center;gap:8px;">
+<div class="plan-current__name" id="subscriptionPlanName">Plan inconnu</div>
+<span class="plan-current__badge" id="subscriptionPlanStatus">Inactif</span>
+</div>
+<div class="plan-current__desc" id="subscriptionPlanDesc">Chargement des informations d’abonnement…</div>
+</div>
+</div>
+<div class="plan-current__details">
+<div class="plan-current__detail">
+<div class="plan-current__detail-label"><i class="bi bi-calendar"></i> Prochain renouvellement</div>
+<div class="plan-current__detail-value" id="subscriptionRenewalDate">–</div>
+</div>
+<div class="plan-current__detail">
+<div class="plan-current__detail-label"><i class="bi bi-receipt"></i> Montant</div>
+<div class="plan-current__detail-value" id="subscriptionAmount">–</div>
+</div>
+<div class="plan-current__detail">
+<div class="plan-current__detail-label"><i class="bi bi-credit-card"></i> Mode de paiement</div>
+<div class="plan-current__detail-value" id="subscriptionPaymentMode">–</div>
+</div>
+</div>
+<div class="plan-current__usage">
+<div class="plan-current__usage-header">
+<span class="plan-current__usage-label">Utilisation des factures</span>
+<span id="subscriptionUsageCount" style="font-size:.8rem;font-weight:600;">0 / 0</span>
+</div>
+<div class="progress"><div id="subscriptionUsageBar" class="progress-bar" style="width:0%;"></div></div>
+<p style="font-size:.75rem;color:var(--gray-400);margin-top:6px;font-style:italic;">Votre quota se réinitialise le 1er de chaque mois.</p>
+</div>
+<div class="plan-current__timer" style="margin-top:18px;padding:18px;border-radius:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.12);">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+<div>
+<div style="font-size:.85rem;color:var(--gray-500);margin-bottom:6px;">Temps restant avant le prochain renouvellement</div>
+<div id="subscriptionCountdown" style="font-size:1.35rem;font-weight:700;color:var(--primary);">Chargement...</div>
+</div>
+<div style="display:flex;gap:10px;align-items:center;">
+<i class="bi bi-clock-history" style="font-size:1.8rem;color:var(--primary);"></i>
+</div>
+</div>
+</div>
+</div>
+
+<div style="margin-top:24px;">
+<div class="compare-section__header">
+<div>
+<div class="compare-section__title">Comparer nos offres</div>
+<div class="compare-section__desc">Choisissez le plan qui correspond le mieux à vos besoins.</div>
+</div>
+<div class="toggle-switch">
+<button class="toggle-btn">Mensuel</button>
+<button class="toggle-btn active">Annuel <span style="font-size:.7rem;opacity:.8;">-20%</span></button>
+</div>
+</div>
+
+<div class="compare-grid">
+<div class="compare-card">
+<div class="compare-card__icon" style="background:var(--gray-100);color:var(--gray-600);"><i class="bi bi-lightning-charge"></i></div>
+<div class="compare-card__name">Gratuit</div>
+<div class="compare-card__desc">Pour tester les bases du logiciel.</div>
+<div class="compare-card__price">0 €<span>/mois</span></div>
+<ul class="compare-card__features">
+<li><i class="bi bi-check-lg"></i> Jusqu'à 50 factures / mois</li>
+<li><i class="bi bi-check-lg"></i> 1 Utilisateur unique</li>
+<li><i class="bi bi-check-lg"></i> Exports PDF basiques</li>
+<li><i class="bi bi-check-lg"></i> Support par email (48h)</li>
+</ul>
+<button class="btn btn-outline-secondary compare-card__btn" style="border-color:var(--gray-200);color:var(--gray-500);">Votre plan initial</button>
+</div>
+
+<div class="compare-card compare-card--current">
+<div class="compare-card__current-badge">PLAN ACTUEL</div>
+<div class="compare-card__icon" style="background:var(--primary-light);color:var(--primary);margin-top:20px;"><i class="bi bi-star-fill"></i></div>
+<div class="compare-card__name">Standard</div>
+<div class="compare-card__desc">L'essentiel pour structurer votre activité.</div>
+<div class="compare-card__price">24 €<span>/mois</span></div>
+<ul class="compare-card__features">
+<li><i class="bi bi-check-lg"></i> Facturation illimitée</li>
+<li><i class="bi bi-check-lg"></i> 3 Utilisateurs inclus</li>
+<li><i class="bi bi-check-lg"></i> Gestion des stocks basique</li>
+<li><i class="bi bi-check-lg"></i> Support prioritaire (24h)</li>
+<li><i class="bi bi-check-lg"></i> Relances automatiques</li>
+</ul>
+<button class="btn btn-outline-primary compare-card__btn" style="border-color:var(--primary);color:var(--primary);">Gérer</button>
+</div>
+
+<div class="compare-card">
+<div class="compare-card__icon" style="background:var(--gray-800);color:#fff;"><i class="bi bi-crown"></i></div>
+<div class="compare-card__name" style="color:var(--primary);">Premium</div>
+<div class="compare-card__desc">La puissance totale de FacTo pour votre entreprise.</div>
+<div class="compare-card__price">49 €<span>/mois</span></div>
+<ul class="compare-card__features">
+<li><i class="bi bi-check-lg"></i> Tout le plan Standard</li>
+<li><i class="bi bi-check-lg"></i> Utilisateurs illimités</li>
+<li><i class="bi bi-check-lg"></i> Reporting financier avancé</li>
+<li><i class="bi bi-check-lg"></i> Multi-devises & International</li>
+<li><i class="bi bi-check-lg"></i> Account Manager dédié</li>
+<li><i class="bi bi-check-lg"></i> API FacTo complète</li>
+</ul>
+<a href="choix-abonnement.html" class="btn btn-primary compare-card__btn">Passer à Premium</a>
+</div>
+</div>
+</div>
+
+<div style="margin-top:24px;">
+<div class="billing__header">
+<div class="billing__title">Historique des factures</div>
+<a href="#" class="billing__link">Voir tout <i class="bi bi-arrow-right"></i></a>
+</div>
+<table class="custom-table">
+<thead><tr><th>Référence</th><th>Date</th><th>Client</th><th>Montant</th><th>Statut</th><th>Action</th></tr></thead>
+<tbody id="subscriptionInvoicesBody">
+<tr>
+<td colspan="6" style="text-align:center;color:var(--gray-500);padding:20px;">Chargement de l’historique des factures…</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="action-card">
+<div class="action-card__title">Actions rapides</div>
+<button id="btnChangePlan" class="action-card__btn btn btn-primary"><i class="bi bi-arrow-repeat"></i> Changer d'offre</button>
+<button id="btnUpdatePayment" class="action-card__btn action-card__btn--outline"><i class="bi bi-credit-card"></i> Modifier le paiement</button>
+<button id="btnCancel" class="action-card__btn action-card__btn--danger"><i class="bi bi-x-circle"></i> Résilier l'abonnement</button>
+</div>
+
+<div class="action-card">
+<div class="payment-method__title">Moyen de paiement</div>
+<div class="payment-card">
+<div class="payment-card__icon" style="background:var(--gray-100);"><i class="bi bi-credit-card"></i></div>
+<div class="payment-card__info">
+<div class="payment-card__title" id="paymentCardTitle">Carte bancaire</div>
+<div class="payment-card__meta" id="paymentCardMeta">–</div>
+</div>
+<span class="badge-soft badge-soft-secondary">Principal</span>
+</div>
+<div class="payment-method__add"><i class="bi bi-plus"></i> Ajouter une carte</div>
+<div style="text-align:center;margin-top:12px;"><a href="#" style="font-size:.8rem;color:var(--gray-500);">Modifier les informations de facturation</a></div>
+</div>
+
+<div style="background:var(--primary-light);border:1px solid var(--primary-100);border-radius:var(--radius-md);padding:20px;">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+<div style="width:36px;height:36px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="bi bi-question-lg"></i></div>
+<div style="font-weight:700;font-size:.9rem;">Besoin d'aide ?</div>
+</div>
+<p style="font-size:.85rem;color:var(--gray-500);line-height:1.5;margin-bottom:16px;">Notre équipe de support est disponible pour répondre à toutes vos questions concernant votre abonnement ou votre facturation.</p>
+<a href="support.html" style="color:var(--primary);font-weight:600;font-size:.85rem;">Ouvrir un ticket <i class="bi bi-arrow-right"></i></a>
+</div>
+</div>
+</div>
+
+</main>
+
+<footer style="padding:16px 24px;border-top:1px solid var(--gray-200);background:#fff;">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size:.8rem;color:var(--gray-500);">
+<div>© 2024 FACTO TECHNOLOGIES — TOUS DROITS RÉSERVÉS</div>
+<div class="d-flex gap-3"><a href="#" style="color:var(--gray-500);">MENTIONS LÉGALES</a><a href="#" style="color:var(--gray-500);">CONFIDENTIALITÉ</a></div>
+</div>
+</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/ui.js"></script>
+<script src="scripts/auth.js"></script>
+<script src="scripts/mon-abonnement.js"></script>
+</body>
+</html>

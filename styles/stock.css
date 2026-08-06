@@ -1,0 +1,12 @@
+﻿.stock-low { color: var(--danger); font-weight: 700; }
+.stock-ok { color: var(--success); font-weight: 600; }
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.stock-badge.low { background: var(--danger-light); color: #b91c1c; }
+.stock-badge.ok { background: var(--success-light); color: #047857; }

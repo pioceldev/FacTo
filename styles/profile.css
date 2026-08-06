@@ -1,0 +1,20 @@
+/* Styles spécifiques pour la page profil */
+.logo-preview img#previewImg {
+  max-width: 160px;
+  max-height: 160px;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+
+.card .h4 { margin-bottom: 12px; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .topbar__breadcrumb { display: none; }
+}
+
+/* Petite amélioration visuelle pour le container profil */
+.card.p-3 { border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
+.topbar__avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.company-logo-small { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; }

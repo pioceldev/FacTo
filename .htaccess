@@ -1,0 +1,7 @@
+# Protection serveur des pages privées (nécessite mod_rewrite)
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^(dashboard|administration|notifications|mon-abonnement|choix-abonnement|support|profile)\.html$ backend/gate.php?page=$1.html [L,QSA]
+</IfModule>

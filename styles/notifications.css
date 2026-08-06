@@ -1,0 +1,137 @@
+
+/* ============================================
+   NOTIFICATIONS PAGE
+   ============================================ */
+
+.notif__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.notif__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif__badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.notif__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.notif__mark-read {
+  padding: 8px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif__filter-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notif__filter-btn.is-active {
+  background: var(--gray-900);
+  color: #fff;
+  border-color: var(--gray-900);
+}
+
+.notif__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.notif__sidebar-card {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.notif__sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif__alert-box {
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.notif__alert-box h5 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.notif__alert-box p {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.notif__alert-box .btn {
+  background: #fff;
+  color: var(--primary);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.notif__calendar {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif__calendar-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--gray-100);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}

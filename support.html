@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="csrf-token" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/sidebar.css">
+<link rel="stylesheet" href="styles/dashboard.css">
+<link rel="stylesheet" href="styles/animations.css">
+<link rel="stylesheet" href="styles/support.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<nav class="sidebar__nav">
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
+<a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
+<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
+<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
+<a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
+<a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
+<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Invoices</a>
+<a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
+<a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> D�penses</a>
+<a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
+<hr class="sidebar__divider">
+<a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
+<a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Subscription</a>
+<a href="support.html" class="sidebar__item is-active"><i class="bi bi-question-circle"></i> Support</a>
+</nav>
+<div class="sidebar__footer">
+	<a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
+	<a href="profile.html" class="sidebar__item"><i class="bi bi-person"></i> Mon profil</a>
+	<a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+	<a href="connexion.html" class="sidebar__item" data-auth="guest"><i class="bi bi-box-arrow-in-right"></i> Se connecter</a>
+</div>
+</aside>
+
+<div class="app-layout">
+<header class="topbar">
+<div class="d-flex align-items-center">
+<button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+<div class="topbar__breadcrumb d-none d-md-block">
+<a href="dashboard.html">Dashboard</a> <i class="bi bi-chevron-right" style="font-size:.7rem;"></i> <span>Support</span>
+</div>
+</div>
+<div class="d-flex align-items-center gap-3">
+      <div class="topbar__search d-none d-md-flex align-items-center">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Rechercher dans l'aide...">
+      </div>
+      <div class="topbar__actions">
+        <a href="notifications.html" class="topbar__icon-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span class="topbar__badge" id="notificationBadge" style="display:none;"></span></a>
+        <div class="topbar__user">
+          <div class="topbar__avatar" id="topbarAvatar"><i class="bi bi-person"></i></div>
+          <span class="topbar__username d-none d-lg-block" id="topbarUsername">Utilisateur</span>
+        </div>
+      </div>
+    </div>
+</header>
+
+<main class="app-content">
+<section class="support-hero">
+<div class="support-hero__content">
+<div class="support-hero__badge">Centre d'assistance</div>
+<h1 class="support-hero__title">Besoin d'aide ? Nous sommes l� pour vous.</h1>
+<p class="support-hero__desc">Trouve rapidement des r�ponses, ouvre un ticket ou contacte notre �quipe support pour r�soudre tes demandes.</p>
+<div class="support-hero__search">
+<i class="bi bi-search"></i>
+<input type="text" placeholder="Rechercher une question, un article ou un guide...">
+</div>
+</div>
+<div class="support-hero__img">
+<img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500&h=420&fit=crop" alt="Support illustration">
+</div>
+</section>
+
+<div class="support-cards">
+<div class="support-card support-card--highlight">
+<div class="support-card__icon"><i class="bi bi-headset"></i></div>
+<div class="support-card__title">Support 24/7</div>
+<div class="support-card__desc">Assistance en continu pour tes questions techniques et commerciales.</div>
+<a href="#" class="support-card__link">Ouvrir un ticket</a>
+</div>
+<div class="support-card">
+<div class="support-card__icon"><i class="bi bi-file-earmark-text"></i></div>
+<div class="support-card__title">Documentation</div>
+<div class="support-card__desc">Guides, FAQ et articles pour utiliser FacTo rapidement.</div>
+<a href="#faq" class="support-card__link">Voir la documentation</a>
+</div>
+<div class="support-card">
+<div class="support-card__icon"><i class="bi bi-chat-dots"></i></div>
+<div class="support-card__title">Chat en direct</div>
+<div class="support-card__desc">Pose une question en direct � notre �quipe depuis ton espace.</div>
+<a href="#" class="support-card__link">Commencer le chat</a>
+</div>
+<div class="support-card">
+<div class="support-card__icon"><i class="bi bi-shield-check"></i></div>
+<div class="support-card__title">S�curit�</div>
+<div class="support-card__desc">Informations sur la conformit�, la confidentialit� et la protection des donn�es.</div>
+<a href="#" class="support-card__link">En savoir plus</a>
+</div>
+</div>
+
+<section class="support-faq" id="faq">
+<div class="support-faq__left">
+<div class="support-faq__header">
+<div class="support-faq__title"><i class="bi bi-question-circle"></i> Questions fr�quentes</div>
+<a href="#" class="support-faq__link">Voir toutes les FAQ</a>
+</div>
+<div class="support-faq__item is-open">
+<div class="support-faq__question">Comment ouvrir un ticket support ?<i class="bi bi-chevron-down"></i></div>
+<div class="support-faq__answer">Clique sur le bouton ci-dessous, d�cris ton souci et notre �quipe te r�pondra rapidement par email.</div>
+</div>
+<div class="support-faq__item">
+<div class="support-faq__question">Comment modifier mes informations de facturation ?<i class="bi bi-chevron-down"></i></div>
+<div class="support-faq__answer">Va dans la page "Mon abonnement" et clique sur "Modifier le paiement" pour mettre � jour ta carte.</div>
+</div>
+<div class="support-faq__item">
+<div class="support-faq__question">O� trouver mes factures ?<i class="bi bi-chevron-down"></i></div>
+<div class="support-faq__answer">Tes factures sont disponibles dans la section Factures de ton tableau de bord.</div>
+</div>
+<div class="support-faq__item">
+<div class="support-faq__question">Comment signaler un produit en rupture de stock ?<i class="bi bi-chevron-down"></i></div>
+<div class="support-faq__answer">Notre syst�me envoie automatiquement des alertes de stock bas, mais tu peux aussi ouvrir un ticket si tu as besoin d'un audit.</div>
+</div>
+</div>
+
+<div class="support-tickets">
+<div class="support-tickets__header">
+<div>
+<div class="support-tickets__title">Ouvrir un ticket</div>
+<p class="support-tickets__desc">Envoie-nous un message et notre �quipe support te recontacte sous 24h.</p>
+</div>
+<div class="support-tickets__icon"><i class="bi bi-send-check"></i></div>
+</div>
+<form action="backend/support.php" method="POST" novalidate>
+<div class="auth-form__alert" id="supportAlert" role="alert" aria-live="polite"></div>
+<div class="mb-3">
+<label class="form-label">Sujet</label>
+<select class="form-select" name="subject">
+<option>Support technique</option>
+<option>Question commerciale</option>
+<option>Demande fonctionnelle</option>
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label">Email</label>
+<input type="email" name="email" class="form-control" placeholder="contact@entreprise.fr" required>
+</div>
+<div class="mb-3">
+<label class="form-label">Message</label>
+<textarea name="message" class="form-control" rows="5" placeholder="D�cris ton probl�me ici..." required></textarea>
+</div>
+<button type="submit" class="btn btn-primary support-tickets__btn">Envoyer une demande</button>
+</form>
+</div>
+</section>
+
+<section class="support-videos">
+<div class="support-card">
+<div class="support-card__title">Tutoriel : Cr�er une facture</div>
+<p class="support-card__desc">Apprends � g�n�rer et envoyer une facture en quelques clics.</p>
+<a href="#" class="support-card__link">Regarder la vid�o</a>
+</div>
+<div class="support-card">
+<div class="support-card__title">Tutoriel : G�rer le stock</div>
+<p class="support-card__desc">D�couvre comment suivre tes produits et �viter les ruptures de stock.</p>
+<a href="#" class="support-card__link">Regarder la vid�o</a>
+</div>
+</section>
+
+<section class="support-categories">
+<div class="support-card">
+<div class="support-card__title">Facturation</div>
+<p class="support-card__desc">Articles sur la cr�ation de devis, factures et paiements.</p>
+<a href="#" class="support-card__link">Consulter</a>
+</div>
+<div class="support-card">
+<div class="support-card__title">Abonnements</div>
+<p class="support-card__desc">Tout sur la gestion des plans, paiements et changements d'offre.</p>
+<a href="#" class="support-card__link">Consulter</a>
+</div>
+<div class="support-card">
+<div class="support-card__title">S�curit�</div>
+<p class="support-card__desc">Informations sur la protection des donn�es et la conformit�.</p>
+<a href="#" class="support-card__link">Consulter</a>
+</div>
+</section>
+</main>
+
+<footer class="landing-footer" style="margin-top:0;">
+<div class="section-container">
+<div class="row">
+<div class="col-lg-4">
+<div class="footer__brand">
+<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"><span class="fw-bold fs-5">FacTo</span></div>
+<p>FacTo facilite la gestion de votre entreprise avec des outils de facturation, gestion de stock et support d�di�.</p>
+</div>
+</div>
+<div class="col-lg-2 col-6"><div class="footer__title">Produit</div><ul class="footer__links"><li><a href="#">Fonctionnalit�s</a></li><li><a href="#">Tarifs</a></li><li><a href="#">Ressources</a></li><li><a href="#">Roadmap</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Entreprise</div><ul class="footer__links"><li><a href="#">� propos</a></li><li><a href="#">Carri�res</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Support</div><ul class="footer__links"><li><a href="support.html">Centre d'aide</a></li><li><a href="#">Statut</a></li><li><a href="#">S�curit�</a></li><li><a href="#">FAQ</a></li></ul></div>
+</div>
+<div class="footer__bottom" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:24px;">
+<div>� 2026 FacTo. Tous droits r�serv�s.</div>
+<div class="d-flex gap-3"><a href="#">Politique</a><a href="#">Conditions</a><a href="#">Sitemap</a></div>
+</div>
+</div>
+</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/auth.js"></script>
+</body>
+</html>

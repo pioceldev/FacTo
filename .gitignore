@@ -1,0 +1,8 @@
+.aider*
+vendor/
+node_modules/
+*.log
+.env
+.env.*
+backend/config.php
+!backend/config.example.php

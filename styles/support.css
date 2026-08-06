@@ -1,0 +1,226 @@
+
+/* ============================================
+   SUPPORT PAGE
+   ============================================ */
+
+.support-hero {
+  background: #3e2723;
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.support-hero__content {
+  max-width: 500px;
+  position: relative;
+  z-index: 1;
+}
+
+.support-hero__badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.support-hero__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.support-hero__desc {
+  opacity: 0.8;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.support-hero__search {
+  position: relative;
+  max-width: 400px;
+}
+
+.support-hero__search input {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+}
+
+.support-hero__search input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+.support-hero__search i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.5);
+  font-size: 0.9rem;
+}
+
+.support-hero__img {
+  width: 220px;
+  position: relative;
+  z-index: 1;
+}
+
+.support-hero__img img {
+  width: 100%;
+}
+
+/* Cards grid */
+.support-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+/* FAQ Section */
+.support-faq {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.support-faq__left {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.support-faq__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.support-faq__title {
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.support-faq__link {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.support-faq__item {
+  border-bottom: 1px solid var(--gray-200);
+  padding: 14px 0;
+}
+
+.support-faq__item:last-child {
+  border-bottom: none;
+}
+
+.support-faq__question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--gray-900);
+}
+
+.support-faq__question i {
+  color: var(--gray-400);
+  font-size: 0.8rem;
+  transition: transform 0.3s;
+}
+
+.support-faq__answer {
+  padding-top: 10px;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  line-height: 1.6;
+  display: none;
+}
+
+.support-faq__item.is-open .support-faq__answer {
+  display: block;
+}
+
+.support-faq__item.is-open .support-faq__question i {
+  transform: rotate(180deg);
+}
+
+/* Tickets */
+.support-tickets {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.support-tickets__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.support-tickets__title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.support-tickets__icon {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.support-tickets__desc {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-bottom: 16px;
+}
+
+.support-tickets__btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Videos */
+.support-videos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+/* Categories */
+.support-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}

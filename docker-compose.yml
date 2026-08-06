@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  apache:
+    image: php:8.3-apache
+    container_name: facto-apache
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - mysql
+    environment:
+      - APACHE_DOCROOT=/var/www/html
+
+  mysql:
+    image: mysql:8.2
+    container_name: facto-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: facto
+      MYSQL_USER: facto
+      MYSQL_PASSWORD: facto
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: facto-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:

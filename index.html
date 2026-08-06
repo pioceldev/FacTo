@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FacTo - Gestion d'entreprise simplifiée</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/landing.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="landing-nav">
+<div class="d-flex align-items-center gap-2">
+<img src="images/logo.png" alt="FacTo" class="logo">
+<span class="fw-bold fs-5">FacTo</span>
+</div>
+<div class="landing-nav__links d-none d-lg-flex">
+<a href="#features" class="landing-nav__link">Features</a>
+<a href="#pricing" class="landing-nav__link">Pricing</a>
+<div class="dropdown">
+<a class="landing-nav__link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Resources</a>
+</div>
+</div>
+<div class="landing-nav__actions">
+<a href="connexion.html" class="btn btn-link text-dark text-decoration-none fw-medium">Log in</a>
+<a href="inscription.html" class="btn btn-primary">Get started</a>
+</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+<div class="hero__content">
+<div class="hero__badge">Gestion d'entreprise simplifiée</div>
+<h1 class="hero__title">Propulsez votre <span>facturation</span> vers l'excellence.</h1>
+<p class="hero__subtitle">FacTo est la plateforme de gestion tout-en-un conçue pour les PME. Automatisez vos factures, gérez vos stocks et suivez votre croissance en temps réel.</p>
+<div class="hero__actions">
+<a href="inscription.html" class="btn btn-primary hero__btn">Commencer gratuitement <i class="bi bi-arrow-right"></i></a>
+<a href="#" class="hero__link">Voir la démo</a>
+</div>
+<div class="hero__trust">
+<i class="bi bi-check-circle-fill text-success"></i>
+<span>Rejoint par plus de <strong>2 500+</strong> entreprises en France.</span>
+</div>
+</div>
+<div class="hero__image-wrap d-none d-lg-block">
+<img src="images/dashbord.png" class="hero__image" alt="Dashboard">
+<div class="hero__float">
+<div class="text-success"><i class="bi bi-check-circle-fill fs-5"></i></div>
+<div class="hero__float-text">
+<strong>Paiement reçu</strong>
+<span>Facture #4392 · 1 250,00 €</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Features -->
+<section id="features" class="features-section">
+<div class="section-container">
+<h2 class="section-title">Des fonctionnalités pensées pour vous</h2>
+<p class="section-subtitle">Gérez chaque aspect de votre activité commerciale avec une interface fluide et intuitive.</p>
+
+<div class="feature-row">
+<div class="feature__image">
+<div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);max-width:280px;">
+<div class="d-flex align-items-center gap-2 mb-3"><div style="width:40px;height:40px;background:var(--primary-light);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--primary);"><i class="bi bi-file-earmark-text"></i></div><div class="fw-bold">INVOICE</div></div>
+<div style="height:8px;background:var(--gray-100);border-radius:4px;margin-bottom:8px;"></div>
+<div style="height:8px;background:var(--gray-100);border-radius:4px;width:80%;margin-bottom:8px;"></div>
+<div style="height:8px;background:var(--gray-100);border-radius:4px;width:60%;"></div>
+<div class="mt-3 text-end text-success fw-bold" style="font-size:.8rem;">Total: 2,450.00 €</div>
+</div>
+</div>
+<div class="feature__content">
+<div class="feature__icon"><i class="bi bi-lightning-charge"></i></div>
+<h3 class="feature__title">Facturation Intelligente</h3>
+<p class="feature__desc">Créez des factures professionnelles en quelques secondes. FacTo gère les taxes, les remises et les devises multiples automatiquement pour vous faire gagner un temps précieux.</p>
+<ul class="feature__list">
+<li><i class="bi bi-check-circle-fill"></i> Modèles personnalisables</li>
+<li><i class="bi bi-check-circle-fill"></i> Envoi automatique par email</li>
+<li><i class="bi bi-check-circle-fill"></i> Relances automatiques</li>
+</ul>
+</div>
+</div>
+
+<div class="feature-row">
+<div class="feature__image">
+<div style="background:#fff;padding:30px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);max-width:320px;width:100%;">
+<div class="d-flex align-items-center justify-content-between mb-3"><span class="fw-bold" style="font-size:.8rem;">INVENTORY</span><i class="bi bi-box-seam text-primary"></i></div>
+<div style="height:120px;background:linear-gradient(180deg,var(--primary-light) 0%,#fff 100%);border-radius:8px;display:flex;align-items:flex-end;padding:10px;gap:6px;">
+<div style="flex:1;height:40%;background:var(--primary);border-radius:4px;opacity:.3;"></div>
+<div style="flex:1;height:70%;background:var(--primary);border-radius:4px;opacity:.5;"></div>
+<div style="flex:1;height:55%;background:var(--primary);border-radius:4px;opacity:.4;"></div>
+<div style="flex:1;height:90%;background:var(--primary);border-radius:4px;"></div>
+</div>
+</div>
+</div>
+<div class="feature__content">
+<div class="feature__icon"><i class="bi bi-box-seam"></i></div>
+<h3 class="feature__title">Gestion des Stocks</h3>
+<p class="feature__desc">Ne soyez plus jamais en rupture de stock. Suivez vos niveaux d'inventaire en temps réel sur plusieurs entrepôts et recevez des alertes automatiques.</p>
+<ul class="feature__list">
+<li><i class="bi bi-check-circle-fill"></i> Ajustements de stock en temps réel</li>
+<li><i class="bi bi-check-circle-fill"></i> Alertes de niveau bas</li>
+<li><i class="bi bi-check-circle-fill"></i> Gestion multi-entrepôts</li>
+</ul>
+</div>
+</div>
+
+<div class="feature-row">
+<div class="feature__image">
+<div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);max-width:280px;">
+<div style="height:160px;background:var(--gray-100);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+<div style="width:80%;height:60%;background:#fff;border-radius:8px;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,.05);">
+<div style="display:flex;align-items:flex-end;gap:4px;height:100%;">
+<div style="flex:1;height:30%;background:var(--primary);border-radius:3px;"></div>
+<div style="flex:1;height:50%;background:var(--primary);border-radius:3px;"></div>
+<div style="flex:1;height:40%;background:var(--primary);border-radius:3px;"></div>
+<div style="flex:1;height:70%;background:var(--primary);border-radius:3px;"></div>
+<div style="flex:1;height:60%;background:var(--primary);border-radius:3px;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="feature__content">
+<div class="feature__icon"><i class="bi bi-bar-chart"></i></div>
+<h3 class="feature__title">Analyses & Reporting</h3>
+<p class="feature__desc">Prenez des décisions éclairées grâce à nos tableaux de bord analytiques. Visualisez votre rentabilité, vos flux de trésorerie et vos produits phares en un clin d'oeil.</p>
+<ul class="feature__list">
+<li><i class="bi bi-check-circle-fill"></i> Rapports financiers complets</li>
+<li><i class="bi bi-check-circle-fill"></i> Exportation comptable</li>
+<li><i class="bi bi-check-circle-fill"></i> Suivi des indicateurs clés</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Stats -->
+<section class="stats-bar">
+<div><div class="stats-bar__number">99%</div><div class="stats-bar__label">Satisfaction client</div></div>
+<div><div class="stats-bar__number">15k+</div><div class="stats-bar__label">Utilisateurs actifs</div></div>
+<div><div class="stats-bar__number">24/7</div><div class="stats-bar__label">Support technique</div></div>
+<div><div class="stats-bar__number">5M+</div><div class="stats-bar__label">Factures émises</div></div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing" class="pricing-section">
+<div class="section-container">
+<h2 class="section-title">Tarification transparente</h2>
+<p class="section-subtitle">Choisissez le plan qui correspond à la taille de votre entreprise. Sans engagement, annulez à tout moment.</p>
+<div class="row g-4 justify-content-center">
+<div class="col-lg-4 col-md-6">
+<div class="plan-card h-100">
+<div class="plan-card__name">GRATUIT</div>
+<div class="plan-card__price">0€<span>/mois</span></div>
+<div class="plan-card__desc">Idéal pour les auto-entrepreneurs qui débutent.</div>
+<ul class="plan-card__features">
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Jusqu'à 5 clients</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> 10 factures par mois</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Tableau de bord basique</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Support communautaire</li>
+<li class="not-included"><i class="bi bi-circle"></i> Gestion des stocks</li>
+<li class="not-included"><i class="bi bi-circle"></i> Rapports financiers avancés</li>
+<li class="not-included"><i class="bi bi-circle"></i> Multi-utilisateurs</li>
+</ul>
+<a href="inscription.html" class="btn btn-outline-dark w-100" style="border-radius:8px;padding:10px;">Essayer maintenant</a>
+</div>
+</div>
+<div class="col-lg-4 col-md-6">
+<div class="plan-card plan-card--popular h-100">
+<div class="plan-card__badge">POPULAIRE</div>
+<div class="plan-card__name">STANDARD</div>
+<div class="plan-card__price">29€<span>/mois</span></div>
+<div class="plan-card__desc">Pour les TPE en pleine croissance.</div>
+<ul class="plan-card__features">
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Clients illimités</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Factures illimitées</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Gestion des stocks</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Relances automatiques</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Support prioritaire par email</li>
+<li class="not-included"><i class="bi bi-circle"></i> Rapports financiers avancés</li>
+<li class="not-included"><i class="bi bi-circle"></i> API développeur</li>
+</ul>
+<a href="inscription.html" class="btn btn-primary w-100" style="border-radius:8px;padding:10px;">Commencer maintenant</a>
+</div>
+</div>
+<div class="col-lg-4 col-md-6">
+<div class="plan-card h-100">
+<div class="plan-card__name">PREMIUM</div>
+<div class="plan-card__price">79€<span>/mois</span></div>
+<div class="plan-card__desc">Solution complète pour les PME structurées.</div>
+<ul class="plan-card__features">
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Tout du plan Standard</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Reporting avancé & Analytics</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Gestion multi-utilisateurs</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> API personnalisée</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Support dédié 24/7</li>
+</ul>
+<a href="inscription.html" class="btn btn-outline-dark w-100" style="border-radius:8px;padding:10px;">Contacter les ventes</a>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-section">
+<div class="section-container">
+<h2 class="section-title">Ce que disent nos clients</h2>
+<p class="section-subtitle"><i class="bi bi-star-fill" style="color:#fbbf24;"></i><i class="bi bi-star-fill" style="color:#fbbf24;"></i><i class="bi bi-star-fill" style="color:#fbbf24;"></i><i class="bi bi-star-fill" style="color:#fbbf24;"></i><i class="bi bi-star-fill" style="color:#fbbf24;"></i></p>
+<div class="row g-4">
+<div class="col-md-4">
+<div class="testimonial-card h-100">
+<div class="testimonial-card__stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+<p class="testimonial-card__text">"FacTo a radicalement changé ma façon de gérer mes factures. J'ai gagné au moins 10 heures par mois que je peux désormais consacrer à mes clients."</p>
+<div class="testimonial-card__author"><img src="https://i.pravatar.cc/150?img=11" alt=""><div><div class="testimonial-card__name">Jean Dupont</div><div class="testimonial-card__role">CEO, TechAvance</div></div></div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="testimonial-card h-100">
+<div class="testimonial-card__stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+<p class="testimonial-card__text">"L'interface est d'une simplicité déconcertante. Même mon équipe comptable a été surprise par la fluidité des exports et de la gestion des stocks."</p>
+<div class="testimonial-card__author"><img src="https://i.pravatar.cc/150?img=5" alt=""><div><div class="testimonial-card__name">Marie Laurent</div><div class="testimonial-card__role">Directrice Logistique, SolaLog</div></div></div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="testimonial-card h-100">
+<div class="testimonial-card__stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+<p class="testimonial-card__text">"Le support client est exceptionnel. J'ai eu une question sur l'intégration API et j'ai reçu une réponse détaillée en moins d'une heure."</p>
+<div class="testimonial-card__author"><img src="https://i.pravatar.cc/150?img=3" alt=""><div><div class="testimonial-card__name">Thomas Berger</div><div class="testimonial-card__role">Consultant Indépendant</div></div></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+<div class="section-container">
+<div class="row g-5">
+<div class="col-lg-4">
+<div class="faq-section__badge">Aide & Support</div>
+<h2 class="faq-section__title">Questions fréquemment posées</h2>
+<p class="faq-section__desc">Vous avez des questions sur FacTo ? Nous avons regroupé ici les réponses les plus courantes pour vous aider à démarrer rapidement.</p>
+<a href="#" class="faq-section__link">Consulter notre centre d'aide complet <i class="bi bi-arrow-right"></i></a>
+</div>
+<div class="col-lg-8">
+<div class="faq-item is-open">
+<div class="faq-item__question">Est-ce que mes données sont sécurisées ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Oui, nous utilisons un chiffrement de niveau bancaire (AES-256) et vos données sont hébergées sur des serveurs certifiés ISO 27001 en Europe.</div>
+</div>
+<div class="faq-item">
+<div class="faq-item__question">Puis-je changer de forfait à tout moment ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Absolument. Vous pouvez augmenter ou réduire votre forfait à tout moment. La différence sera calculée au prorata.</div>
+</div>
+<div class="faq-item">
+<div class="faq-item__question">Y a-t-il des frais d'installation ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Non, FacTo est 100% cloud. Aucun frais d'installation ni de maintenance n'est requis.</div>
+</div>
+<div class="faq-item">
+<div class="faq-item__question">Puis-je importer mes données existantes ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Oui, nous supportons l'import depuis Excel, CSV et de nombreux logiciels comptables.</div>
+</div>
+<div class="faq-item">
+<div class="faq-item__question">Le support est-il disponible en français ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Oui, notre équipe de support est basée en France et disponible en français du lundi au vendredi de 9h à 19h.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Contact -->
+<section class="contact-section">
+<div class="contact__info">
+<h3 class="contact__info-title">Contactez-nous</h3>
+<p class="contact__info-desc">Vous avez un projet spécifique ou besoin d'une démonstration personnalisée ? Notre équipe est à votre écoute.</p>
+<div class="contact__detail"><i class="bi bi-envelope"></i><span>contact@facto.io</span></div>
+<div class="contact__detail"><i class="bi bi-telephone"></i><span>+33 1 23 45 67 89</span></div>
+<div class="contact__detail"><i class="bi bi-geo-alt"></i><span>75008 Paris, France</span></div>
+</div>
+<div class="contact__form">
+<div class="row g-3">
+<div class="col-md-6"><label class="form-label">Prénom</label><input type="text" class="form-control" placeholder="Jean"></div>
+<div class="col-md-6"><label class="form-label">Nom</label><input type="text" class="form-control" placeholder="Dupont"></div>
+<div class="col-12"><label class="form-label">Email professionnel</label><input type="email" class="form-control" placeholder="jean@entreprise.com"></div>
+<div class="col-12"><label class="form-label">Sujet</label><select class="form-select"><option>Demande de démo</option><option>Support technique</option><option>Question commerciale</option></select></div>
+<div class="col-12"><label class="form-label">Message</label><textarea class="form-control" rows="4" placeholder="Dites-nous en plus sur vos besoins..."></textarea></div>
+<div class="col-12"><button class="btn btn-primary w-100" style="padding:12px;">Envoyer le message</button></div>
+</div>
+</div>
+</section>
+
+<!-- CTA -->
+<section class="cta-dark">
+<h2 class="cta-dark__title">Prêt à transformer votre gestion ?</h2>
+<p class="cta-dark__text">Rejoignez des milliers d'entreprises qui font confiance à FacTo pour simplifier leur quotidien opérationnel.<br>Essai gratuit de 14 jours, sans carte bancaire.</p>
+<div class="cta-dark__actions">
+<a href="inscription.html" class="btn btn-primary cta-dark__btn">Commencer gratuitement</a>
+<button class="btn btn-outline-light cta-dark__btn">Parler à un expert</button>
+</div>
+<div class="cta-dark__trust">
+<span><i class="bi bi-globe"></i> Disponible partout dans le monde</span>
+<span><i class="bi bi-headset"></i> Assistance prioritaire</span>
+</div>
+</section>
+
+<!-- Footer -->
+<footer class="landing-footer">
+<div class="section-container">
+<div class="row">
+<div class="col-lg-4">
+<div class="footer__brand">
+<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"><span class="fw-bold fs-5">FacTo</span></div>
+<p>FacTo is a professional billing and business management platform designed for SMEs to streamline operations effortlessly.</p>
+<div class="footer__socials"><a href="#"><i class="bi bi-twitter"></i></a><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-instagram"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-github"></i></a></div>
+</div>
+</div>
+<div class="col-lg-2 col-6"><div class="footer__title">Product</div><ul class="footer__links"><li><a href="#">Features</a></li><li><a href="#">Pricing</a></li><li><a href="#">Integrations</a></li><li><a href="#">Roadmap</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Company</div><ul class="footer__links"><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Legal</div><ul class="footer__links"><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Cookie Policy</a></li><li><a href="#">Security</a></li></ul></div>
+</div>
+<div class="footer__bottom">
+<div>© 2026 FacTo Technologies. All rights reserved.</div>
+<div class="d-flex gap-3"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Sitemap</a></div>
+</div>
+</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.querySelectorAll('.faq-item__question').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const wasOpen = item.classList.contains('is-open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('is-open'));
+    if (!wasOpen) item.classList.add('is-open');
+  });
+});
+</script>
+</body>
+</html>

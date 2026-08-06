@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="csrf-token" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock — FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/sidebar.css">
+<link rel="stylesheet" href="styles/dashboard.css">
+<link rel="stylesheet" href="styles/animations.css">
+<link rel="stylesheet" href="styles/stock.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <a href="dashboard.html" class="sidebar__logo">
+    <img src="images/logo.png" alt="FacTo" class="logo"> FacTo
+  </a>
+  <nav class="sidebar__nav">
+    <a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
+    <a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
+    <a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Produits</a>
+    <a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Fournisseurs</a>
+    <a href="stock.html" class="sidebar__item is-active"><i class="bi bi-layers"></i> Stock</a>
+    <a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
+    <a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Factures</a>
+    <a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
+    <a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
+    <a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
+    <hr class="sidebar__divider">
+    <a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
+    <a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Abonnement</a>
+    <a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
+  </nav>
+  <div class="sidebar__footer">
+    <a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
+    <a href="profile.html" class="sidebar__item"><i class="bi bi-person"></i> Mon profil</a>
+    <a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+  </div>
+</aside>
+
+<div class="app-layout">
+
+  <header class="topbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <div class="topbar__breadcrumb d-none d-md-flex align-items-center gap-1">
+        <a href="dashboard.html">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
+        <span>Stock</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="topbar__search d-none d-md-flex align-items-center">
+        <i class="bi bi-search"></i>
+        <input type="text" id="stockSearch" placeholder="Rechercher produit, référence...">
+      </div>
+      <div class="topbar__actions">
+        <a href="notifications.html" class="topbar__icon-btn" aria-label="Notifications">
+          <i class="bi bi-bell"></i>
+          <span class="topbar__badge" id="notificationBadge" style="display:none;"></span>
+        </a>
+        <div class="topbar__user">
+          <div class="topbar__avatar" id="topbarAvatar"><i class="bi bi-person"></i></div>
+          <span class="topbar__username d-none d-lg-block" id="topbarUsername">Utilisateur</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">Gestion du Stock</h1>
+        <p class="page-header__subtitle">Pilotez votre inventaire et soyez alerté des ruptures.</p>
+      </div>
+      <div class="page-header__actions">
+        <button class="btn btn-primary" id="btnNewStock"><i class="bi bi-plus-lg"></i> Entrée de stock</button>
+      </div>
+    </div>
+
+    <div class="dashboard__stats" id="stockStatsCards">
+      <div class="skeleton skeleton-card" style="height:100px;"></div>
+      <div class="skeleton skeleton-card" style="height:100px;"></div>
+      <div class="skeleton skeleton-card" style="height:100px;"></div>
+    </div>
+
+    <div class="dashboard__card mb-4">
+      <div class="d-flex flex-wrap gap-3 align-items-end">
+        <div class="flex-grow-1" style="min-width:200px;">
+          <label class="form-label">Recherche</label>
+          <input type="text" class="form-control" id="stockSearchInput" placeholder="Nom ou référence...">
+        </div>
+        <div style="min-width:150px;">
+          <label class="form-label">Catégorie</label>
+          <select class="form-select" id="stockCategoryFilter">
+            <option value="">Toutes</option>
+          </select>
+        </div>
+        <div style="min-width:150px;">
+          <label class="form-label">Statut</label>
+          <select class="form-select" id="stockAlertFilter">
+            <option value="">Tous</option>
+            <option value="low">Stock faible</option>
+            <option value="ok">OK</option>
+          </select>
+        </div>
+        <button class="btn btn-outline-secondary" id="btnRefreshStock" title="Actualiser">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard__card">
+      <div class="table-responsive">
+        <table class="custom-table mb-0">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Réf.</th>
+              <th>Catégorie</th>
+              <th>Qté</th>
+              <th>Seuil</th>
+              <th>Valeur</th>
+              <th>Statut</th>
+              <th style="width:80px;"></th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody">
+            <tr><td colspan="8" class="text-center py-4" style="color:var(--gray-500);">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center pt-3 px-3">
+        <span id="stockTableInfo" class="text-muted" style="font-size:.85rem;"></span>
+        <nav id="stockPagination"></nav>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="app-footer">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>&copy; 2024 FacTo Technologies</div>
+      <div class="d-flex gap-3">
+        <a href="#">Mentions légales</a>
+        <a href="#">Confidentialité</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<div class="modal fade" id="stockModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="stockModalTitle">Entrée de stock</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="stockForm" novalidate>
+          <input type="hidden" id="stockId">
+          <div class="mb-3">
+            <label class="form-label" for="stockProduct">Produit</label>
+            <select class="form-select" id="stockProduct" required></select>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="stockQuantity">Quantité</label>
+              <input type="number" class="form-control" id="stockQuantity" min="0" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="stockReorderLevel">Seuil de réapprovisionnement</label>
+              <input type="number" class="form-control" id="stockReorderLevel" min="0" value="0">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="btnSaveStock">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/auth.js"></script>
+<script src="scripts/stock.js"></script>
+</body>
+</html>

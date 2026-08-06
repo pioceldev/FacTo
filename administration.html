@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="csrf-token" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/sidebar.css">
+<link rel="stylesheet" href="styles/dashboard.css">
+<link rel="stylesheet" href="styles/animations.css">
+<link rel="stylesheet" href="styles/admin.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<nav class="sidebar__nav">
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
+<a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
+<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
+<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
+<a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
+<a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
+<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Invoices</a>
+<a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
+<a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
+<a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
+<hr class="sidebar__divider">
+<a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
+<a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Subscription</a>
+<a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
+</nav>
+<div class="sidebar__footer">
+<a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
+    <a href="profile.html" class="sidebar__item"><i class="bi bi-person"></i> Mon profil</a>
+    <a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+</div>
+</aside>
+
+<div class="app-layout">
+<header class="topbar">
+<div class="d-flex align-items-center">
+<button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+<div class="topbar__breadcrumb d-none d-md-flex align-items-center gap-1">
+        <a href="dashboard.html">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
+        <span>Administration</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="topbar__search d-none d-md-flex align-items-center">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Rechercher...">
+      </div>
+      <div class="topbar__actions">
+        <a href="notifications.html" class="topbar__icon-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span class="topbar__badge" id="notificationBadge" style="display:none;"></span></a>
+        <div class="topbar__user">
+          <div class="topbar__avatar" id="topbarAvatar"><i class="bi bi-person"></i></div>
+          <span class="topbar__username d-none d-lg-block" id="topbarUsername">Admin</span>
+        </div>
+      </div>
+    </div>
+</header>
+
+<main class="app-content">
+
+<div class="page-header">
+<div>
+<h1 class="page-header__title">Tableau de Bord Administrateur</h1>
+<p class="page-header__subtitle">Supervision globale de la plateforme et gestion des entreprises.</p>
+</div>
+<div class="page-header__actions">
+<button class="btn btn-light" style="border:1px solid var(--gray-200);"><i class="bi bi-download"></i> Exporter (.csv)</button>
+<button class="btn btn-primary"><i class="bi bi-tools"></i> Maintenance</button>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="admin__stats">
+<div class="stat-card">
+<div class="d-flex justify-content-between align-items-start">
+<div>
+<div class="stat-card__label">Revenu Mensuel (MRR)</div>
+<div class="stat-card__value" id="statRevenue">€65,240</div>
+<div class="stat-card__change up"><i class="bi bi-arrow-up-right"></i> +12.5%</div>
+</div>
+<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-currency-euro"></i></div>
+</div>
+</div>
+<div class="stat-card">
+<div class="d-flex justify-content-between align-items-start">
+<div>
+<div class="stat-card__label">Entreprises Actives</div>
+<div class="stat-card__value" id="statClients">1,248</div>
+<div class="stat-card__change up"><i class="bi bi-arrow-up-right"></i> +4.2%</div>
+</div>
+<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-building"></i></div>
+</div>
+</div>
+<div class="stat-card">
+<div class="d-flex justify-content-between align-items-start">
+<div>
+<div class="stat-card__label">Utilisateurs Totaux</div>
+<div class="stat-card__value" id="statUsers">8,492</div>
+<div class="stat-card__change up"><i class="bi bi-arrow-up-right"></i> +8.1%</div>
+</div>
+<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-people"></i></div>
+</div>
+</div>
+<div class="stat-card">
+<div class="d-flex justify-content-between align-items-start">
+<div>
+<div class="stat-card__label">Temps de réponse</div>
+<div class="stat-card__value">124ms</div>
+<div class="stat-card__change down"><i class="bi bi-arrow-down-right"></i> -15ms</div>
+</div>
+<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-activity"></i></div>
+</div>
+</div>
+</div>
+
+<!-- Charts -->
+<div class="admin__grid">
+<div class="admin__card">
+<div class="admin__card-header">
+<div><div class="admin__card-title">Croissance des Revenus</div><div class="admin__card-subtitle">Évolution des revenus sur les 6 derniers mois</div></div>
+<div class="toggle-switch"><button class="toggle-btn active">MRR</button><button class="toggle-btn">Utilisateurs</button></div>
+</div>
+<div class="chart-container"><canvas id="adminChart"></canvas></div>
+</div>
+<div class="admin__card">
+<div class="dashboard__card-header">
+<div><div class="dashboard__card-title">Journal Système</div></div>
+</div>
+<div class="activity-item">
+<div class="activity-item__icon" style="background:var(--info-light);color:var(--info);"><i class="bi bi-info-circle"></i></div>
+<div class="activity-item__content"><div class="activity-item__title">Mise à jour serveur v2.4</div><div class="activity-item__time">SYSTÈME • Il y a 2 min</div></div>
+</div>
+<div class="activity-item">
+<div class="activity-item__icon" style="background:var(--success-light);color:var(--success);"><i class="bi bi-person-plus"></i></div>
+<div class="activity-item__content"><div class="activity-item__title">Nouveau compte: TechFlow</div><div class="activity-item__time">ADMIN • Il y a 15 min</div></div>
+</div>
+<div class="activity-item">
+<div class="activity-item__icon" style="background:var(--danger-light);color:var(--danger);"><i class="bi bi-x-circle"></i></div>
+<div class="activity-item__content"><div class="activity-item__title">Échec de paiement (Global Logistics)</div><div class="activity-item__time">STRIPE • Il y a 1h</div></div>
+</div>
+<div class="activity-item">
+<div class="activity-item__icon" style="background:var(--success-light);color:var(--success);"><i class="bi bi-check-circle"></i></div>
+<div class="activity-item__content"><div class="activity-item__title">Backup hebdomadaire réussi</div><div class="activity-item__time">SYSTÈME • Il y a 3h</div></div>
+</div>
+<div style="margin-top:12px;text-align:center;"><a href="#" style="color:var(--primary);font-size:.85rem;font-weight:500;">Voir tous les journaux</a></div>
+</div>
+</div>
+
+<!-- Companies Table -->
+<div class="admin__card" style="margin-bottom:16px;">
+<div class="admin__card-header">
+<div><div class="admin__card-title">Gestion des Entreprises</div></div>
+<div class="admin__filters">
+<div class="admin__filter-input"><i class="bi bi-search"></i><input type="text" placeholder="Filtrer par nom ou ID..."></div>
+<button class="admin__filter-btn"><i class="bi bi-funnel"></i> Filtres</button>
+</div>
+</div>
+<table class="custom-table">
+<thead>
+<tr>
+<th>Entreprise</th>
+<th>Abonnement</th>
+<th>Statut</th>
+<th>Utilisateurs</th>
+<th>Revenu</th>
+<th>Date d'inscription</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="company-avatar" style="background:#f97316;">T</div>
+<div><div class="admin__company-name">TechFlow Solutions SA / FT-1982</div></div>
+</div>
+</td>
+<td><span class="badge-soft badge-soft-primary">Premium</span></td>
+<td><span class="status-dot success"></span>Actif</td>
+<td>24</td>
+<td>€1,200/m</td>
+<td>12 Oct 2023</td>
+<td>
+<div class="dashboard__invoice-actions">
+<button><i class="bi bi-envelope"></i></button>
+<button><i class="bi bi-pencil"></i></button>
+<button><i class="bi bi-slash-circle"></i></button>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="company-avatar" style="background:var(--primary);">L</div>
+<div><div class="admin__company-name">Lumière Architecture</div><div class="admin__company-id">ID: FT-2982</div></div>
+</div>
+</td>
+<td><span class="badge-soft badge-soft-info">Standard</span></td>
+<td><span class="status-dot success"></span>Actif</td>
+<td>8</td>
+<td>€450/m</td>
+<td>05 Nov 2023</td>
+<td>
+<div class="dashboard__invoice-actions">
+<button><i class="bi bi-envelope"></i></button>
+<button><i class="bi bi-pencil"></i></button>
+<button><i class="bi bi-slash-circle"></i></button>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="company-avatar" style="background:#f97316;">G</div>
+<div><div class="admin__company-name">Global Logistics s.a. / FT-3982</div></div>
+</div>
+</td>
+<td><span class="badge-soft badge-soft-primary">Premium</span></td>
+<td><span class="status-dot warning"></span>En retard</td>
+<td>45</td>
+<td>€2,400/m</td>
+<td>22 Sep 2023</td>
+<td>
+<div class="dashboard__invoice-actions">
+<button><i class="bi bi-envelope"></i></button>
+<button><i class="bi bi-pencil"></i></button>
+<button><i class="bi bi-slash-circle"></i></button>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="company-avatar" style="background:#f97316;">A</div>
+<div><div class="admin__company-name">Artisanat & Co / FT-4982</div></div>
+</div>
+</td>
+<td><span class="badge-soft badge-soft-secondary">Gratuit</span></td>
+<td><span class="status-dot success"></span>Actif</td>
+<td>2</td>
+<td>€0/m</td>
+<td>15 Jan 2024</td>
+<td>
+<div class="dashboard__invoice-actions">
+<button><i class="bi bi-envelope"></i></button>
+<button><i class="bi bi-pencil"></i></button>
+<button><i class="bi bi-slash-circle"></i></button>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="company-avatar" style="background:#f97316;">I</div>
+<div><div class="admin__company-name">Invest Immo / FT-5982</div></div>
+</div>
+</td>
+<td><span class="badge-soft badge-soft-info">Standard</span></td>
+<td><span class="status-dot danger"></span>Suspendu</td>
+<td>12</td>
+<td>€450/m</td>
+<td>30 Oct 2023</td>
+<td>
+<div class="dashboard__invoice-actions">
+<button><i class="bi bi-envelope"></i></button>
+<button><i class="bi bi-pencil"></i></button>
+<button><i class="bi bi-slash-circle"></i></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="d-flex justify-content-between align-items-center mt-3" style="font-size:.85rem;color:var(--gray-500);">
+<div>Affichage de 5 sur 1,248 entreprises</div>
+<div class="pagination-custom">
+<a href="#" class="pagination-custom__link">Précédent</a>
+<a href="#" class="pagination-custom__link active">1</a>
+<a href="#" class="pagination-custom__link">2</a>
+<a href="#" class="pagination-custom__link">3</a>
+<a href="#" class="pagination-custom__link">Suivant</a>
+</div>
+</div>
+</div>
+
+<!-- Bottom cards -->
+<div class="admin__bottom-grid">
+<div class="admin__alert-card">
+<h5>Version 2.5</h5>
+<h4>Prêt pour la version 2.5?</h4>
+<p>Le déploiement de la nouvelle version est prévu pour lundi prochain. Vérifiez les dépendances de base de données.</p>
+<button class="btn-light">Consulter la Roadmap <i class="bi bi-arrow-up-right"></i></button>
+</div>
+<div class="admin__alert-card admin__alert-card--dark">
+<h5>Alertes Système</h5>
+<h4>3 terminaux en surchauffe</h4>
+<p>Le cluster de base de données "EU-West-1" rapporte une utilisation CPU de 94%.</p>
+<div class="d-flex align-items-center gap-3">
+<button class="btn-outline-light">Optimiser</button>
+<span style="font-size:.8rem;opacity:.6;"><i class="bi bi-clock"></i> Vérifié il y a 4s</span>
+</div>
+</div>
+</div>
+
+</main>
+
+<footer style="padding:16px 24px;border-top:1px solid var(--gray-200);background:#fff;">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size:.8rem;color:var(--gray-500);">
+<div>© 2024 FacTo. Tous droits réservés.</div>
+<div class="d-flex gap-3"><a href="support.html" style="color:var(--gray-500);">Support technique</a><a href="#" style="color:var(--gray-500);">Centre d'aide</a><a href="#" style="color:var(--gray-500);">État du système</a></div>
+</div>
+</footer>
+</div>
+
+<script>
+async function loadAdminData() {
+  try {
+    const ov = await fetch('backend/admin.php?action=overview', { credentials: 'same-origin' }).then(r => r.json());
+    const o = ov.overview;
+    document.getElementById('statUsers').textContent = o.total_users;
+    document.getElementById('statClients').textContent = o.total_clients;
+    document.getElementById('statInvoices').textContent = o.total_invoices;
+    document.getElementById('statRevenue').textContent = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(o.total_revenue);
+  } catch (e) { /* ignore */ }
+
+  try {
+    const mr = await fetch('backend/admin.php?action=monthly_revenue', { credentials: 'same-origin' }).then(r => r.json());
+    const ctx = document.getElementById('adminChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: mr.monthly_revenue.map(d => d.month),
+        datasets: [{ label: 'MRR', data: mr.monthly_revenue.map(d => d.revenue), borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.4, pointRadius: 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v) } }, x: { grid: { display: false } } } }
+    });
+  } catch (e) { /* ignore */ }
+}
+loadAdminData();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/auth.js"></script>
+</body>
+</html>

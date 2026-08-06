@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation du paiement - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/auth.css">
+<link rel="stylesheet" href="styles/animations.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body class="auth-page">
+
+<div class="payment-return">
+  <div class="payment-return__card">
+    <div class="payment-return__loader" id="returnLoader">
+      <div class="spinner-ring"></div>
+      <div class="payment-return__title">Vérification du paiement…</div>
+      <p class="payment-return__sub">Nous confirmons votre transaction auprès de FedaPay. Patientez un instant.</p>
+    </div>
+
+    <div class="payment-return__result" id="returnResult" style="display:none;">
+      <div class="payment-return__icon" id="returnIcon"></div>
+      <div class="payment-return__title" id="returnTitle">—</div>
+      <p class="payment-return__sub" id="returnMessage">—</p>
+      <div class="payment-return__actions">
+        <a href="mon-abonnement.html" class="btn btn-primary">Voir mon abonnement</a>
+        <a href="choix-abonnement.html" class="btn btn-outline-dark">Choisir une autre offre</a>
+      </div>
+      <p class="payment-return__redirect" id="returnRedirect">Redirection automatique dans quelques secondes…</p>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const urlStatus = params.get('status');
+
+  const loader = document.getElementById('returnLoader');
+  const result = document.getElementById('returnResult');
+  const icon = document.getElementById('returnIcon');
+  const title = document.getElementById('returnTitle');
+  const message = document.getElementById('returnMessage');
+
+  function showResult(ok, msgTitle, msg, iconHtml) {
+    loader.style.display = 'none';
+    result.style.display = 'block';
+    icon.className = 'payment-return__icon ' + (ok ? 'is-success' : 'is-error');
+    icon.innerHTML = iconHtml;
+    title.textContent = msgTitle;
+    message.textContent = msg;
+    document.querySelector('.payment-return__card').classList.add('is-done');
+  }
+
+  if (!id) {
+    showResult(false, 'Transaction introuvable', 'Le retour FedaPay ne contient pas d’identifiant de transaction.', '<i class="bi bi-question-circle"></i>');
+    return;
+  }
+
+  try {
+    const response = await fetch('backend/subscription.php?action=confirm&id=' + encodeURIComponent(id), {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      showResult(true, 'Paiement confirmé !', data.message, '<i class="bi bi-check-lg"></i>');
+    } else {
+      showResult(false, 'Paiement non abouti', data.error || data.message || 'Votre paiement n’a pas pu être confirmé.', '<i class="bi bi-x-lg"></i>');
+    }
+  } catch (e) {
+    showResult(false, 'Erreur de vérification', 'Impossible de contacter le serveur. Rendez-vous sur la page abonnement.', '<i class="bi bi-wifi-off"></i>');
+  }
+
+  setTimeout(() => {
+    window.location.href = 'mon-abonnement.html';
+  }, 6000);
+});
+</script>
+</body>
+</html>

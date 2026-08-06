@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="csrf-token" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/sidebar.css">
+<link rel="stylesheet" href="styles/dashboard.css">
+<link rel="stylesheet" href="styles/animations.css">
+<link rel="stylesheet" href="styles/notifications.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<nav class="sidebar__nav">
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
+<a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
+<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
+<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
+<a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
+<a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
+<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Invoices</a>
+<a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
+<a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
+<a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
+<hr class="sidebar__divider">
+<a href="notifications.html" class="sidebar__item is-active"><i class="bi bi-bell"></i> Notifications</a>
+<a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Subscription</a>
+<a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
+</nav>
+<div class="sidebar__footer">
+<a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
+    <a href="profile.html" class="sidebar__item"><i class="bi bi-person"></i> Mon profil</a>
+    <a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+</div>
+</aside>
+
+<div class="app-layout">
+<header class="topbar">
+<div class="d-flex align-items-center">
+<button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+<div class="topbar__breadcrumb d-none d-md-flex align-items-center gap-1">
+        <a href="dashboard.html">Dashboard</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
+        <span>Notifications</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="topbar__search d-none d-md-flex align-items-center">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Rechercher notifications...">
+      </div>
+      <div class="topbar__actions">
+        <a href="notifications.html" class="topbar__icon-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span class="topbar__badge" id="notificationBadge" style="display:none;"></span></a>
+        <div class="topbar__user">
+          <div class="topbar__avatar" id="topbarAvatar"><i class="bi bi-person"></i></div>
+          <span class="topbar__username d-none d-lg-block" id="topbarUsername">Utilisateur</span>
+        </div>
+      </div>
+    </div>
+</header>
+
+<main class="app-content">
+
+<div class="notif__header">
+<div class="notif__title-wrap">
+<h1 class="page-header__title" style="margin:0;">Notifications <span class="notif__badge" id="notificationsCountBadge">0 Nouvelles</span></h1>
+<p class="page-header__subtitle" style="margin:0;">Restez informé des activités de votre entreprise et des mises à jour système.</p>
+</div>
+<div class="notif__actions">
+<button id="notificationsMarkReadBtn" class="notif__mark-read"><i class="bi bi-check-all"></i> Tout marquer comme lu</button>
+<button class="btn btn-light" style="border:1px solid var(--gray-200);"><i class="bi bi-funnel"></i></button>
+</div>
+</div>
+
+<div class="notif__grid">
+<div>
+<div style="display:flex;gap:8px;margin-bottom:16px;">
+<div class="topbar__search" style="flex:1;">
+<i class="bi bi-search"></i>
+<input id="notificationSearchInput" type="text" placeholder="Rechercher une notification..." style="width:100%;">
+</div>
+<button class="notif__filter-btn is-active" data-filter="all">Toutes</button>
+<button class="notif__filter-btn" data-filter="unread">Non lues</button>
+<button class="notif__filter-btn" data-filter="payments">Paiements</button>
+</div>
+
+<div id="notificationsList">
+  <div class="notif-item notif-item--empty">
+    <div class="notif-item__content">
+      <div class="notif-item__title">Chargement des notifications…</div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:20px;">
+<button id="notificationsLoadMoreBtn" style="color:var(--gray-500);font-size:.85rem;background:none;border:none;">Afficher les notifications plus anciennes</button>
+</div>
+</div>
+
+<div>
+<div class="notif__sidebar-card">
+<h6 class="notif__sidebar-title"><i class="bi bi-exclamation-triangle" style="color:var(--warning);"></i> Résumé des alertes</h6>
+<div class="summary-card__row"><span class="summary-card__label">Paiements en attente</span><span class="summary-card__value" style="color:var(--warning);">03</span></div>
+<div class="summary-card__row"><span class="summary-card__label">Stock bas</span><span class="summary-card__value" style="color:var(--primary);">01</span></div>
+<div class="summary-card__row"><span class="summary-card__label">Factures impayées</span><span class="summary-card__value" style="color:var(--danger);">02</span></div>
+</div>
+
+<div class="notif__sidebar-card">
+<h6 class="notif__sidebar-title">Catégories</h6>
+<ul class="category-list">
+<li><span><i class="bi bi-receipt" style="color:var(--primary);"></i> Paiements</span><strong>12</strong></li>
+<li><span><i class="bi bi-file-earmark-text" style="color:var(--info);"></i> Factures</span><strong>08</strong></li>
+<li><span><i class="bi bi-box-seam" style="color:var(--warning);"></i> Stock</span><strong>04</strong></li>
+<li><span><i class="bi bi-crown" style="color:var(--primary);"></i> Abonnement</span><strong>02</strong></li>
+</ul>
+</div>
+
+<div class="notif__alert-box">
+<h5><i class="bi bi-gear"></i> Paramètres d'alerte</h5>
+<p>Configurez vos préférences pour recevoir les notifications par email ou mobile.</p>
+<button>Personnaliser mes alertes</button>
+</div>
+
+<div class="notif__calendar">
+<div class="notif__calendar-icon"><i class="bi bi-calendar"></i></div>
+<div>
+<div style="font-weight:600;font-size:.9rem;">Calendrier d'activités</div>
+<div style="font-size:.8rem;color:var(--gray-500);">Voir l'historique chronologique</div>
+</div>
+</div>
+</div>
+</div>
+
+</main>
+
+<footer style="padding:16px 24px;border-top:1px solid var(--gray-200);background:#fff;">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size:.8rem;color:var(--gray-500);">
+<div>© 2026 FacTo. Tous droits réservés.</div>
+<div class="d-flex gap-3"><a href="support.html" style="color:var(--gray-500);">Support technique</a><a href="#" style="color:var(--gray-500);">Centre d'aide</a><a href="#" style="color:var(--gray-500);">État du système</a></div>
+</div>
+</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/auth.js"></script>
+<script src="scripts/notifications.js"></script>
+</body>
+</html>

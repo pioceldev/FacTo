@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="images/logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réinitialiser le mot de passe - FacTo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/global.css">
+<link rel="stylesheet" href="styles/auth.css">
+<link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body class="auth-page">
+
+<nav class="auth-page__nav">
+<a href="index.html" class="auth-page__nav-logo">
+<img src="images/logo.png" alt="FacTo" class="logo">
+FacTo
+</a>
+<div class="d-flex align-items-center gap-3">
+<a href="connexion.html" class="btn btn-link text-dark text-decoration-none fw-medium">Log in</a>
+<a href="inscription.html" class="btn btn-primary">Get started</a>
+</div>
+</nav>
+
+<div style="padding:40px 24px;">
+<div style="max-width:120px;margin:0 auto 24px;">
+<a href="connexion.html" class="d-flex align-items-center gap-2 text-muted" style="font-size:.9rem;"><i class="bi bi-arrow-left"></i> Retour à la connexion</a>
+</div>
+
+<div class="forgot-card">
+<h2 class="forgot-card__title">Nouveau mot de passe</h2>
+<p class="forgot-card__desc">Choisissez un nouveau mot de passe pour votre compte FacTo.</p>
+
+<form class="auth-form" action="backend/auth.php?action=reset_password" method="POST" novalidate>
+<div class="auth-form__alert" id="authAlert" role="alert" aria-live="polite"></div>
+<input type="hidden" name="token" id="resetTokenInput" value="">
+<div class="auth-form__group" style="text-align:left;">
+<label class="auth-form__label">Nouveau mot de passe</label>
+<div class="auth-form__input-wrap">
+<i class="bi bi-lock"></i>
+<input type="password" name="password" class="auth-form__input" placeholder="••••••••" required>
+</div>
+<p class="form-hint" style="font-size:.8rem;color:var(--gray-500);">Min. 8 caractères avec au moins un chiffre.</p>
+</div>
+<button type="submit" class="btn btn-primary" style="width:100%;padding:12px;font-weight:600;">Réinitialiser le mot de passe</button>
+</form>
+
+<div class="forgot-card__hint">Le lien de réinitialisation est valable 2 heures et ne peut être utilisé qu'une seule fois.</div>
+</div>
+
+<p class="text-center mt-4" style="font-size:.85rem;color:var(--gray-500);">Besoin d'aide ? <a href="support.html" style="color:var(--primary);font-weight:500;">Contactez l'assistance FacTo</a></p>
+</div>
+
+<footer class="landing-footer" style="margin-top:0;">
+<div class="section-container">
+<div class="row">
+<div class="col-lg-4">
+<div class="footer__brand">
+<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"><span class="fw-bold fs-5">FacTo</span></div>
+<p>FacTo is a professional billing and business management platform designed for SMEs to streamline operations effortlessly.</p>
+<div class="footer__socials"><a href="#"><i class="bi bi-twitter"></i></a><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-instagram"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-github"></i></a></div>
+</div>
+</div>
+<div class="col-lg-2 col-6"><div class="footer__title">Product</div><ul class="footer__links"><li><a href="#">Features</a></li><li><a href="#">Pricing</a></li><li><a href="#">Integrations</a></li><li><a href="#">Roadmap</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Company</div><ul class="footer__links"><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Legal</div><ul class="footer__links"><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Cookie Policy</a></li><li><a href="#">Security</a></li></ul></div>
+</div>
+<div class="footer__bottom">
+<div>© 2026 FacTo Technologies. All rights reserved.</div>
+<div class="d-flex gap-3"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Sitemap</a></div>
+</div>
+</div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const token = new URLSearchParams(window.location.search).get('token');
+  const input = document.getElementById('resetTokenInput');
+  const alertBox = document.getElementById('authAlert');
+  if (input) input.value = token || '';
+  if (!token) {
+    const submitBtn = document.querySelector('form.auth-form button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    if (alertBox) {
+      alertBox.textContent = 'Lien de réinitialisation manquant ou invalide.';
+      alertBox.className = 'auth-form__alert auth-form__alert--error';
+    }
+  }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="scripts/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+﻿.invoice-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.invoice-status.brouillon { background: var(--gray-200); color: var(--gray-700); }
+.invoice-status.envoyé { background: var(--info-light); color: #1d4ed8; }
+.invoice-status.payée { background: var(--success-light); color: #047857; }
+.invoice-status.refusée { background: var(--danger-light); color: #b91c1c; }
+.invoice-status.annulée { background: var(--warning-light); color: #b45309; }

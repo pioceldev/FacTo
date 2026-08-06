@@ -1,0 +1,10 @@
+﻿.expense-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}

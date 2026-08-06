@@ -1,0 +1,26 @@
+﻿/* ============================================
+   CLIENTS PAGE
+   ============================================ */
+.client-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, var(--primary-light), #fed7aa);
+  color: var(--primary-dark);
+  flex-shrink: 0;
+}
+.client-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: box-shadow var(--transition);
+}
+.client-card:hover {
+  box-shadow: var(--shadow-md);
+}
+

@@ -1,0 +1,12 @@
+﻿.quote-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.quote-status.brouillon { background: var(--gray-200); color: var(--gray-700); }
+.quote-status.envoyé { background: var(--info-light); color: #1d4ed8; }
+.quote-status.accepté { background: var(--success-light); color: #047857; }
+.quote-status.refusé { background: var(--danger-light); color: #b91c1c; }

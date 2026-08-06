@@ -1,0 +1,70 @@
+name: FacTo CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_mysql
+      - name: PHP Syntax Check
+        run: |
+          find backend/ -name "*.php" -exec php -l {} \;
+      - name: PHP CS Fixer
+        uses: docker://phpcs/phpcs:latest
+        with:
+          args: --standard=PSR12 backend/
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.2
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: facto
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_mysql
+      - name: Install dependencies
+        run: composer install --no-interaction
+      - name: Copy config
+        run: cp backend/config.example.php backend/config.php
+      - name: Run tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_NAME: facto
+          DB_USER: root
+          DB_PASS: root
+        run: php vendor/bin/phpunit tests/
+
+  deploy:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to production
+        run: |
+          echo "Deploying FacTo to production..."
+          ssh user@server "cd /var/www/facto && git pull && composer install --optimize-autoloader --no-dev && php artisan migrate --force"

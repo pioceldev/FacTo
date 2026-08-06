@@ -1,0 +1,11 @@
+﻿.payment-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
