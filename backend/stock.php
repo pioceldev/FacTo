@@ -54,10 +54,21 @@ try {
             $stmt->execute($params);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Statistiques globales (indépendantes de la pagination)
+            $statsParams = $params;
+            unset($statsParams[':limit'], $statsParams[':offset']);
+            $statsStmt = $pdo->prepare("SELECT COUNT(*) AS total_products,
+                COALESCE(SUM(CASE WHEN s.quantity <= s.reorder_level AND s.reorder_level > 0 THEN 1 ELSE 0 END), 0) AS low_stock,
+                COALESCE(SUM(s.quantity * p.unit_price), 0) AS total_value
+                FROM stock s JOIN products p ON s.product_id = p.id $where");
+            $statsStmt->execute($statsParams);
+            $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
             echo json_encode([
                 'success' => true,
                 'stock' => $items,
                 'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => $pages],
+                'stats' => $stats,
             ]);
             break;
 

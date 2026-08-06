@@ -102,7 +102,7 @@ function updateTopbarNotificationBadge() {
   const badgeEls = document.querySelectorAll('.topbar__badge');
   const unreadCount = notificationState.notifications.filter(notification => !notification.is_read).length;
   badgeEls.forEach((badgeEl) => {
-    badgeEl.textContent = unreadCount ? unreadCount : '';
+    badgeEl.textContent = unreadCount ? (unreadCount > 9 ? '9+' : unreadCount) : '';
   });
 }
 

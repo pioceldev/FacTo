@@ -49,10 +49,21 @@ try {
             $stmt->execute($params);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Statistiques globales (indépendantes de la pagination)
+            $statsParams = $params;
+            unset($statsParams[':limit'], $statsParams[':offset']);
+            $statsStmt = $pdo->prepare("SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total FROM expenses $where");
+            $statsStmt->execute($statsParams);
+            $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+            $monthStmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) AS month_total FROM expenses $where AND expense_date >= :monthStart");
+            $monthStmt->execute($statsParams + [':monthStart' => date('Y-m-01')]);
+            $stats['month_total'] = (float) $monthStmt->fetchColumn();
+
             echo json_encode([
                 'success' => true,
                 'expenses' => $items,
                 'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => $pages],
+                'stats' => $stats,
             ]);
             break;
 

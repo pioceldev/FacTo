@@ -89,8 +89,10 @@ function renderStats() {
     { label: 'Clients sans facture', value: String(without), icon: 'bi-person-circle', color: 'var(--gray-400)', change: 'a relancer' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((card, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${card.label}</div>

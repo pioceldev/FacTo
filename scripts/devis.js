@@ -8,6 +8,7 @@ const quoteState = {
   clients: [],
   products: [],
   quoteItems: [],
+  stats: null,
 };
 
 async function api(path, options = {}) {
@@ -60,6 +61,7 @@ async function refreshQuotes() {
     const data = await api('list&' + params.toString());
     quoteState.quotes = data.quotes || [];
     quoteState.pagination = data.pagination || quoteState.pagination;
+    quoteState.stats = data.stats || null;
   } catch (error) {
     toast(error.message, 'error');
     return;
@@ -98,9 +100,21 @@ function renderStats() {
   const container = document.getElementById('quoteStatsCards');
   if (!container) return;
   const quotes = quoteState.quotes;
-  const pending = quotes.filter(q => q.status === 'brouillon' || q.status === 'envoyé').length;
-  const accepted = quotes.filter(q => q.status === 'accepté').length;
-  const total = quotes.reduce((sum, q) => sum + Number(q.total || 0), 0);
+  const stats = quoteState.stats;
+
+  // Les statuts peuvent être stockés avec ou sans accents ('envoye' ou 'envoyé')
+  const normalize = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  let pending, accepted, total;
+  if (stats) {
+    pending = Number(stats.pending) || 0;
+    accepted = Number(stats.accepted) || 0;
+    total = Number(stats.total) || 0;
+  } else {
+    pending = quotes.filter(q => ['brouillon', 'envoye'].includes(normalize(q.status))).length;
+    accepted = quotes.filter(q => normalize(q.status) === 'accepte').length;
+    total = quotes.reduce((sum, q) => sum + Number(q.total || 0), 0);
+  }
 
   const cards = [
     { label: 'Devis en attente', value: String(pending), change: 'brouillons & envoyés', variant: 'up', icon: 'bi-file-text', gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
@@ -108,8 +122,10 @@ function renderStats() {
     { label: 'Montant total', value: formatCurrency(total), change: 'tous les devis', variant: 'up', icon: 'bi-currency-euro', gradient: 'linear-gradient(135deg, #f97316, #fb923c)' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((stat, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${stat.label}</div>

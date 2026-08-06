@@ -82,7 +82,8 @@
 /* Stats Grid */
 .dashboard__stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* auto-fit : s'adapte au nombre de cartes (3, 4, 5...) sans colonne vide */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }

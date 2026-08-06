@@ -86,4 +86,13 @@
     }
     container.innerHTML = html;
   };
+
+  /* Renvoie la classe d'animation d'entrée uniquement au premier rendu du conteneur
+     (pour ne pas rejouer l'animation à chaque filtre/refresh) */
+  window.onceAnimated = function (container) {
+    if (!container) return '';
+    const animate = container.dataset.rendered ? '' : ' animate-in';
+    container.dataset.rendered = '1';
+    return animate;
+  };
 })();

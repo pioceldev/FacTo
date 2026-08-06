@@ -29,8 +29,10 @@
 }
 
 /* ---------- Entrée des cartes ---------- */
+/* fill-mode backwards : après l'animation, les styles naturels reprennent
+   (permet aux effets :hover comme .stat-card:hover de fonctionner) */
 .animate-in {
-  animation: facto-fade-in-up .45s ease both;
+  animation: facto-fade-in-up .45s ease backwards;
 }
 .animate-pop {
   animation: facto-pop .35s ease both;

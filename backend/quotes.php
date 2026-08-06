@@ -53,10 +53,22 @@ try {
             $stmt->execute($params);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Statistiques globales (indépendantes de la pagination)
+            $statsParams = $params;
+            unset($statsParams[':limit'], $statsParams[':offset']);
+            $statsStmt = $pdo->prepare("SELECT COUNT(*) AS count,
+                COALESCE(SUM(q.total), 0) AS total,
+                COALESCE(SUM(CASE WHEN LOWER(q.status) IN ('brouillon', 'envoye', 'envoyé') THEN 1 ELSE 0 END), 0) AS pending,
+                COALESCE(SUM(CASE WHEN LOWER(q.status) IN ('accepte', 'accepté') THEN 1 ELSE 0 END), 0) AS accepted
+                FROM quotes q LEFT JOIN clients c ON q.client_id = c.id $where");
+            $statsStmt->execute($statsParams);
+            $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
             echo json_encode([
                 'success' => true,
                 'quotes' => $items,
                 'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => $pages],
+                'stats' => $stats,
             ]);
             break;
 

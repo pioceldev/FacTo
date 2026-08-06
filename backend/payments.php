@@ -53,10 +53,21 @@ try {
             $stmt->execute($params);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Statistiques globales (indépendantes de la pagination)
+            $statsParams = $params;
+            unset($statsParams[':limit'], $statsParams[':offset']);
+            $statsStmt = $pdo->prepare("SELECT COUNT(*) AS count,
+                COALESCE(SUM(CASE WHEN p.status = 'paid' THEN p.amount ELSE 0 END), 0) AS total_received,
+                COALESCE(SUM(CASE WHEN p.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_count
+                FROM payments p LEFT JOIN invoices i ON p.invoice_id = i.id LEFT JOIN clients c ON i.client_id = c.id $where");
+            $statsStmt->execute($statsParams);
+            $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
             echo json_encode([
                 'success' => true,
                 'payments' => $items,
                 'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => $pages],
+                'stats' => $stats,
             ]);
             break;
 

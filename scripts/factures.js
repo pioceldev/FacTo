@@ -135,8 +135,10 @@ function renderStats() {
     { label: 'Total factures', value: String(totalEmitted), icon: 'bi-receipt', color: 'var(--primary)' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((card, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${card.label}</div>

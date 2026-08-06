@@ -6,6 +6,7 @@ const expenseState = {
   filters: { q: '', category: '', period: '', page: 1 },
   editingId: null,
   categories: [],
+  stats: null,
 };
 
 async function api(path, options = {}) {
@@ -58,6 +59,7 @@ async function refreshExpenses() {
     const data = await api('list&' + params.toString());
     expenseState.expenses = data.expenses || [];
     expenseState.pagination = data.pagination || expenseState.pagination;
+    expenseState.stats = data.stats || null;
   } catch (error) {
     toast(error.message, 'error');
     return;
@@ -85,11 +87,12 @@ function renderStats() {
   const container = document.getElementById('expenseStatsCards');
   if (!container) return;
   const expenses = expenseState.expenses;
-  const total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const stats = expenseState.stats || {};
+  const total = stats.total != null ? Number(stats.total) : expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  const monthExpenses = expenses.filter(e => e.expense_date >= monthStart).reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  const count = expenseState.pagination.total || expenses.length;
+  const monthExpenses = stats.month_total != null ? Number(stats.month_total) : expenses.filter(e => e.expense_date >= monthStart).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const count = stats.count != null ? Number(stats.count) : (expenseState.pagination.total || expenses.length);
 
   const cards = [
     { label: 'Total des dépenses', value: formatCurrency(total), change: 'toutes périodes', variant: 'up', icon: 'bi-wallet2', gradient: 'linear-gradient(135deg, #f97316, #fb923c)' },
@@ -97,8 +100,10 @@ function renderStats() {
     { label: 'Dépenses enregistrées', value: String(count), change: 'au total', variant: 'up', icon: 'bi-receipt-cutoff', gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((stat, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${stat.label}</div>

@@ -6,6 +6,7 @@ const paymentState = {
   filters: { q: '', method: '', status: '', page: 1 },
   editingId: null,
   invoices: [],
+  stats: null,
 };
 
 async function api(path, options = {}) {
@@ -58,6 +59,7 @@ async function refreshPayments() {
     const data = await api('list&' + params.toString());
     paymentState.payments = data.payments || [];
     paymentState.pagination = data.pagination || paymentState.pagination;
+    paymentState.stats = data.stats || null;
   } catch (error) {
     toast(error.message, 'error');
     return;
@@ -87,9 +89,10 @@ function renderStats() {
   const container = document.getElementById('paymentStatsCards');
   if (!container) return;
   const payments = paymentState.payments;
-  const totalReceived = payments.reduce((sum, p) => sum + (p.status === 'paid' ? Number(p.amount) : 0), 0);
-  const pendingCount = payments.filter(p => p.status === 'pending').length;
-  const count = paymentState.pagination.total || payments.length;
+  const stats = paymentState.stats || {};
+  const totalReceived = stats.total_received != null ? Number(stats.total_received) : payments.reduce((sum, p) => sum + (p.status === 'paid' ? Number(p.amount) : 0), 0);
+  const pendingCount = stats.pending_count != null ? Number(stats.pending_count) : payments.filter(p => p.status === 'pending').length;
+  const count = stats.count != null ? Number(stats.count) : (paymentState.pagination.total || payments.length);
 
   const cards = [
     { label: 'Total encaissé', value: formatCurrency(totalReceived), change: 'paiements payés', variant: 'up', icon: 'bi-credit-card', gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
@@ -97,8 +100,10 @@ function renderStats() {
     { label: 'Paiements enregistrés', value: String(count), change: 'au total', variant: 'up', icon: 'bi-receipt', gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((stat, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${stat.label}</div>

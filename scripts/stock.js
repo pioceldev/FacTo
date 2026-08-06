@@ -6,6 +6,7 @@ const stockState = {
   filters: { q: '', category: '', alert: '', page: 1 },
   editingId: null,
   products: [],
+  stats: null,
 };
 
 async function api(path, options = {}) {
@@ -58,6 +59,7 @@ async function refreshStock() {
     const data = await api('list&' + params.toString());
     stockState.items = data.stock || [];
     stockState.pagination = data.pagination || stockState.pagination;
+    stockState.stats = data.stats || null;
   } catch (error) {
     toast(error.message, 'error');
     return;
@@ -87,9 +89,10 @@ function renderStats() {
   const container = document.getElementById('stockStatsCards');
   if (!container) return;
   const items = stockState.items;
-  const totalProducts = stockState.pagination.total || items.length;
-  const lowStock = items.filter(i => i.quantity <= i.reorder_level && i.reorder_level > 0).length;
-  const totalValue = items.reduce((sum, i) => sum + (Number(i.quantity) * Number(i.unit_price || 0)), 0);
+  const stats = stockState.stats || {};
+  const totalProducts = stats.total_products != null ? Number(stats.total_products) : (stockState.pagination.total || items.length);
+  const lowStock = stats.low_stock != null ? Number(stats.low_stock) : items.filter(i => i.quantity <= i.reorder_level && i.reorder_level > 0).length;
+  const totalValue = stats.total_value != null ? Number(stats.total_value) : items.reduce((sum, i) => sum + (Number(i.quantity) * Number(i.unit_price || 0)), 0);
 
   const cards = [
     { label: 'Produits en stock', value: String(totalProducts), change: 'références', variant: 'up', icon: 'bi-box-seam', gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
@@ -97,8 +100,10 @@ function renderStats() {
     { label: 'Valeur du stock', value: formatCurrency(totalValue), change: 'au prix unitaire', variant: 'up', icon: 'bi-cash-stack', gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((stat, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${stat.label}</div>

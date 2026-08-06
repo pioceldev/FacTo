@@ -79,8 +79,10 @@ function renderStats() {
     { label: 'Valeur catalogue', value: formatCurrency(s.total_value), icon: 'bi-currency-dollar', color: 'var(--primary)', change: 'prix unitaire cumule' },
   ];
 
+  const animate = onceAnimated(container);
+
   container.innerHTML = cards.map((card, i) => `
-    <div class="stat-card animate-in" style="animation-delay: ${i * 0.08}s">
+    <div class="stat-card${animate}" style="animation-delay: ${i * 0.08}s">
       <div class="d-flex justify-content-between align-items-start">
         <div>
           <div class="stat-card__label">${card.label}</div>
