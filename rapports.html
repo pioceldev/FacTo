@@ -24,7 +24,7 @@
 
 <aside class="sidebar" id="sidebar">
   <a href="dashboard.html" class="sidebar__logo">
-    <img src="images/logo.png" alt="FacTo" class="logo"> FacTo
+    <img src="images/logo.png" alt="FacTo" class="logo">
   </a>
   <nav class="sidebar__nav">
     <a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
@@ -82,6 +82,9 @@
         <h1 class="page-header__title">Rapports</h1>
         <p class="page-header__subtitle">Visualisez les performances de votre entreprise.</p>
       </div>
+      <div class="page-header__actions">
+        <button type="button" class="btn btn-outline-secondary" id="btnExportReports"><i class="bi bi-download"></i> Exporter CSV</button>
+      </div>
     </div>
 
     <div class="dashboard__stats" id="reportsStatsCards">
@@ -104,15 +107,24 @@
       <div class="dashboard__card">
         <div class="dashboard__card-header">
           <div>
+            <div class="dashboard__card-title">Dépenses mensuelles</div>
+            <div class="dashboard__card-subtitle">Évolution sur les 12 derniers mois</div>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="chartMonthlyExpenses"></canvas></div>
+      </div>
+    </div>
+
+    <div class="dashboard__grid mb-4">
+      <div class="dashboard__card">
+        <div class="dashboard__card-header">
+          <div>
             <div class="dashboard__card-title">Dépenses par catégorie</div>
             <div class="dashboard__card-subtitle">Répartition mensuelle</div>
           </div>
         </div>
         <div class="chart-container"><canvas id="chartExpenseCategory"></canvas></div>
       </div>
-    </div>
-
-    <div class="dashboard__grid-2">
       <div class="dashboard__card">
         <div class="dashboard__card-header">
           <div>
@@ -122,14 +134,17 @@
         </div>
         <div class="chart-container"><canvas id="chartInvoiceStatus"></canvas></div>
       </div>
-      <div class="dashboard__card">
+    </div>
+
+    <div class="dashboard__grid mb-4">
+      <div class="dashboard__card" style="grid-column:1/-1;">
         <div class="dashboard__card-header">
           <div>
             <div class="dashboard__card-title">Méthodes de paiement</div>
             <div class="dashboard__card-subtitle">Préférences clients</div>
           </div>
         </div>
-        <div class="chart-container"><canvas id="chartPaymentMethods"></canvas></div>
+        <div class="chart-container" style="max-width:640px;margin:0 auto;"><canvas id="chartPaymentMethods"></canvas></div>
       </div>
     </div>
 

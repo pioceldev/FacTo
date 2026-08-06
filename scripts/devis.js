@@ -9,6 +9,7 @@ const quoteState = {
   products: [],
   quoteItems: [],
   stats: null,
+  issuer: null,
 };
 
 async function api(path, options = {}) {
@@ -116,6 +117,158 @@ async function loadProducts() {
   }
 }
 
+/* ============ DOCUMENT DEVIS (format « modèle » violet, partagé impression/aperçu) ============ */
+async function loadIssuer() {
+  try {
+    const res = await fetch('backend/profile.php?action=get', { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    quoteState.issuer = data.user || null;
+  } catch (e) { /* silencieux */ }
+}
+
+function quoteDocHTML(quote) {
+  const u = quoteState.issuer || {};
+  const company = (u.company || u.name || 'FacTo');
+  const initial = (company.trim().charAt(0) || 'F').toUpperCase();
+  const logo = u.logo_path
+    ? `<img src="${esc(u.logo_path)}" alt="Logo">`
+    : `<span>${esc(initial)}</span>`;
+
+  const office = [
+    `<p><strong>${esc(company)}</strong></p>`,
+    u.phone ? `<p>${esc(u.phone)}</p>` : '',
+    u.email ? `<p>${esc(u.email)}</p>` : '',
+  ].join('');
+
+  const clientBlock = [
+    quote.client_name ? `<p><strong>${esc(quote.client_name)}</strong></p>` : '',
+    quote.client_email ? `<p>${esc(quote.client_email)}</p>` : '',
+    quote.client_phone ? `<p>${esc(quote.client_phone)}</p>` : '',
+    quote.client_address ? `<p>${esc(quote.client_address)}</p>` : '',
+  ].join('') || '<p>—</p>';
+
+  const rows = (quote.items || []).map(item => `
+    <tr>
+      <td>${esc(item.description || '—')}</td>
+      <td>${formatCurrency(item.unit_price)}</td>
+      <td>${esc(item.quantity)}</td>
+      <td>${esc(item.vat_rate)} %</td>
+      <td>${formatCurrency(item.line_total)}</td>
+    </tr>`).join('')
+    || '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:14px;">Aucune ligne</td></tr>';
+
+  const sum = {
+    amount: Number(quote.amount) || 0,
+    vat: Number(quote.vat) || 0,
+    total: Number(quote.total) || 0,
+  };
+
+  const statusLabelMap = {
+    brouillon: 'Brouillon',
+    envoye: 'Envoyé',
+    envoyé: 'Envoyé',
+    accepte: 'Accepté',
+    accepté: 'Accepté',
+    refuse: 'Refusé',
+    refusé: 'Refusé',
+  };
+  const statusText = statusLabelMap[String(quote.status || '').toLowerCase()] || esc(String(quote.status || '—'));
+
+  const sign = `
+    <div class="inv-doc__sign">
+      ${u.signature ? `<img src="${esc(u.signature)}" alt="Signature de ${esc(u.name || company)}">` : ''}
+      <div class="inv-doc__sign-name">${esc(u.name || company)}</div>
+      <div class="inv-doc__sign-role">${u.signature ? 'Signature' : 'Non signé'}</div>
+    </div>`;
+
+  return `
+    <div class="inv-doc">
+      <div class="inv-doc__header">
+        <div class="inv-doc__brand">
+          <div class="inv-doc__logo">${logo}</div>
+          <div>
+            <div class="inv-doc__company">${esc(company)}</div>
+            <div class="inv-doc__slogan">${esc(u.email || 'Facturation simplifiée')}</div>
+          </div>
+        </div>
+        <div>
+          <div class="inv-doc__doclabel">DEVIS</div>
+          <div class="inv-doc__meta">
+            <div>N° <strong>${esc(quote.ref || '—')}</strong></div>
+            <div>${formatDate(quote.created_at)}</div>
+            <div>Valide jusqu'au ${formatDate(quote.valid_until)}</div>
+            <div>Statut : ${esc(statusText)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-doc__addresses">
+        <div>
+          <div class="inv-doc__block-title">Adresse / Émetteur</div>
+          ${office}
+        </div>
+        <div>
+          <div class="inv-doc__block-title">Devis pour</div>
+          ${clientBlock}
+        </div>
+      </div>
+
+      <table class="inv-doc__table">
+        <thead>
+          <tr><th>Désignation</th><th>P.U. HT</th><th>Qté</th><th>TVA</th><th>Total HT</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="inv-doc__sum">
+        <div class="inv-doc__note">
+          <div class="inv-doc__block-title">Note</div>
+          <p>${esc(quote.notes || 'Merci de votre confiance. Ce devis est valable jusqu\'à la date de validité indiquée.')}</p>
+        </div>
+        <div class="inv-doc__totals">
+          <div><span>Sous-total HT</span><span>${formatCurrency(sum.amount)}</span></div>
+          <div><span>TVA</span><span>${formatCurrency(sum.vat)}</span></div>
+          <div class="inv-grand"><span>Total TTC</span><span>${formatCurrency(sum.total)}</span></div>
+        </div>
+      </div>
+
+      ${sign}
+
+      <div class="inv-doc__thanks">Merci pour votre confiance</div>
+
+      <div class="inv-doc__footer">
+        <div>
+          <b>Questions ?</b>
+          <p>${esc(u.email || '—')}</p>
+          <p>${esc(u.phone || '—')}</p>
+        </div>
+        <div>
+          <b>Devis</b>
+          <p>Réf. ${esc(quote.ref || '—')}</p>
+          <p>Validité : ${formatDate(quote.valid_until)}</p>
+        </div>
+        <div>
+          <b>Conditions</b>
+          <p>${esc(quote.notes || 'Merci de valider ce devis avant la date de validité indiquée.')}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function printQuote(quoteId) {
+  try {
+    if (!quoteState.issuer) await loadIssuer();
+    const data = await api('get&id=' + quoteId);
+    const quote = data.quote;
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = quoteDocHTML(quote);
+    setTimeout(() => window.print(), 60);
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
 /* Normalisation des statuts (avec ou sans accents) */
 function normalizeStatus(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -165,6 +318,7 @@ function renderTable() {
       <td>${statusBadge(quote.status)}</td>
       <td>
         <div class="invoice-table-actions" style="justify-content:flex-end;">
+          <button type="button" title="Imprimer" data-print="${quote.id}"><i class="bi bi-printer"></i></button>
           <button type="button" title="Modifier" data-edit="${quote.id}"><i class="bi bi-pencil"></i></button>
           <button type="button" title="Supprimer" class="is-danger" data-del="${quote.id}"><i class="bi bi-trash"></i></button>
         </div>
@@ -446,11 +600,26 @@ function attachEvents() {
   }
 
   document.getElementById('quotesTableBody').addEventListener('click', event => {
+    const printBtn = event.target.closest('[data-print]');
     const editBtn = event.target.closest('[data-edit]');
     const delBtn = event.target.closest('[data-del]');
-    if (editBtn) openEditQuote(editBtn.getAttribute('data-edit'));
+    if (printBtn) printQuote(printBtn.getAttribute('data-print'));
+    else if (editBtn) openEditQuote(editBtn.getAttribute('data-edit'));
     else if (delBtn) deleteQuote(delBtn.getAttribute('data-del'));
   });
+
+  // Bouton d'en-tête : imprime le premier devis de la liste
+  const headerPrintBtn = document.getElementById('btnPrintQuote');
+  if (headerPrintBtn) {
+    headerPrintBtn.addEventListener('click', () => {
+      const first = quoteState.quotes[0];
+      if (!first) {
+        toast('Aucun devis à imprimer.', 'info');
+        return;
+      }
+      printQuote(first.id);
+    });
+  }
 
   document.getElementById('quotePagination').addEventListener('click', event => {
     const btn = event.target.closest('[data-page]');
@@ -546,5 +715,6 @@ document.addEventListener('DOMContentLoaded', () => {
   attachEvents();
   loadClients().catch(() => {});
   loadProducts().catch(() => {});
+  loadIssuer().catch(() => {});
   refreshQuotes().catch(error => toast(error.message, 'error'));
 });

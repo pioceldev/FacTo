@@ -19,7 +19,6 @@
 <nav class="landing-nav">
 <div class="d-flex align-items-center gap-2">
 <img src="images/logo.png" alt="FacTo" class="logo">
-<span class="fw-bold fs-5">FacTo</span>
 </div>
 <div class="landing-nav__links d-none d-lg-flex">
 <a href="#features" class="landing-nav__link">Fonctionnalités</a>
@@ -27,8 +26,33 @@
 <a href="#faq" class="landing-nav__link">FAQ</a>
 </div>
 <div class="landing-nav__actions">
-<a href="connexion.html" class="btn btn-link text-dark text-decoration-none fw-medium">Connexion</a>
-<a href="inscription.html" class="btn btn-primary">Commencer</a>
+  <!-- Liens visibles uniquement quand l'utilisateur n'est PAS connecté -->
+  <div id="guestActions" style="display:flex;align-items:center;gap:8px;">
+    <a href="connexion.html" class="btn btn-link text-dark text-decoration-none fw-medium">Connexion</a>
+    <a href="inscription.html" class="btn btn-primary">Commencer</a>
+  </div>
+  <!-- Zone utilisateur : affichée quand quelqu'un est connecté -->
+  <div id="userArea" class="d-none" style="position:relative;">
+    <div class="dropdown">
+      <button class="btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border:none;background:transparent;padding:6px 10px;border-radius:999px;">
+        <span class="landing-nav__avatar" id="userAvatar">U</span>
+        <span class="d-none d-md-inline fw-semibold text-dark" style="font-size:.88rem;" id="userName">Utilisateur</span>
+        <i class="bi bi-chevron-down text-muted" style="font-size:.65rem;"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenuBtn" style="border-radius:14px;border:1px solid var(--gray-200);padding:6px;">
+        <li class="px-3 py-2">
+          <div class="fw-bold" style="font-size:.85rem;" id="userMenuName">Utilisateur</div>
+          <div class="text-muted" style="font-size:.75rem;" id="userMenuEmail"></div>
+        </li>
+        <li><hr class="dropdown-divider" style="margin:4px 0;"></li>
+        <li><a class="dropdown-item py-2" href="dashboard.html" style="border-radius:8px;"><i class="bi bi-grid me-2"></i>Tableau de bord</a></li>
+        <li><a class="dropdown-item py-2" href="profile.html" style="border-radius:8px;"><i class="bi bi-person me-2"></i>Mon profil</a></li>
+        <li id="adminLinkItem" class="d-none"><a class="dropdown-item py-2" href="administration.html" style="border-radius:8px;"><i class="bi bi-shield-lock me-2"></i>Administration</a></li>
+        <li><hr class="dropdown-divider" style="margin:4px 0;"></li>
+        <li><a class="dropdown-item py-2 text-danger" href="#" id="logoutBtn" style="border-radius:8px;"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+      </ul>
+    </div>
+  </div>
 </div>
 </nav>
 
@@ -317,7 +341,7 @@
 <div class="row">
 <div class="col-lg-4">
 <div class="footer__brand">
-<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"><span class="fw-bold fs-5">FacTo</span></div>
+<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"></div>
 <p>FacTo est une plateforme de facturation et de gestion d'entreprise conçue pour simplifier le quotidien des TPE et PME.</p>
 <div class="footer__socials"><a href="#"><i class="bi bi-twitter"></i></a><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-instagram"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-github"></i></a></div>
 </div>
@@ -343,6 +367,52 @@ document.querySelectorAll('.faq-item__question').forEach(q => {
     if (!wasOpen) item.classList.add('is-open');
   });
 });
+
+/* ---- Navbar dynamique : utilisateur connecté ou liens d'inscription ---- */
+(function () {
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const guestActions = document.getElementById('guestActions');
+  const userArea = document.getElementById('userArea');
+  if (!guestActions || !userArea) return;
+
+  fetch('backend/session.php', { credentials: 'same-origin' })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.logged_in || !data.user) return; // visiteur : on garde les liens statiques
+
+      const user = data.user;
+      const firstName = String(user.name || '').split(' ')[0] || 'Utilisateur';
+      const initial = firstName.charAt(0).toUpperCase() || 'U';
+
+      // Basculer l'affichage
+      guestActions.style.display = 'none';
+      userArea.classList.remove('d-none');
+
+      // Remplir les infos
+      document.getElementById('userAvatar').textContent = initial;
+      document.getElementById('userName').textContent = firstName;
+      document.getElementById('userMenuName').textContent = user.name || 'Utilisateur';
+      document.getElementById('userMenuEmail').textContent = user.email || '';
+
+      // Lien admin visible uniquement pour les administrateurs
+      if (String(user.role || '').toLowerCase() === 'admin') {
+        document.getElementById('adminLinkItem').classList.remove('d-none');
+      }
+
+      // Déconnexion
+      document.getElementById('logoutBtn').addEventListener('click', async (event) => {
+        event.preventDefault();
+        try {
+          await fetch('backend/auth.php?action=logout', { method: 'POST', credentials: 'same-origin' });
+        } catch (e) { /* on redirige quand même */ }
+        window.location.href = 'index.html';
+      });
+    })
+    .catch(() => { /* session indisponible : on laisse les liens statiques */ });
+})();
 </script>
 </body>
 </html>

@@ -90,14 +90,64 @@ async function refreshExpenses() {
   renderSearchClear();
 }
 
-async function loadCategories() {
+/* Valeur sentinelle de l'option « Nouvelle catégorie… » (improbable comme nom de catégorie) */
+const NEW_CATEGORY_VALUE = '__facto_new_category__';
+
+/* Remplit le menu déroulant du formulaire avec les catégories existantes
+   + une option « Nouvelle catégorie… » qui affiche un champ libre. */
+function populateCategorySelect(selected) {
+  const select = document.getElementById('expenseCategory');
+  if (!select) return;
+  const newWrap = document.getElementById('expenseNewCategoryWrap');
+  const newInput = document.getElementById('expenseNewCategory');
+
+  select.innerHTML = '<option value="">— Choisir une catégorie —</option>' +
+    expenseState.categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('') +
+    `<option value="${NEW_CATEGORY_VALUE}">➕ Nouvelle catégorie…</option>`;
+
+  if (selected && selected !== NEW_CATEGORY_VALUE) {
+    const exists = expenseState.categories.some(c => String(c) === String(selected));
+    if (exists) {
+      select.value = selected;
+    } else {
+      // Catégorie historique absente de la liste : on la pré-remplit dans le champ libre
+      select.value = NEW_CATEGORY_VALUE;
+      if (newInput) newInput.value = selected;
+    }
+  }
+
+  // L'état du champ libre est toujours dérivé de la sélection courante
+  if (newWrap) newWrap.style.display = select.value === NEW_CATEGORY_VALUE ? 'block' : 'none';
+}
+
+/* Retourne la catégorie choisie : celle du menu, ou la saisie libre si « Nouvelle catégorie… » */
+function getSelectedCategory() {
+  const select = document.getElementById('expenseCategory');
+  if (select && select.value === NEW_CATEGORY_VALUE) {
+    const newInput = document.getElementById('expenseNewCategory');
+    return (newInput ? newInput.value : '').trim();
+  }
+  return select ? select.value.trim() : '';
+}
+
+async function loadCategories(selected) {
   try {
     const data = await api('categories');
     expenseState.categories = data.categories || [];
-    const select = document.getElementById('expenseCategoryFilter');
-    if (!select) return;
-    select.innerHTML = '<option value="">Toutes</option>' +
-      expenseState.categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+    const filterSelect = document.getElementById('expenseCategoryFilter');
+    if (filterSelect) {
+      const current = filterSelect.value;
+      filterSelect.innerHTML = '<option value="">Toutes</option>' +
+        expenseState.categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      filterSelect.value = current;
+    }
+
+    // Menu du formulaire : sélection explicite (édition) sinon conservation de la sélection en cours
+    const modalSelect = document.getElementById('expenseCategory');
+    if (modalSelect) {
+      populateCategorySelect(selected !== undefined ? selected : modalSelect.value);
+    }
   } catch (error) {
     toast('Impossible de charger les catégories', 'error');
   }
@@ -212,7 +262,7 @@ function getModal(id) {
 function openNewExpense(event) {
   if (event) event.preventDefault();
   expenseState.editingId = null;
-  document.getElementById('expenseModalTitle').textContent = 'Nouvelle dépense';
+  document.getElementById('expenseModalTitleText').textContent = 'Nouvelle dépense';
   document.getElementById('expenseId').value = '';
   document.getElementById('expenseForm').reset();
   loadCategories().catch(() => {});
@@ -224,14 +274,13 @@ function openEditExpense(expenseId) {
     .then(data => {
       const expense = data.expense;
       expenseState.editingId = expense.id;
-      document.getElementById('expenseModalTitle').textContent = 'Modifier dépense';
+      document.getElementById('expenseModalTitleText').textContent = 'Modifier dépense';
       document.getElementById('expenseId').value = expense.id;
-      document.getElementById('expenseCategory').value = expense.category || '';
       document.getElementById('expenseDate').value = expense.expense_date ? expense.expense_date.slice(0, 10) : '';
       document.getElementById('expenseDescription').value = expense.description || '';
       document.getElementById('expenseAmount').value = expense.amount;
       document.getElementById('expenseReceipt').value = expense.receipt_path || '';
-      loadCategories().catch(() => {});
+      loadCategories(expense.category || '').catch(() => {});
       openModal('expenseModal');
     })
     .catch(error => toast(error.message, 'error'));
@@ -242,9 +291,16 @@ async function submitExpense(event) {
   const saveBtn = document.getElementById('btnSaveExpense');
   saveBtn.disabled = true;
 
+  const category = getSelectedCategory();
+  if (!category) {
+    toast('Choisissez une catégorie ou saisissez une nouvelle catégorie.', 'error');
+    saveBtn.disabled = false;
+    return;
+  }
+
   const payload = {
     id: expenseState.editingId,
-    category: document.getElementById('expenseCategory').value.trim(),
+    category,
     description: document.getElementById('expenseDescription').value.trim(),
     amount: parseFloat(document.getElementById('expenseAmount').value) || 0,
     expense_date: document.getElementById('expenseDate').value,
@@ -322,6 +378,20 @@ function attachEvents() {
       expenseState.filters.category = catFilter.value;
       expenseState.filters.page = 1;
       refreshExpenses().catch(error => toast(error.message, 'error'));
+    });
+  }
+
+  const catSelect = document.getElementById('expenseCategory');
+  if (catSelect) {
+    catSelect.addEventListener('change', () => {
+      const newWrap = document.getElementById('expenseNewCategoryWrap');
+      const newInput = document.getElementById('expenseNewCategory');
+      if (catSelect.value === NEW_CATEGORY_VALUE) {
+        if (newWrap) newWrap.style.display = 'block';
+        if (newInput) newInput.focus();
+      } else {
+        if (newWrap) newWrap.style.display = 'none';
+      }
     });
   }
 

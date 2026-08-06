@@ -23,7 +23,7 @@
 
 <aside class="sidebar" id="sidebar">
   <a href="dashboard.html" class="sidebar__logo">
-    <img src="images/logo.png" alt="FacTo" class="logo"> FacTo
+    <img src="images/logo.png" alt="FacTo" class="logo">
   </a>
   <nav class="sidebar__nav">
     <a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
@@ -161,43 +161,52 @@
 
 <div class="modal fade" id="expenseModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="expenseModalTitle">Nouvelle dépense</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-content expense-modal">
+      <div class="modal-header expense-modal__header">
+        <h5 class="modal-title expense-modal__title" id="expenseModalTitle">
+          <i class="bi bi-wallet2"></i>
+          <span id="expenseModalTitleText">Nouvelle dépense</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
       </div>
       <div class="modal-body">
         <form id="expenseForm" novalidate>
           <input type="hidden" id="expenseId">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label" for="expenseCategory">Catégorie</label>
-              <input type="text" class="form-control" id="expenseCategory" placeholder="ex: Transport, Bureau..." required>
+          <div class="expense-field">
+            <label class="form-label" for="expenseCategory"><i class="bi bi-tags"></i> Catégorie</label>
+            <select class="form-select" id="expenseCategory" required>
+              <option value="">— Choisir une catégorie —</option>
+            </select>
+            <div class="mt-2" id="expenseNewCategoryWrap" style="display:none;">
+              <input type="text" class="form-control" id="expenseNewCategory" placeholder="Nouvelle catégorie (ex: Transport, Bureau...)">
             </div>
-            <div class="col-md-6">
-              <label class="form-label" for="expenseDate">Date</label>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6 expense-field">
+              <label class="form-label" for="expenseDate"><i class="bi bi-calendar3"></i> Date</label>
               <input type="date" class="form-control" id="expenseDate" required>
             </div>
-          </div>
-          <div class="mt-3">
-            <label class="form-label" for="expenseDescription">Description</label>
-            <input type="text" class="form-control" id="expenseDescription" placeholder="Description de la dépense">
-          </div>
-          <div class="row g-3 mt-1">
-            <div class="col-md-6">
-              <label class="form-label" for="expenseAmount">Montant (€)</label>
-              <input type="number" class="form-control" id="expenseAmount" min="0" step="0.01" required>
+            <div class="col-md-6 expense-field">
+              <label class="form-label" for="expenseAmount"><i class="bi bi-currency-euro"></i> Montant</label>
+              <div class="expense-amount-wrap">
+                <span class="expense-amount-prefix">€</span>
+                <input type="number" class="form-control" id="expenseAmount" min="0" step="0.01" placeholder="0,00" required>
+              </div>
             </div>
-            <div class="col-md-6">
-              <label class="form-label" for="expenseReceipt">Reçu (optionnel)</label>
-              <input type="text" class="form-control" id="expenseReceipt" placeholder="Réf. ou chemin du reçu">
-            </div>
+          </div>
+          <div class="expense-field">
+            <label class="form-label" for="expenseDescription"><i class="bi bi-card-text"></i> Description</label>
+            <input type="text" class="form-control" id="expenseDescription" placeholder="Ex: Essence livraison, Fournitures bureau...">
+          </div>
+          <div class="expense-field">
+            <label class="form-label" for="expenseReceipt"><i class="bi bi-receipt"></i> Référence du reçu <span class="text-muted">(optionnel)</span></label>
+            <input type="text" class="form-control" id="expenseReceipt" placeholder="Ex: RCPT-2026-001">
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-        <button type="button" class="btn btn-primary" id="btnSaveExpense">Enregistrer</button>
+      <div class="modal-footer expense-modal__footer">
+        <button type="button" class="btn btn-light expense-modal__cancel" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" form="expenseForm" class="btn btn-primary expense-modal__save" id="btnSaveExpense"><i class="bi bi-check-lg"></i> Enregistrer</button>
       </div>
     </div>
   </div>

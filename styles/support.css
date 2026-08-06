@@ -67,6 +67,18 @@
   color: rgba(255,255,255,0.5);
 }
 
+.support-search-info {
+  min-height: 22px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  text-align: center;
+}
+
+.support-search-info:not(:empty) {
+  color: var(--gray-600);
+}
+
 .support-hero__search i {
   position: absolute;
   left: 14px;

@@ -10,7 +10,9 @@
 .card .h4 { margin-bottom: 12px; }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
+  /* La sidebar est gérée par responsive.css (glissement + overlay) :
+     ne PAS la masquer en display:none, sinon le menu hamburger
+     affiche un overlay flouté sans contenu. */
   .topbar__breadcrumb { display: none; }
 }
 

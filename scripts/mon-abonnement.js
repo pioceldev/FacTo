@@ -5,6 +5,25 @@ const subscriptionState = {
   usage: { invoice_count: 0, invoice_limit: 0 },
 };
 
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+}
+
+function formatDate(value) {
+  if (!value) return '-';
+  try {
+    return new Date(value).toLocaleDateString('fr-FR');
+  } catch {
+    return value;
+  }
+}
+
 async function fetchSubscription() {
   const response = await fetch('backend/subscription.php?action=get', { credentials: 'same-origin' });
   if (!response.ok) {
@@ -107,6 +126,14 @@ function updateSubscriptionUI(subscription) {
       btnCancel.classList.remove('action-card__btn--outline');
     }
   }
+
+  const historyBody = document.getElementById('subscriptionInvoicesBody');
+  if (historyBody) {
+    historyBody.addEventListener('click', (event) => {
+      const btn = event.target.closest('[data-receipt]');
+      if (btn) printReceipt(btn.getAttribute('data-receipt'));
+    });
+  }
 }
 
 function renderPaymentHistory() {
@@ -125,9 +152,146 @@ function renderPaymentHistory() {
       <td>${p.payment_method || '—'}</td>
       <td>${Number(p.amount).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</td>
       <td><span class="badge-soft ${statusBadge(p.status)}">${formatStatusLabel(p.status)}</span></td>
-      <td><button type="button" class="btn btn-sm btn-outline-secondary" disabled>PDF</button></td>
+      <td><button type="button" class="btn btn-sm btn-outline-primary" data-receipt="${p.id}" title="Imprimer / télécharger le reçu"><i class="bi bi-receipt"></i> Reçu</button></td>
     </tr>
   `).join('');
+}
+
+/* ============ REÇU DE PAIEMENT PDF ============ */
+let receiptIssuer = null;
+
+async function loadReceiptIssuer() {
+  if (receiptIssuer) return;
+  try {
+    const res = await fetch('backend/profile.php?action=get', { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    receiptIssuer = data.user || {};
+  } catch (e) {
+    receiptIssuer = {};
+  }
+}
+
+function receiptDocHTML(p, planName) {
+  const u = receiptIssuer || {};
+  const company = (u.company || u.name || 'FacTo');
+  const initial = (company.trim().charAt(0) || 'F').toUpperCase();
+  const logo = u.logo_path
+    ? `<img src="${esc(u.logo_path)}" alt="Logo">`
+    : `<span>${esc(initial)}</span>`;
+
+  const office = [
+    `<p><strong>${esc(company)}</strong></p>`,
+    u.phone ? `<p>${esc(u.phone)}</p>` : '',
+    u.email ? `<p>${esc(u.email)}</p>` : '',
+  ].join('');
+
+  const payer = [
+    `<p><strong>${esc(u.name || company)}</strong></p>`,
+    u.email ? `<p>${esc(u.email)}</p>` : '',
+  ].join('');
+
+  const ref = p.transaction_ref || ('RCPT-' + (p.id || ''));
+  const date = p.paid_at || p.created_at;
+  const description = 'Abonnement ' + (planName || '') + ' — ' + (p.payment_method || 'Paiement');
+  const statusLabel2 = String(p.status || '').toLowerCase() === 'paid' ? 'Payé' : formatStatusLabel(p.status);
+
+  const sign = `
+    <div class="inv-doc__sign">
+      ${u.signature ? `<img src="${esc(u.signature)}" alt="Signature de ${esc(u.name || company)}">` : ''}
+      <div class="inv-doc__sign-name">${esc(u.name || company)}</div>
+      <div class="inv-doc__sign-role">${u.signature ? 'Signature' : 'Non signé'}</div>
+    </div>`;
+
+  return `
+    <div class="inv-doc">
+      <div class="inv-doc__header">
+        <div class="inv-doc__brand">
+          <div class="inv-doc__logo">${logo}</div>
+          <div>
+            <div class="inv-doc__company">${esc(company)}</div>
+            <div class="inv-doc__slogan">${esc(u.email || 'Facturation simplifiée')}</div>
+          </div>
+        </div>
+        <div>
+          <div class="inv-doc__doclabel">REÇU</div>
+          <div class="inv-doc__meta">
+            <div>N° <strong>${esc(ref)}</strong></div>
+            <div>${formatDate(date)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-doc__addresses">
+        <div>
+          <div class="inv-doc__block-title">Émetteur</div>
+          ${office}
+        </div>
+        <div>
+          <div class="inv-doc__block-title">Payé par</div>
+          ${payer}
+        </div>
+      </div>
+
+      <table class="inv-doc__table">
+        <thead>
+          <tr><th>Désignation</th><th>Méthode</th><th>Statut</th><th>Montant</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${esc(description)}</td>
+            <td>${esc(p.payment_method || '—')}</td>
+            <td>${esc(statusLabel2)}</td>
+            <td>${formatCurrency(p.amount)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="inv-doc__sum">
+        <div class="inv-doc__note">
+          <div class="inv-doc__block-title">Note</div>
+          <p>Merci pour votre paiement. Ce document fait office de reçu.</p>
+        </div>
+        <div class="inv-doc__totals">
+          <div class="inv-grand"><span>Total payé</span><span>${formatCurrency(p.amount)}</span></div>
+        </div>
+      </div>
+
+      ${sign}
+
+      <div class="inv-doc__thanks">Merci pour votre confiance</div>
+
+      <div class="inv-doc__footer">
+        <div>
+          <b>Questions ?</b>
+          <p>${esc(u.email || '—')}</p>
+          <p>${esc(u.phone || '—')}</p>
+        </div>
+        <div>
+          <b>Paiement</b>
+          <p>${esc(p.payment_method || '—')}</p>
+          <p>Réf. : ${esc(ref)}</p>
+        </div>
+        <div>
+          <b>Conditions</b>
+          <p>Reçu de paiement — ${esc(company)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function printReceipt(paymentId) {
+  try {
+    await loadReceiptIssuer();
+    const payment = subscriptionState.history.find(h => String(h.id) === String(paymentId));
+    if (!payment) { toast('Paiement introuvable', 'error'); return; }
+    const planName = subscriptionState.subscription?.plan_name || '';
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = receiptDocHTML(payment, planName);
+    setTimeout(() => window.print(), 60);
+  } catch (error) {
+    toast(error.message, 'error');
+  }
 }
 
 function getTimeRemaining(targetDate) {

@@ -21,10 +21,14 @@
   padding: 20px 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--gray-900);
+}
+
+/* Le logo contient déjà le texte « FacTo » : il est affiché seul et agrandi */
+.sidebar__logo .logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 16px;
+  object-fit: contain;
 }
 
 .sidebar__logo-icon {
@@ -210,6 +214,30 @@
   color: var(--gray-700);
   font-size: 1.25rem;
   margin-right: 8px;
+  /* Menu hamburger : sans contour ni fond */
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.topbar__menu-toggle:hover {
+  color: var(--primary);
+}
+
+.topbar__menu-toggle:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Repère discret uniquement pour la navigation clavier (invisible au clic souris) */
+.topbar__menu-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* Main layout */

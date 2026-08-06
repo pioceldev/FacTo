@@ -8,7 +8,7 @@
 <title>Support - FacTo</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/global.css">
 <link rel="stylesheet" href="styles/components.css">
 <link rel="stylesheet" href="styles/sidebar.css">
@@ -22,7 +22,7 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-<a href="dashboard.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<a href="dashboard.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo"></a>
 <nav class="sidebar__nav">
 <a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
 <a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
@@ -58,7 +58,7 @@
 <div class="d-flex align-items-center gap-3">
       <div class="topbar__search d-none d-md-flex align-items-center">
         <i class="bi bi-search"></i>
-        <input type="text" placeholder="Rechercher dans l'aide...">
+        <input type="text" id="supportSearchTopbar" placeholder="Rechercher dans l'aide...">
       </div>
       <div class="topbar__actions">
         <a href="notifications.html" class="topbar__icon-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span class="topbar__badge" id="notificationBadge" style="display:none;"></span></a>
@@ -78,8 +78,9 @@
 <p class="support-hero__desc">Trouve rapidement des réponses, ouvre un ticket ou contacte notre équipe support pour résoudre tes demandes.</p>
 <div class="support-hero__search">
 <i class="bi bi-search"></i>
-<input type="text" placeholder="Rechercher une question, un article ou un guide...">
+<input type="text" id="supportSearchHero" placeholder="Rechercher une question, un article ou un guide..." autocomplete="off">
 </div>
+<div class="support-search-info" id="supportSearchInfo"></div>
 </div>
 <div class="support-hero__img">
 <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500&h=420&fit=crop" alt="Support illustration">
@@ -205,7 +206,7 @@
 <div class="row">
 <div class="col-lg-4">
 <div class="footer__brand">
-<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"><span class="fw-bold fs-5">FacTo</span></div>
+<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"></div>
 <p>FacTo facilite la gestion de votre entreprise avec des outils de facturation, gestion de stock et support dédié.</p>
 </div>
 </div>
@@ -225,5 +226,77 @@
 <script src="scripts/main.js"></script>
 <script src="scripts/ui.js"></script>
 <script src="scripts/auth.js"></script>
+<script>
+/* ---- Centre d'aide dynamique : FAQ interactive + recherche temps réel ---- */
+(function () {
+  const heroSearch = document.getElementById('supportSearchHero');
+  const topbarSearch = document.getElementById('supportSearchTopbar');
+  const infoEl = document.getElementById('supportSearchInfo');
+  if (!heroSearch) return;
+
+  /* 1) FAQ interactive : un clic ouvre/ferme, une seule ouverte à la fois */
+  document.querySelectorAll('.support-faq__question').forEach(question => {
+    question.addEventListener('click', () => {
+      const item = question.closest('.support-faq__item');
+      if (!item) return;
+      const wasOpen = item.classList.contains('is-open');
+      document.querySelectorAll('.support-faq__item.is-open').forEach(open => open.classList.remove('is-open'));
+      if (!wasOpen) item.classList.add('is-open');
+    });
+  });
+
+  /* 2) Recherche : filtre la FAQ + les cartes (support, catégories, tutoriels) */
+  const faqItems = Array.from(document.querySelectorAll('.support-faq__item'));
+  const cards = Array.from(document.querySelectorAll('.support-cards .support-card, .support-categories .support-card, .support-videos .support-card'));
+  const sections = [document.querySelector('.support-cards'), document.querySelector('.support-categories'), document.querySelector('.support-videos'), document.querySelector('.support-faq')];
+
+  function runSearch(query) {
+    const q = String(query || '').trim().toLowerCase();
+
+    faqItems.forEach(item => {
+      item.style.display = (!q || item.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
+    cards.forEach(card => {
+      card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
+
+    // Masque les sections entièrement vides pendant la recherche
+    sections.forEach(section => {
+      if (!section) return;
+      const visibleChildren = Array.from(section.children).some(child => child.style.display !== 'none');
+      section.style.display = (!q || visibleChildren) ? '' : 'none';
+    });
+
+    // Compteur de résultats
+    if (!infoEl) return;
+    if (!q) {
+      infoEl.textContent = '';
+      return;
+    }
+    const faqCount = faqItems.filter(item => item.textContent.toLowerCase().includes(q)).length;
+    const cardCount = cards.filter(card => card.textContent.toLowerCase().includes(q)).length;
+    const total = faqCount + cardCount;
+    if (total === 0) {
+      infoEl.textContent = 'Aucun résultat pour « ' + query.trim() + ' » — ouvrez un ticket ci-dessous pour obtenir de l\'aide.';
+      return;
+    }
+    const parts = [];
+    if (faqCount) parts.push(faqCount + ' question' + (faqCount > 1 ? 's' : ''));
+    if (cardCount) parts.push(cardCount + ' article' + (cardCount > 1 ? 's' : ''));
+    infoEl.textContent = parts.join(' et ') + ' trouvé' + (total > 1 ? 's' : '') + ' pour « ' + query.trim() + ' »';
+  }
+
+  // Synchronise les deux champs (hero + topbar)
+  function bindSearch(input, other) {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      if (other) other.value = input.value;
+      runSearch(input.value);
+    });
+  }
+  bindSearch(heroSearch, topbarSearch);
+  bindSearch(topbarSearch, heroSearch);
+})();
+</script>
 </body>
 </html>

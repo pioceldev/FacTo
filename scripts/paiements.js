@@ -167,6 +167,7 @@ function renderTable() {
       <td><span class="${statusBadge}">${statusText}</span></td>
       <td>
         <div class="invoice-table-actions">
+          <button type="button" title="Reçu PDF" data-receipt="${payment.id}"><i class="bi bi-receipt"></i></button>
           <button type="button" title="Modifier" data-edit="${payment.id}"><i class="bi bi-pencil"></i></button>
           <button type="button" title="Supprimer" class="is-danger" data-del="${payment.id}"><i class="bi bi-trash"></i></button>
         </div>
@@ -212,6 +213,146 @@ function renderPagination() {
 function getModal(id) {
   const el = document.getElementById(id);
   return el ? bootstrap.Modal.getOrCreateInstance(el) : null;
+}
+
+/* ============ REÇU DE PAIEMENT PDF ============ */
+let paymentIssuer = null;
+
+async function loadPaymentIssuer() {
+  if (paymentIssuer) return;
+  try {
+    const res = await fetch('backend/profile.php?action=get', { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    paymentIssuer = data.user || {};
+  } catch (e) {
+    paymentIssuer = {};
+  }
+}
+
+function paymentReceiptHTML(payment) {
+  const u = paymentIssuer || {};
+  const company = (u.company || u.name || 'FacTo');
+  const initial = (company.trim().charAt(0) || 'F').toUpperCase();
+  const logo = u.logo_path
+    ? `<img src="${esc(u.logo_path)}" alt="Logo">`
+    : `<span>${esc(initial)}</span>`;
+
+  const office = [
+    `<p><strong>${esc(company)}</strong></p>`,
+    u.phone ? `<p>${esc(u.phone)}</p>` : '',
+    u.email ? `<p>${esc(u.email)}</p>` : '',
+  ].join('');
+
+  const payer = [
+    payment.client_name ? `<p><strong>${esc(payment.client_name)}</strong></p>` : '',
+    payment.client_email ? `<p>${esc(payment.client_email)}</p>` : '',
+  ].join('') || '<p>—</p>';
+
+  const ref = payment.transaction_ref || ('PAY-' + (payment.id || ''));
+  const dateStr = payment.paid_at || payment.created_at || '';
+  let dateLabel = '—';
+  try { if (dateStr) dateLabel = new Date(dateStr).toLocaleDateString('fr-FR'); } catch (e) { /* ignore */ }
+  const description = payment.invoice_ref
+    ? 'Paiement de la facture ' + payment.invoice_ref
+    : 'Paiement enregistré';
+  const statusText = payment.status === 'paid' ? 'Payé' : (payment.status === 'pending' ? 'En attente' : 'Échoué');
+
+  const sign = `
+    <div class="inv-doc__sign">
+      ${u.signature ? `<img src="${esc(u.signature)}" alt="Signature de ${esc(u.name || company)}">` : ''}
+      <div class="inv-doc__sign-name">${esc(u.name || company)}</div>
+      <div class="inv-doc__sign-role">${u.signature ? 'Signature' : 'Non signé'}</div>
+    </div>`;
+
+  return `
+    <div class="inv-doc">
+      <div class="inv-doc__header">
+        <div class="inv-doc__brand">
+          <div class="inv-doc__logo">${logo}</div>
+          <div>
+            <div class="inv-doc__company">${esc(company)}</div>
+            <div class="inv-doc__slogan">${esc(u.email || 'Facturation simplifiée')}</div>
+          </div>
+        </div>
+        <div>
+          <div class="inv-doc__doclabel">REÇU</div>
+          <div class="inv-doc__meta">
+            <div>N° <strong>${esc(ref)}</strong></div>
+            <div>${esc(dateLabel)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-doc__addresses">
+        <div>
+          <div class="inv-doc__block-title">Émetteur</div>
+          ${office}
+        </div>
+        <div>
+          <div class="inv-doc__block-title">Payé par</div>
+          ${payer}
+        </div>
+      </div>
+
+      <table class="inv-doc__table">
+        <thead>
+          <tr><th>Désignation</th><th>Méthode</th><th>Statut</th><th>Montant</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${esc(description)}</td>
+            <td>${esc(payment.payment_method || '—')}</td>
+            <td>${esc(statusText)}</td>
+            <td>${formatCurrency(payment.amount)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="inv-doc__sum">
+        <div class="inv-doc__note">
+          <div class="inv-doc__block-title">Note</div>
+          <p>Merci pour votre paiement. Ce document fait office de reçu.</p>
+        </div>
+        <div class="inv-doc__totals">
+          <div class="inv-grand"><span>Total payé</span><span>${formatCurrency(payment.amount)}</span></div>
+        </div>
+      </div>
+
+      ${sign}
+
+      <div class="inv-doc__thanks">Merci pour votre confiance</div>
+
+      <div class="inv-doc__footer">
+        <div>
+          <b>Questions ?</b>
+          <p>${esc(u.email || '—')}</p>
+          <p>${esc(u.phone || '—')}</p>
+        </div>
+        <div>
+          <b>Paiement</b>
+          <p>${esc(payment.payment_method || '—')}</p>
+          <p>Réf. : ${esc(ref)}</p>
+        </div>
+        <div>
+          <b>Conditions</b>
+          <p>Reçu de paiement — ${esc(company)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function printPaymentReceipt(paymentId) {
+  try {
+    await loadPaymentIssuer();
+    const data = await api('get&id=' + paymentId);
+    const payment = data.payment;
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = paymentReceiptHTML(payment);
+    setTimeout(() => window.print(), 60);
+  } catch (error) {
+    toast(error.message, 'error');
+  }
 }
 
 function openNewPayment(event) {
@@ -300,9 +441,11 @@ function attachEvents() {
   document.getElementById('paymentForm').addEventListener('submit', submitPayment);
 
   document.getElementById('paymentsTableBody').addEventListener('click', event => {
+    const receiptBtn = event.target.closest('[data-receipt]');
     const editBtn = event.target.closest('[data-edit]');
     const delBtn = event.target.closest('[data-del]');
-    if (editBtn) openEditPayment(editBtn.getAttribute('data-edit'));
+    if (receiptBtn) printPaymentReceipt(receiptBtn.getAttribute('data-receipt'));
+    else if (editBtn) openEditPayment(editBtn.getAttribute('data-edit'));
     else if (delBtn) deletePayment(delBtn.getAttribute('data-del'));
   });
 

@@ -187,22 +187,25 @@ function renderTable() {
 
   tbody.innerHTML = invoiceState.invoices.map(invoice => {
     const isCancelled = invoice.status === 'annulee';
+    const statusClass = STATUS_BADGES[invoice.status] || 'badge-soft-secondary';
     return `
       <tr>
-        <td style="font-weight:600;color:var(--gray-800);">${invoice.ref || '-'}</td>
-        <td style="font-weight:500;">${esc(invoice.client_name || 'Client inconnu')}</td>
-        <td style="color:var(--gray-500);">${formatDate(invoice.due_date)}</td>
-        <td style="font-weight:700;">${formatCurrency(invoice.total)}</td>
         <td>
-          <select class="form-select form-select-sm invoice-status-select" data-id="${invoice.id}" ${isCancelled ? 'disabled' : ''}
-            style="width:auto;display:inline-block;font-size:.75rem;padding:3px 26px 3px 10px;border-radius:20px;border-color:var(--gray-200);background:var(--gray-50);color:var(--gray-700);">
+          <div style="font-weight:700;color:var(--gray-800);">${esc(invoice.ref || '-')}</div>
+          <div style="font-size:.72rem;color:var(--gray-400);">Émise le ${formatDate(invoice.issued_at || invoice.created_at)}</div>
+        </td>
+        <td style="font-weight:500;">${esc(invoice.client_name || 'Client inconnu')}</td>
+        <td style="color:var(--gray-500);white-space:nowrap;">${formatDate(invoice.due_date)}</td>
+        <td style="font-weight:800;color:var(--gray-900);white-space:nowrap;">${formatCurrency(invoice.total)}</td>
+        <td>
+          <select class="invoice-status-select invoice-status-select--${invoice.status}" data-id="${invoice.id}" ${isCancelled ? 'disabled' : ''} title="Changer le statut">
             ${Object.keys(STATUS_LABELS).map(s =>
               `<option value="${s}" ${s === invoice.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
             ).join('')}
           </select>
         </td>
         <td>
-          <div class="invoice-table-actions">
+          <div class="invoice-table-actions" style="justify-content:flex-end;">
             <button type="button" title="Voir" data-view="${invoice.id}"><i class="bi bi-eye"></i></button>
             <button type="button" title="Modifier" data-edit="${invoice.id}" ${isCancelled ? 'disabled style="opacity:.4;cursor:not-allowed;"' : ''}><i class="bi bi-pencil"></i></button>
             <button type="button" title="Imprimer" data-print="${invoice.id}"><i class="bi bi-printer"></i></button>

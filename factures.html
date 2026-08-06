@@ -8,7 +8,7 @@
 <title>Factures - FacTo</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/global.css">
 <link rel="stylesheet" href="styles/components.css">
 <link rel="stylesheet" href="styles/sidebar.css">
@@ -22,12 +22,12 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<a href="dashboard.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo"></a>
 <nav class="sidebar__nav">
-<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
 <a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
-<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
-<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
+<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Produits</a>
+<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Fournisseurs</a>
 <a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
 <a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
 <a href="factures.html" class="sidebar__item is-active"><i class="bi bi-receipt"></i> Factures</a>
@@ -36,7 +36,7 @@
 <a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
 <hr class="sidebar__divider">
 <a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
-<a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Subscription</a>
+<a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Abonnement</a>
 <a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
 </nav>
 <div class="sidebar__footer">
@@ -73,12 +73,13 @@
 
 <div class="page-header">
 <div>
+<div class="page-header__eyebrow"><i class="bi bi-receipt"></i> Facturation</div>
 <h1 class="page-header__title">Factures</h1>
 <p class="page-header__subtitle">Créez, suivez et encaissez vos factures clients en toute simplicité.</p>
 </div>
 <div class="page-header__actions">
 <span id="quotaBadge" class="badge-soft badge-soft-secondary" style="align-self:center;display:none;"></span>
-<button type="button" class="btn btn-primary" id="btnNewInvoice"><i class="bi bi-plus"></i> Nouvelle Facture</button>
+<button type="button" class="btn btn-primary btn-lg" id="btnNewInvoice"><i class="bi bi-plus-lg"></i> Nouvelle Facture</button>
 </div>
 </div>
 
@@ -91,7 +92,7 @@
 <i class="bi bi-search"></i>
 <input id="invoiceFilterSearch" type="text" placeholder="Rechercher par référence, client, montant…">
 </div>
-<select id="invoiceFilterStatus" class="form-select" style="max-width:200px;">
+<select id="invoiceFilterStatus" class="form-select">
 <option value="all">Tous les statuts</option>
 <option value="brouillon">Brouillons</option>
 <option value="en_attente">En attente</option>
@@ -99,10 +100,10 @@
 <option value="payee">Payées</option>
 <option value="annulee">Annulées</option>
 </select>
-<select id="invoiceFilterClient" class="form-select" style="max-width:220px;">
+<select id="invoiceFilterClient" class="form-select">
 <option value="">Tous les clients</option>
 </select>
-<button type="button" class="btn btn-light invoice-filters__refresh" id="btnRefreshInvoices" title="Actualiser"><i class="bi bi-arrow-clockwise"></i></button>
+<button type="button" class="btn invoice-filters__refresh" id="btnRefreshInvoices" title="Actualiser"><i class="bi bi-arrow-clockwise"></i></button>
 </div>
 
 <!-- Bannière quota -->
@@ -110,8 +111,14 @@
 
 <!-- Table -->
 <div class="invoice-table-card">
+<div class="invoice-table-card__head">
+<div>
+<div class="invoice-table-card__title"><i class="bi bi-list-ul"></i> Toutes les factures</div>
+<div class="invoice-table-card__subtitle" id="invoiceTableInfo"></div>
+</div>
+</div>
 <div class="table-responsive">
-<table class="custom-table">
+<table class="custom-table invoice-table">
 <thead>
 <tr>
 <th>Référence</th>
@@ -127,17 +134,16 @@
 </div>
 
 <div class="invoice-table-footer">
-<div class="invoice-table-footer__info" id="invoiceTableInfo"></div>
 <nav class="pagination-custom" id="invoicePagination"></nav>
 </div>
 </div>
 
 </main>
 
-<footer style="padding:16px 24px;border-top:1px solid var(--gray-200);background:#fff;">
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size:.8rem;color:var(--gray-500);">
-<div>© 2024 FACTO TECHNOLOGIES — TOUS DROITS RÉSERVÉS</div>
-<div class="d-flex gap-3"><a href="#" style="color:var(--gray-500);">MENTIONS LÉGALES</a><a href="#" style="color:var(--gray-500);">CONFIDENTIALITÉ</a></div>
+<footer class="app-footer">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div>© 2026 FacTo Technologies — Tous droits réservés</div>
+<div class="d-flex gap-3"><a href="#">Mentions légales</a><a href="#">Confidentialité</a></div>
 </div>
 </footer>
 </div>
@@ -147,14 +153,19 @@
 <div class="modal-dialog modal-xl modal-dialog-scrollable">
 <div class="modal-content">
 <form id="invoiceForm" novalidate>
-<div class="modal-header">
+<div class="modal-header inv-form__header">
+<div>
 <h5 class="modal-title" id="invoiceModalTitle">Nouvelle facture</h5>
+<p class="inv-form__header-sub">Renseignez les informations de la facture et ses lignes.</p>
+</div>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
 </div>
 <div class="modal-body">
 <input type="hidden" id="invoiceId">
 
-<div class="row g-3 mb-3">
+<div class="inv-form__section">
+<div class="inv-form__section-title"><i class="bi bi-person-badge"></i> Informations</div>
+<div class="row g-3">
 <div class="col-md-5">
 <label class="form-label">Client</label>
 <select id="invoiceClient" class="form-select">
@@ -185,36 +196,46 @@
 </select>
 </div>
 </div>
+</div>
 
+<div class="inv-form__section">
+<div class="inv-form__section-title"><i class="bi bi-list-check"></i> Lignes de facture</div>
 <div class="invoice-items">
 <div class="invoice-items__header">
 <span style="flex:2;">Désignation</span>
 <span style="flex:0 0 70px;">Qté</span>
 <span style="flex:0 0 110px;">P.U. HT</span>
 <span style="flex:0 0 90px;">TVA %</span>
-<span style="flex:0 0 100px;">Total HT</span>
+<span style="flex:0 0 110px;">Total HT</span>
 <span style="flex:0 0 34px;"></span>
 </div>
 <div id="invoiceItemsRows"></div>
-<button type="button" class="btn btn-sm btn-outline-secondary" id="btnAddItem"><i class="bi bi-plus"></i> Ajouter une ligne</button>
+<button type="button" class="btn btn-sm btn-outline-secondary" id="btnAddItem"><i class="bi bi-plus-lg"></i> Ajouter une ligne</button>
+</div>
 </div>
 
+<div class="inv-form__section">
+<div class="inv-form__section-title"><i class="bi bi-calculator"></i> Récapitulatif</div>
+<div class="row g-3">
+<div class="col-lg-6">
+<label class="form-label">Notes (optionnel)</label>
+<textarea id="invoiceNotes" class="form-control" rows="3" placeholder="Mentions, conditions de paiement…"></textarea>
+</div>
+<div class="col-lg-6">
 <div class="invoice-totals">
 <div class="invoice-totals__row"><span>Total HT</span><strong id="invoiceTotalHt">0,00 €</strong></div>
 <div class="invoice-totals__row"><span>TVA</span><strong id="invoiceTotalVat">0,00 €</strong></div>
 <div class="invoice-totals__row">
 <span>Remise</span>
-<div style="display:flex;align-items:center;gap:6px;">
-<input type="number" id="invoiceDiscount" class="form-control form-control-sm" min="0" step="0.01" value="0" style="width:90px;text-align:right;" title="Remise en € (le modèle affiche la ligne DISCOUNT)">
+<div class="inv-form__discount">
+<input type="number" id="invoiceDiscount" class="form-control form-control-sm" min="0" step="0.01" value="0" title="Remise en € (le modèle affiche la ligne DISCOUNT)">
 <span>€</span>
 </div>
 </div>
 <div class="invoice-totals__row invoice-totals__row--grand"><span>Total TTC</span><strong id="invoiceTotalTtc">0,00 €</strong></div>
 </div>
-
-<div class="mb-2">
-<label class="form-label">Notes (optionnel)</label>
-<textarea id="invoiceNotes" class="form-control" rows="2" placeholder="Mentions, conditions de paiement…"></textarea>
+</div>
+</div>
 </div>
 </div>
 <div class="modal-footer">

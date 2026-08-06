@@ -36,6 +36,103 @@ function formatCurrency(amount) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
 }
 
+/* ============ EXPORT CSV ============ */
+function csvCell(value) {
+  const s = String(value == null ? '' : value);
+  // Échappe les cellules contenant séparateur, guillemets ou sauts de ligne
+  return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvSection(lines) {
+  return lines.map(row => row.map(csvCell).join(';')).join('\r\n');
+}
+
+// Format numérique Excel FR : virgule décimale, 2 décimales
+function fmtNum(value) {
+  return (Number(value) || 0).toFixed(2).replace('.', ',');
+}
+
+async function exportCSV() {
+  try {
+    const [overviewRes, revenueRes, statusRes, expensesRes, categoriesRes, methodsRes] = await Promise.all([
+      api('overview'),
+      api('monthly_revenue'),
+      api('invoice_status'),
+      api('monthly_expenses'),
+      api('expense_by_category'),
+      api('payment_methods'),
+    ]);
+
+    const o = overviewRes.overview || {};
+    const profit = (Number(o.total_revenue) || 0) - (Number(o.total_expenses) || 0);
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString('fr-FR');
+
+    const sections = [];
+
+    sections.push('RÉCAPITULATIF FACTO — généré le ' + dateLabel);
+    sections.push('');
+    sections.push(csvSection([
+      ['Indicateur', 'Valeur (€)'],
+      ['Chiffre d\'affaires', fmtNum(o.total_revenue)],
+      ['Dépenses', fmtNum(o.total_expenses)],
+      ['Profit net', fmtNum(profit)],
+      ['Factures payées', (o.paid_invoices || 0) + ' / ' + (o.total_invoices || 0)],
+      ['Clients', o.total_clients || 0],
+    ]));
+
+    sections.push('');
+    sections.push('CHIFFRE D\'AFFAIRES MENSUEL');
+    sections.push(csvSection([
+      ['Mois', 'Revenus (€)'],
+      ...(revenueRes.monthly_revenue || []).map(d => [d.month, fmtNum(d.revenue)]),
+    ]));
+
+    sections.push('');
+    sections.push('DÉPENSES MENSUELLES');
+    sections.push(csvSection([
+      ['Mois', 'Dépenses (€)'],
+      ...(expensesRes.monthly_expenses || []).map(d => [d.month, fmtNum(d.expenses)]),
+    ]));
+
+    sections.push('');
+    sections.push('DÉPENSES PAR CATÉGORIE');
+    sections.push(csvSection([
+      ['Catégorie', 'Montant (€)'],
+      ...(categoriesRes.expense_by_category || []).map(d => [d.category || 'Autre', fmtNum(d.total)]),
+    ]));
+
+    sections.push('');
+    sections.push('STATUT DES FACTURES');
+    sections.push(csvSection([
+      ['Statut', 'Nombre'],
+      ...(statusRes.invoice_status || []).map(d => [d.status, d.count]),
+    ]));
+
+    sections.push('');
+    sections.push('MÉTHODES DE PAIEMENT');
+    sections.push(csvSection([
+      ['Méthode', 'Montant (€)'],
+      ...(methodsRes.payment_methods || []).map(d => [d.payment_method || '—', fmtNum(d.total)]),
+    ]));
+
+    // BOM UTF-8 pour les accents (Excel) + séparateur point-virgule
+    const blob = new Blob(['\uFEFF' + sections.join('\r\n\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rapports-facto-' + now.toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast('Export CSV généré avec succès', 'success');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
 function destroyChart(key) {
   if (reportState.charts[key]) {
     reportState.charts[key].destroy();
@@ -223,6 +320,11 @@ function attachEvents() {
   document.getElementById('btnRefreshReports').addEventListener('click', () => {
     loadReports().catch(error => toast(error.message, 'error'));
   });
+
+  const exportBtn = document.getElementById('btnExportReports');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportCSV);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
