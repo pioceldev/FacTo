@@ -373,7 +373,7 @@ function openNewInvoice(event) {
   addItemRow();
   addItemRow();
 
-  getModal('invoiceModal').show();
+  openModal('invoiceModal');
 }
 
 function openEditInvoice(invoiceId) {
@@ -401,7 +401,7 @@ function openEditInvoice(invoiceId) {
       }));
       if (!(inv.items || []).length) addItemRow();
 
-      getModal('invoiceModal').show();
+      openModal('invoiceModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -446,7 +446,7 @@ async function submitInvoice(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || (isEdit ? 'Facture mise à jour' : 'Facture créée'), 'success');
-    getModal('invoiceModal').hide();
+    closeModal('invoiceModal');
     await refresh();
   } catch (error) {
     toast(error.message, 'error');
@@ -461,7 +461,7 @@ async function openDetail(invoiceId) {
     const data = await api('get&id=' + invoiceId);
     invoiceState.detail = data.invoice;
     renderDetail();
-    getModal('invoiceDetailModal').show();
+    openModal('invoiceDetailModal');
   } catch (error) {
     toast(error.message, 'error');
   }
@@ -637,8 +637,8 @@ async function deleteInvoice(invoiceId) {
   try {
     const data = await api('delete', { method: 'POST', body: JSON.stringify({ id: invoiceId }) });
     toast(data.message || 'Facture supprimée', 'success');
-    if (getModal('invoiceDetailModal') && invoiceState.detail && String(invoiceState.detail.id) === String(invoiceId)) {
-      getModal('invoiceDetailModal').hide();
+    if (document.getElementById('invoiceDetailModal') && invoiceState.detail && String(invoiceState.detail.id) === String(invoiceId)) {
+      closeModal('invoiceDetailModal');
     }
     await refresh();
   } catch (error) {
@@ -784,9 +784,8 @@ function attachEvents() {
   });
 
   document.getElementById('btnEditInvoice').addEventListener('click', () => {
-    if (!invoiceState.detail) return;
-    getModal('invoiceDetailModal').hide();
-    openEditInvoice(invoiceState.detail.id);
+    if (!invoiceState.detail) return;      closeModal('invoiceDetailModal');
+      openEditInvoice(invoiceState.detail.id);
   });
 
   document.getElementById('btnDeleteInvoice').addEventListener('click', () => {

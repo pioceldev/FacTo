@@ -210,7 +210,7 @@ function openNewQuote(event) {
   renderQuoteItems();
   loadClients().catch(() => {});
   loadProducts().catch(() => {});
-  getModal('quoteModal').show();
+  openModal('quoteModal');
 }
 
 function openEditQuote(quoteId) {
@@ -234,7 +234,7 @@ function openEditQuote(quoteId) {
       renderQuoteItems();
       loadClients().catch(() => {});
       loadProducts().catch(() => {});
-      getModal('quoteModal').show();
+      openModal('quoteModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -268,7 +268,7 @@ async function submitQuote(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Devis enregistré', 'success');
-    getModal('quoteModal').hide();
+    closeModal('quoteModal');
     await refreshQuotes();
   } catch (error) {
     toast(error.message, 'error');

@@ -201,7 +201,7 @@ function openNewPayment(event) {
   document.getElementById('paymentId').value = '';
   document.getElementById('paymentForm').reset();
   loadInvoices().catch(() => {});
-  getModal('paymentModal').show();
+  openModal('paymentModal');
 }
 
 function openEditPayment(paymentId) {
@@ -218,7 +218,7 @@ function openEditPayment(paymentId) {
       document.getElementById('paymentTxRef').value = payment.transaction_ref || '';
       document.getElementById('paymentPaidAt').value = payment.paid_at ? payment.paid_at.slice(0, 10) : '';
       loadInvoices().catch(() => {});
-      getModal('paymentModal').show();
+      openModal('paymentModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -247,7 +247,7 @@ async function submitPayment(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Paiement enregistré', 'success');
-    getModal('paymentModal').hide();
+    closeModal('paymentModal');
     await refreshPayments();
   } catch (error) {
     toast(error.message, 'error');

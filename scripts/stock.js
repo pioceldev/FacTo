@@ -208,7 +208,7 @@ function openNewStock(event) {
   document.getElementById('stockId').value = '';
   document.getElementById('stockForm').reset();
   loadProducts();
-  getModal('stockModal').show();
+  openModal('stockModal');
 }
 
 function openEditStock(stockId) {
@@ -221,7 +221,7 @@ function openEditStock(stockId) {
       document.getElementById('stockProduct').value = item.product_id;
       document.getElementById('stockQuantity').value = item.quantity;
       document.getElementById('stockReorderLevel').value = item.reorder_level;
-      getModal('stockModal').show();
+      openModal('stockModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -247,7 +247,7 @@ async function submitStock(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Stock enregistré', 'success');
-    getModal('stockModal').hide();
+    closeModal('stockModal');
     await refreshStock();
   } catch (error) {
     toast(error.message, 'error');

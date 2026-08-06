@@ -21,26 +21,26 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
+<a href="dashboard.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
 <nav class="sidebar__nav">
-<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
+<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
 <a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
-<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
-<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
+<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Produits</a>
+<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Fournisseurs</a>
 <a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
 <a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
-<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Invoices</a>
+<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Factures</a>
 <a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
 <a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
 <a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
 <hr class="sidebar__divider">
 <a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
-<a href="choix-abonnement.html" class="sidebar__item is-active"><i class="bi bi-crown"></i> Subscription</a>
+<a href="choix-abonnement.html" class="sidebar__item is-active"><i class="bi bi-crown"></i> Abonnement</a>
 <a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
 </nav>
 <div class="sidebar__footer">
-<a href="dashboard.html" class="sidebar__item"><i class="bi bi-gear"></i> Settings</a>
-<a href="dashboard.html" class="sidebar__item"><i class="bi bi-person"></i> Profile</a>
+<a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
+<a href="profile.html" class="sidebar__item"><i class="bi bi-person"></i> Mon profil</a>
 <a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
 </div>
 </aside>
@@ -130,57 +130,15 @@
 <div class="compare-section__desc">Choisissez le plan qui correspond le mieux à vos besoins.</div>
 </div>
 <div class="toggle-switch">
-<button class="toggle-btn">Mensuel</button>
-<button class="toggle-btn active">Annuel <span style="font-size:.7rem;opacity:.8;">-20%</span></button>
+<button class="toggle-btn active" id="toggleMonthly">Mensuel</button>
+<button class="toggle-btn" id="toggleYearly">Annuel <span style="font-size:.7rem;opacity:.8;">-20%</span></button>
 </div>
 </div>
 
-<div class="compare-grid">
-<div class="compare-card">
-<div class="compare-card__icon" style="background:var(--gray-100);color:var(--gray-600);"><i class="bi bi-lightning-charge"></i></div>
-<div class="compare-card__name">Gratuit</div>
-<div class="compare-card__desc">Pour tester les bases du logiciel.</div>
-<div class="compare-card__price">0 €<span>/mois</span></div>
-<ul class="compare-card__features">
-<li><i class="bi bi-check-lg"></i> Jusqu'à 50 factures / mois</li>
-<li><i class="bi bi-check-lg"></i> 1 Utilisateur unique</li>
-<li><i class="bi bi-check-lg"></i> Exports PDF basiques</li>
-<li><i class="bi bi-check-lg"></i> Support par email (48h)</li>
-</ul>
-<button class="btn btn-outline-secondary compare-card__btn" style="border-color:var(--gray-200);color:var(--gray-500);">Votre plan initial</button>
-</div>
-
-<div class="compare-card compare-card--current">
-<div class="compare-card__current-badge">PLAN ACTUEL</div>
-<div class="compare-card__icon" style="background:var(--primary-light);color:var(--primary);margin-top:20px;"><i class="bi bi-star-fill"></i></div>
-<div class="compare-card__name">Standard</div>
-<div class="compare-card__desc">L'essentiel pour structurer votre activité.</div>
-<div class="compare-card__price">24 €<span>/mois</span></div>
-<ul class="compare-card__features">
-<li><i class="bi bi-check-lg"></i> Facturation illimitée</li>
-<li><i class="bi bi-check-lg"></i> 3 Utilisateurs inclus</li>
-<li><i class="bi bi-check-lg"></i> Gestion des stocks basique</li>
-<li><i class="bi bi-check-lg"></i> Support prioritaire (24h)</li>
-<li><i class="bi bi-check-lg"></i> Relances automatiques</li>
-</ul>
-<button class="btn btn-outline-primary compare-card__btn" style="border-color:var(--primary);color:var(--primary);">Gérer</button>
-</div>
-
-<div class="compare-card">
-<div class="compare-card__icon" style="background:var(--gray-800);color:#fff;"><i class="bi bi-crown"></i></div>
-<div class="compare-card__name" style="color:var(--primary);">Premium</div>
-<div class="compare-card__desc">La puissance totale de FacTo pour votre entreprise.</div>
-<div class="compare-card__price">49 €<span>/mois</span></div>
-<ul class="compare-card__features">
-<li><i class="bi bi-check-lg"></i> Tout le plan Standard</li>
-<li><i class="bi bi-check-lg"></i> Utilisateurs illimités</li>
-<li><i class="bi bi-check-lg"></i> Reporting financier avancé</li>
-<li><i class="bi bi-check-lg"></i> Multi-devises & International</li>
-<li><i class="bi bi-check-lg"></i> Account Manager dédié</li>
-<li><i class="bi bi-check-lg"></i> API FacTo complète</li>
-</ul>
-<a href="choix-abonnement.html" class="btn btn-primary compare-card__btn">Passer à Premium</a>
-</div>
+<div class="compare-grid" id="comparePlansGrid">
+<div class="skeleton skeleton-card" style="height:360px;"></div>
+<div class="skeleton skeleton-card" style="height:360px;"></div>
+<div class="skeleton skeleton-card" style="height:360px;"></div>
 </div>
 </div>
 

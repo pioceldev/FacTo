@@ -101,7 +101,7 @@ try {
                 if (!$invCheck->fetch()) { http_response_code(400); echo json_encode(['error' => 'Facture introuvable']); exit; }
             }
 
-            $stmt = $pdo->prepare("INSERT INTO payments (user_id, invoice_id, amount, payment_method, status, transaction_ref, paid_at) VALUES (:uid, :iid, :amount, :method, :status, :txref, :paid_at)");
+            $stmt = $pdo->prepare("INSERT INTO payments (user_id, invoice_id, amount, payment_method, status, transaction_ref, paid_at, created_at) VALUES (:uid, :iid, :amount, :method, :status, :txref, :paid_at, NOW())");
             $stmt->execute([
                 ':uid' => $userId, ':iid' => $invoiceId ?: null,
                 ':amount' => $amount, ':method' => $paymentMethod,
@@ -128,7 +128,7 @@ try {
             $check->execute([':id' => $id, ':uid' => $userId]);
             if (!$check->fetch()) { http_response_code(404); echo json_encode(['error' => 'Paiement introuvable']); exit; }
 
-            $pdo->prepare("UPDATE payments SET amount = :amount, payment_method = :method, status = :status, transaction_ref = :txref, paid_at = :paid_at, updated_at = NOW() WHERE id = :id AND user_id = :uid")
+            $pdo->prepare("UPDATE payments SET amount = :amount, payment_method = :method, status = :status, transaction_ref = :txref, paid_at = :paid_at WHERE id = :id AND user_id = :uid")
                 ->execute([
                     ':amount' => $amount, ':method' => $paymentMethod,
                     ':status' => $status, ':txref' => $transactionRef ?: null,

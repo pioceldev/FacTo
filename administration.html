@@ -5,10 +5,10 @@
 <link rel="icon" href="images/logo.png">
 <meta name="csrf-token" content="">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Administration - FacTo</title>
+<title>Administration — FacTo</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="styles/global.css">
 <link rel="stylesheet" href="styles/components.css">
@@ -23,35 +23,35 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-<a href="index.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo">FacTo</a>
-<nav class="sidebar__nav">
-<a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Dashboard</a>
-<a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
-<a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Products</a>
-<a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Suppliers</a>
-<a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
-<a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
-<a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Invoices</a>
-<a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
-<a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
-<a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
-<hr class="sidebar__divider">
-<a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
-<a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Subscription</a>
-<a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
-</nav>
-<div class="sidebar__footer">
-<a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
+  <a href="dashboard.html" class="sidebar__logo"><img src="images/logo.png" alt="FacTo" class="logo"> FacTo</a>
+  <nav class="sidebar__nav">
+    <a href="dashboard.html" class="sidebar__item"><i class="bi bi-grid"></i> Tableau de bord</a>
+    <a href="clients.html" class="sidebar__item"><i class="bi bi-people"></i> Clients</a>
+    <a href="produits.html" class="sidebar__item"><i class="bi bi-box-seam"></i> Produits</a>
+    <a href="fournisseurs.html" class="sidebar__item"><i class="bi bi-truck"></i> Fournisseurs</a>
+    <a href="stock.html" class="sidebar__item"><i class="bi bi-layers"></i> Stock</a>
+    <a href="devis.html" class="sidebar__item"><i class="bi bi-file-text"></i> Devis</a>
+    <a href="factures.html" class="sidebar__item"><i class="bi bi-receipt"></i> Factures</a>
+    <a href="paiements.html" class="sidebar__item"><i class="bi bi-credit-card"></i> Paiements</a>
+    <a href="depenses.html" class="sidebar__item"><i class="bi bi-wallet2"></i> Dépenses</a>
+    <a href="rapports.html" class="sidebar__item"><i class="bi bi-bar-chart"></i> Rapports</a>
+    <hr class="sidebar__divider">
+    <a href="notifications.html" class="sidebar__item"><i class="bi bi-bell"></i> Notifications</a>
+    <a href="choix-abonnement.html" class="sidebar__item"><i class="bi bi-crown"></i> Abonnement</a>
+    <a href="support.html" class="sidebar__item"><i class="bi bi-question-circle"></i> Support</a>
+  </nav>
+  <div class="sidebar__footer">
+    <a href="parametres.html" class="sidebar__item"><i class="bi bi-gear"></i> Paramètres</a>
     <a href="profile.html" class="sidebar__item"><i class="bi bi-person"></i> Mon profil</a>
     <a href="#" class="sidebar__item sidebar__item--logout" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
-</div>
+  </div>
 </aside>
 
 <div class="app-layout">
-<header class="topbar">
-<div class="d-flex align-items-center">
-<button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-<div class="topbar__breadcrumb d-none d-md-flex align-items-center gap-1">
+  <header class="topbar">
+    <div class="d-flex align-items-center">
+      <button class="topbar__menu-toggle d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <div class="topbar__breadcrumb d-none d-md-flex align-items-center gap-1">
         <a href="dashboard.html">Dashboard</a>
         <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
         <span>Administration</span>
@@ -70,288 +70,418 @@
         </div>
       </div>
     </div>
-</header>
+  </header>
 
-<main class="app-content">
+  <main class="app-content">
 
-<div class="page-header">
-<div>
-<h1 class="page-header__title">Tableau de Bord Administrateur</h1>
-<p class="page-header__subtitle">Supervision globale de la plateforme et gestion des entreprises.</p>
-</div>
-<div class="page-header__actions">
-<button class="btn btn-light" style="border:1px solid var(--gray-200);"><i class="bi bi-download"></i> Exporter (.csv)</button>
-<button class="btn btn-primary"><i class="bi bi-tools"></i> Maintenance</button>
-</div>
-</div>
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">Tableau de Bord Administrateur</h1>
+        <p class="page-header__subtitle">Supervision globale de la plateforme et gestion des entreprises.</p>
+      </div>
+      <div class="page-header__actions">
+        <button class="btn btn-light" id="btnExportCsv" style="border:1px solid var(--gray-200);"><i class="bi bi-download"></i> Exporter (.csv)</button>
+        <button class="btn btn-primary" id="btnRefresh"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
+      </div>
+    </div>
 
-<!-- Stats -->
-<div class="admin__stats">
-<div class="stat-card">
-<div class="d-flex justify-content-between align-items-start">
-<div>
-<div class="stat-card__label">Revenu Mensuel (MRR)</div>
-<div class="stat-card__value" id="statRevenue">€65,240</div>
-<div class="stat-card__change up"><i class="bi bi-arrow-up-right"></i> +12.5%</div>
-</div>
-<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-currency-euro"></i></div>
-</div>
-</div>
-<div class="stat-card">
-<div class="d-flex justify-content-between align-items-start">
-<div>
-<div class="stat-card__label">Entreprises Actives</div>
-<div class="stat-card__value" id="statClients">1,248</div>
-<div class="stat-card__change up"><i class="bi bi-arrow-up-right"></i> +4.2%</div>
-</div>
-<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-building"></i></div>
-</div>
-</div>
-<div class="stat-card">
-<div class="d-flex justify-content-between align-items-start">
-<div>
-<div class="stat-card__label">Utilisateurs Totaux</div>
-<div class="stat-card__value" id="statUsers">8,492</div>
-<div class="stat-card__change up"><i class="bi bi-arrow-up-right"></i> +8.1%</div>
-</div>
-<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-people"></i></div>
-</div>
-</div>
-<div class="stat-card">
-<div class="d-flex justify-content-between align-items-start">
-<div>
-<div class="stat-card__label">Temps de réponse</div>
-<div class="stat-card__value">124ms</div>
-<div class="stat-card__change down"><i class="bi bi-arrow-down-right"></i> -15ms</div>
-</div>
-<div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi bi-activity"></i></div>
-</div>
-</div>
-</div>
+    <!-- Stats -->
+    <div class="admin__stats" id="adminStatsCards">
+      <div class="skeleton skeleton-card" style="height:110px;"></div>
+      <div class="skeleton skeleton-card" style="height:110px;"></div>
+      <div class="skeleton skeleton-card" style="height:110px;"></div>
+      <div class="skeleton skeleton-card" style="height:110px;"></div>
+    </div>
 
-<!-- Charts -->
-<div class="admin__grid">
-<div class="admin__card">
-<div class="admin__card-header">
-<div><div class="admin__card-title">Croissance des Revenus</div><div class="admin__card-subtitle">Évolution des revenus sur les 6 derniers mois</div></div>
-<div class="toggle-switch"><button class="toggle-btn active">MRR</button><button class="toggle-btn">Utilisateurs</button></div>
-</div>
-<div class="chart-container"><canvas id="adminChart"></canvas></div>
-</div>
-<div class="admin__card">
-<div class="dashboard__card-header">
-<div><div class="dashboard__card-title">Journal Système</div></div>
-</div>
-<div class="activity-item">
-<div class="activity-item__icon" style="background:var(--info-light);color:var(--info);"><i class="bi bi-info-circle"></i></div>
-<div class="activity-item__content"><div class="activity-item__title">Mise à jour serveur v2.4</div><div class="activity-item__time">SYSTÈME • Il y a 2 min</div></div>
-</div>
-<div class="activity-item">
-<div class="activity-item__icon" style="background:var(--success-light);color:var(--success);"><i class="bi bi-person-plus"></i></div>
-<div class="activity-item__content"><div class="activity-item__title">Nouveau compte: TechFlow</div><div class="activity-item__time">ADMIN • Il y a 15 min</div></div>
-</div>
-<div class="activity-item">
-<div class="activity-item__icon" style="background:var(--danger-light);color:var(--danger);"><i class="bi bi-x-circle"></i></div>
-<div class="activity-item__content"><div class="activity-item__title">Échec de paiement (Global Logistics)</div><div class="activity-item__time">STRIPE • Il y a 1h</div></div>
-</div>
-<div class="activity-item">
-<div class="activity-item__icon" style="background:var(--success-light);color:var(--success);"><i class="bi bi-check-circle"></i></div>
-<div class="activity-item__content"><div class="activity-item__title">Backup hebdomadaire réussi</div><div class="activity-item__time">SYSTÈME • Il y a 3h</div></div>
-</div>
-<div style="margin-top:12px;text-align:center;"><a href="#" style="color:var(--primary);font-size:.85rem;font-weight:500;">Voir tous les journaux</a></div>
-</div>
-</div>
+    <!-- Charts -->
+    <div class="admin__grid">
+      <div class="admin__card">
+        <div class="admin__card-header">
+          <div>
+            <div class="admin__card-title">Croissance des Revenus</div>
+            <div class="admin__card-subtitle">Évolution sur les 6 derniers mois</div>
+          </div>
+          <div class="toggle-switch">
+            <button class="toggle-btn active" id="toggleMrr">MRR</button>
+            <button class="toggle-btn" id="toggleUsers">Utilisateurs</button>
+          </div>
+        </div>
+        <div class="chart-container" style="height:280px;"><canvas id="adminChart"></canvas></div>
+      </div>
+      <div class="admin__card">
+        <div class="admin__card-header">
+          <div>
+            <div class="admin__card-title">Journal Système</div>
+            <div class="admin__card-subtitle">Événements récents</div>
+          </div>
+        </div>
+        <div id="activityLogs">
+          <div class="skeleton skeleton-text" style="height:44px; margin:8px 0;"></div>
+          <div class="skeleton skeleton-text" style="height:44px; margin:8px 0;"></div>
+          <div class="skeleton skeleton-text" style="height:44px; margin:8px 0;"></div>
+        </div>
+        <div style="margin-top:12px;text-align:center;">
+          <a href="#" id="btnMoreLogs" style="color:var(--primary);font-size:.85rem;font-weight:500;text-decoration:none;">Voir tous les journaux</a>
+        </div>
+      </div>
+    </div>
 
-<!-- Companies Table -->
-<div class="admin__card" style="margin-bottom:16px;">
-<div class="admin__card-header">
-<div><div class="admin__card-title">Gestion des Entreprises</div></div>
-<div class="admin__filters">
-<div class="admin__filter-input"><i class="bi bi-search"></i><input type="text" placeholder="Filtrer par nom ou ID..."></div>
-<button class="admin__filter-btn"><i class="bi bi-funnel"></i> Filtres</button>
-</div>
-</div>
-<table class="custom-table">
-<thead>
-<tr>
-<th>Entreprise</th>
-<th>Abonnement</th>
-<th>Statut</th>
-<th>Utilisateurs</th>
-<th>Revenu</th>
-<th>Date d'inscription</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<div class="d-flex align-items-center gap-2">
-<div class="company-avatar" style="background:#f97316;">T</div>
-<div><div class="admin__company-name">TechFlow Solutions SA / FT-1982</div></div>
-</div>
-</td>
-<td><span class="badge-soft badge-soft-primary">Premium</span></td>
-<td><span class="status-dot success"></span>Actif</td>
-<td>24</td>
-<td>€1,200/m</td>
-<td>12 Oct 2023</td>
-<td>
-<div class="dashboard__invoice-actions">
-<button><i class="bi bi-envelope"></i></button>
-<button><i class="bi bi-pencil"></i></button>
-<button><i class="bi bi-slash-circle"></i></button>
-</div>
-</td>
-</tr>
-<tr>
-<td>
-<div class="d-flex align-items-center gap-2">
-<div class="company-avatar" style="background:var(--primary);">L</div>
-<div><div class="admin__company-name">Lumière Architecture</div><div class="admin__company-id">ID: FT-2982</div></div>
-</div>
-</td>
-<td><span class="badge-soft badge-soft-info">Standard</span></td>
-<td><span class="status-dot success"></span>Actif</td>
-<td>8</td>
-<td>€450/m</td>
-<td>05 Nov 2023</td>
-<td>
-<div class="dashboard__invoice-actions">
-<button><i class="bi bi-envelope"></i></button>
-<button><i class="bi bi-pencil"></i></button>
-<button><i class="bi bi-slash-circle"></i></button>
-</div>
-</td>
-</tr>
-<tr>
-<td>
-<div class="d-flex align-items-center gap-2">
-<div class="company-avatar" style="background:#f97316;">G</div>
-<div><div class="admin__company-name">Global Logistics s.a. / FT-3982</div></div>
-</div>
-</td>
-<td><span class="badge-soft badge-soft-primary">Premium</span></td>
-<td><span class="status-dot warning"></span>En retard</td>
-<td>45</td>
-<td>€2,400/m</td>
-<td>22 Sep 2023</td>
-<td>
-<div class="dashboard__invoice-actions">
-<button><i class="bi bi-envelope"></i></button>
-<button><i class="bi bi-pencil"></i></button>
-<button><i class="bi bi-slash-circle"></i></button>
-</div>
-</td>
-</tr>
-<tr>
-<td>
-<div class="d-flex align-items-center gap-2">
-<div class="company-avatar" style="background:#f97316;">A</div>
-<div><div class="admin__company-name">Artisanat & Co / FT-4982</div></div>
-</div>
-</td>
-<td><span class="badge-soft badge-soft-secondary">Gratuit</span></td>
-<td><span class="status-dot success"></span>Actif</td>
-<td>2</td>
-<td>€0/m</td>
-<td>15 Jan 2024</td>
-<td>
-<div class="dashboard__invoice-actions">
-<button><i class="bi bi-envelope"></i></button>
-<button><i class="bi bi-pencil"></i></button>
-<button><i class="bi bi-slash-circle"></i></button>
-</div>
-</td>
-</tr>
-<tr>
-<td>
-<div class="d-flex align-items-center gap-2">
-<div class="company-avatar" style="background:#f97316;">I</div>
-<div><div class="admin__company-name">Invest Immo / FT-5982</div></div>
-</div>
-</td>
-<td><span class="badge-soft badge-soft-info">Standard</span></td>
-<td><span class="status-dot danger"></span>Suspendu</td>
-<td>12</td>
-<td>€450/m</td>
-<td>30 Oct 2023</td>
-<td>
-<div class="dashboard__invoice-actions">
-<button><i class="bi bi-envelope"></i></button>
-<button><i class="bi bi-pencil"></i></button>
-<button><i class="bi bi-slash-circle"></i></button>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="d-flex justify-content-between align-items-center mt-3" style="font-size:.85rem;color:var(--gray-500);">
-<div>Affichage de 5 sur 1,248 entreprises</div>
-<div class="pagination-custom">
-<a href="#" class="pagination-custom__link">Précédent</a>
-<a href="#" class="pagination-custom__link active">1</a>
-<a href="#" class="pagination-custom__link">2</a>
-<a href="#" class="pagination-custom__link">3</a>
-<a href="#" class="pagination-custom__link">Suivant</a>
-</div>
-</div>
-</div>
+    <!-- Companies Table -->
+    <div class="admin__card" style="margin-bottom:16px;">
+      <div class="admin__card-header">
+        <div>
+          <div class="admin__card-title">Gestion des Entreprises</div>
+          <div class="admin__card-subtitle"><span id="companiesTotal">—</span> entreprise(s) au total</div>
+        </div>
+        <div class="admin__filters">
+          <div class="admin__filter-input">
+            <i class="bi bi-search"></i>
+            <input type="text" id="companySearchInput" placeholder="Filtrer par nom, société ou email...">
+          </div>
+          <button class="admin__filter-btn" id="btnClearFilter"><i class="bi bi-x-lg"></i> Effacer</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Entreprise</th>
+            <th>Abonnement</th>
+            <th>Statut</th>
+            <th>Factures</th>
+            <th>Abonnement €/m</th>
+            <th>Date d'inscription</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="companiesTableBody">
+          <tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px;">Chargement des entreprises…</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-3" style="font-size:.85rem;color:var(--gray-500);">
+        <div id="companiesInfo">—</div>
+        <div class="pagination-custom">
+          <a href="#" id="btnPrevPage" class="pagination-custom__link">Précédent</a>
+          <span class="pagination-custom__link active" id="pageIndicator">1</span>
+          <a href="#" id="btnNextPage" class="pagination-custom__link">Suivant</a>
+        </div>
+      </div>
+    </div>
 
-<!-- Bottom cards -->
-<div class="admin__bottom-grid">
-<div class="admin__alert-card">
-<h5>Version 2.5</h5>
-<h4>Prêt pour la version 2.5?</h4>
-<p>Le déploiement de la nouvelle version est prévu pour lundi prochain. Vérifiez les dépendances de base de données.</p>
-<button class="btn-light">Consulter la Roadmap <i class="bi bi-arrow-up-right"></i></button>
-</div>
-<div class="admin__alert-card admin__alert-card--dark">
-<h5>Alertes Système</h5>
-<h4>3 terminaux en surchauffe</h4>
-<p>Le cluster de base de données "EU-West-1" rapporte une utilisation CPU de 94%.</p>
-<div class="d-flex align-items-center gap-3">
-<button class="btn-outline-light">Optimiser</button>
-<span style="font-size:.8rem;opacity:.6;"><i class="bi bi-clock"></i> Vérifié il y a 4s</span>
-</div>
-</div>
-</div>
+    <!-- Bottom cards -->
+    <div class="admin__bottom-grid">
+      <div class="admin__alert-card">
+        <h5>Revenu récurrent (MRR)</h5>
+        <h4 id="alertMrr">—</h4>
+        <p id="alertSubsText">Chargement des abonnements actifs…</p>
+        <a href="choix-abonnement.html" class="btn-light" style="display:inline-block;text-decoration:none;">Gérer les offres <i class="bi bi-arrow-up-right"></i></a>
+      </div>
+      <div class="admin__alert-card admin__alert-card--dark">
+        <h5>Dépenses enregistrées</h5>
+        <h4 id="alertExpenses">—</h4>
+        <p id="alertExpensesText">Chargement des dépenses…</p>
+        <button class="btn-outline-light" id="btnRefresh2" style="border:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);padding:8px 16px;border-radius:var(--radius-sm);font-weight:500;font-size:.85rem;"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
+      </div>
+    </div>
 
-</main>
-
-<footer style="padding:16px 24px;border-top:1px solid var(--gray-200);background:#fff;">
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="font-size:.8rem;color:var(--gray-500);">
-<div>© 2024 FacTo. Tous droits réservés.</div>
-<div class="d-flex gap-3"><a href="support.html" style="color:var(--gray-500);">Support technique</a><a href="#" style="color:var(--gray-500);">Centre d'aide</a><a href="#" style="color:var(--gray-500);">État du système</a></div>
-</div>
-</footer>
+  </main>
 </div>
 
 <script>
-async function loadAdminData() {
-  try {
-    const ov = await fetch('backend/admin.php?action=overview', { credentials: 'same-origin' }).then(r => r.json());
-    const o = ov.overview;
-    document.getElementById('statUsers').textContent = o.total_users;
-    document.getElementById('statClients').textContent = o.total_clients;
-    document.getElementById('statInvoices').textContent = o.total_invoices;
-    document.getElementById('statRevenue').textContent = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(o.total_revenue);
-  } catch (e) { /* ignore */ }
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const fmtInt = v => new Intl.NumberFormat('fr-FR').format(Number(v) || 0);
+  const fmtEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v) || 0);
 
-  try {
-    const mr = await fetch('backend/admin.php?action=monthly_revenue', { credentials: 'same-origin' }).then(r => r.json());
-    const ctx = document.getElementById('adminChart').getContext('2d');
-    new Chart(ctx, {
+  let adminChart = null;
+  let chartData = { mrr: [], users: [] };
+  let allCompanies = [];
+  let companyPage = 0;
+  const PAGE_SIZE = 10;
+
+  function toast(msg, type) {
+    if (window.toast) { window.toast(msg, type); return; }
+    alert(msg);
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { credentials: 'same-origin' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur (' + res.status + ')');
+    return data;
+  }
+
+  async function loadOverview() {
+    try {
+      const data = await fetchJSON('backend/admin.php?action=overview');
+      const o = data.overview;
+      const cards = [
+        { label: 'Revenu total', value: fmtEUR(o.total_revenue), change: fmtEUR(o.revenue_this_month) + ' encaissés ce mois', icon: 'bi-currency-euro', up: true },
+        { label: 'Utilisateurs', value: fmtInt(o.total_users), change: '+' + fmtInt(o.active_users) + ' ce mois', icon: 'bi-people', up: true },
+        { label: 'Clients', value: fmtInt(o.total_clients), change: fmtInt(o.total_subscriptions) + ' abonnements actifs', icon: 'bi-building', up: true },
+        { label: 'Factures', value: fmtInt(o.total_invoices), change: fmtEUR(o.total_expenses) + ' de dépenses', icon: 'bi-receipt', up: false }
+      ];
+      $('adminStatsCards').innerHTML = cards.map(c => `
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-card__label">${c.label}</div>
+              <div class="stat-card__value">${c.value}</div>
+              <div class="stat-card__change ${c.up ? 'up' : 'down'}"><i class="bi bi-arrow-up-right"></i> ${c.change}</div>
+            </div>
+            <div class="stat-icon" style="background:var(--primary-light);color:var(--primary);"><i class="bi ${c.icon}"></i></div>
+          </div>
+        </div>`).join('');
+
+      $('alertMrr').textContent = fmtEUR(o.mrr_total);
+      $('alertSubsText').textContent = o.total_subscriptions + ' abonnement(s) actif(s) facturé(s) mensuellement.';
+      $('alertExpenses').textContent = fmtEUR(o.total_expenses);
+      $('alertExpensesText').textContent = 'Total des dépenses enregistrées par tous les utilisateurs.';
+    } catch (e) {
+      $('adminStatsCards').innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:var(--gray-500);">Impossible de charger les statistiques : ' + e.message + '</div>';
+    }
+  }
+
+  async function loadChart() {
+    try {
+      const [mr, ug] = await Promise.all([
+        fetchJSON('backend/admin.php?action=monthly_revenue'),
+        fetchJSON('backend/admin.php?action=user_growth')
+      ]);
+      chartData.mrr = mr.monthly_revenue || [];
+      chartData.users = ug.user_growth || [];
+      renderChart('mrr');
+    } catch (e) { /* graphique silencieux si indisponible */ }
+  }
+
+  function renderChart(mode) {
+    const data = mode === 'mrr' ? chartData.mrr : chartData.users;
+    const labels = data.map(d => d.month);
+    const values = data.map(d => (mode === 'mrr' ? Number(d.revenue) : Number(d.users)));
+    const isMoney = mode === 'mrr';
+    const ctx = $('adminChart');
+    if (!ctx) return;
+    if (adminChart) adminChart.destroy();
+    adminChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: mr.monthly_revenue.map(d => d.month),
-        datasets: [{ label: 'MRR', data: mr.monthly_revenue.map(d => d.revenue), borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.4, pointRadius: 3 }]
+        labels,
+        datasets: [{
+          label: isMoney ? 'MRR' : 'Utilisateurs',
+          data: values,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3
+        }]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v) } }, x: { grid: { display: false } } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: v => isMoney ? fmtEUR(v) : fmtInt(v) } },
+          x: { grid: { display: false } }
+        }
+      }
     });
-  } catch (e) { /* ignore */ }
-}
-loadAdminData();
+  }
+
+  function planBadge(plan) {
+    const p = String(plan || '—').toLowerCase();
+    if (p === 'premium') return '<span class="badge-soft badge-soft-primary">Premium</span>';
+    if (p === 'standard') return '<span class="badge-soft badge-soft-info">Standard</span>';
+    if (p === 'free' || p === 'gratuit') return '<span class="badge-soft badge-soft-secondary">Gratuit</span>';
+    return '<span class="badge-soft badge-soft-secondary">' + (plan || '—') + '</span>';
+  }
+
+  function statusBadge(status) {
+    const s = String(status || '').toLowerCase();
+    const map = {
+      active: ['success', 'Actif'],
+      trialing: ['info', 'Essai'],
+      pending: ['warning', 'En attente'],
+      past_due: ['warning', 'En retard'],
+      cancelled: ['danger', 'Annulé'],
+      canceled: ['danger', 'Annulé']
+    };
+    const m = map[s];
+    if (m) return '<span class="badge-soft badge-soft-' + m[0] + '">' + m[1] + '</span>';
+    return '<span class="badge-soft badge-soft-secondary">' + (status || '—') + '</span>';
+  }
+
+  async function loadCompanies() {
+    try {
+      const q = $('companySearchInput').value.trim();
+      const url = 'backend/admin.php?action=companies' + (q ? '&q=' + encodeURIComponent(q) : '');
+      const data = await fetchJSON(url);
+      allCompanies = data.companies || [];
+      companyPage = 0;
+      $('companiesTotal').textContent = fmtInt(data.total || 0);
+      renderCompanies();
+    } catch (e) {
+      $('companiesTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px;">' + e.message + '</td></tr>';
+    }
+  }
+
+  function renderCompanies() {
+    const tbody = $('companiesTableBody');
+    const q = $('companySearchInput').value.trim();
+    const filtered = q ? allCompanies.filter(c => (c.name + ' ' + (c.company || '') + ' ' + (c.email || '')).toLowerCase().includes(q.toLowerCase())) : allCompanies;
+    const total = filtered.length;
+    const maxPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
+    companyPage = Math.min(companyPage, maxPage);
+    const pageRows = filtered.slice(companyPage * PAGE_SIZE, (companyPage + 1) * PAGE_SIZE);
+
+    if (!pageRows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:24px;">Aucune entreprise trouvée.</td></tr>';
+    } else {
+      tbody.innerHTML = pageRows.map(c => {
+        const initial = (c.company || c.name || '?').trim().charAt(0).toUpperCase();
+        return `
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="company-avatar" style="background:var(--primary);">${initial}</div>
+              <div>
+                <div class="admin__company-name">${c.company || c.name}</div>
+                <div class="admin__company-id">${c.email || ('ID: ' + c.id)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${planBadge(c.plan_name)}</td>
+          <td>${statusBadge(c.sub_status)}</td>
+          <td>${fmtInt(c.invoices_count)}</td>
+          <td>${c.price !== null && c.price !== undefined && c.price !== '' ? fmtEUR(c.price) + '/m' : '—'}</td>
+          <td style="white-space:nowrap;">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
+          <td>
+            <div class="dashboard__invoice-actions">
+              <button type="button" title="Envoyer un email" onclick="location.href='mailto:${c.email || ''}'"><i class="bi bi-envelope"></i></button>
+              <button type="button" title="Voir les détails" onclick="showCompanyDetails(${c.id})"><i class="bi bi-eye"></i></button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    $('companiesInfo').textContent = 'Affichage de ' + pageRows.length + ' sur ' + fmtInt(total) + ' entreprise(s)';
+    $('pageIndicator').textContent = String(companyPage + 1);
+    $('btnPrevPage').style.visibility = companyPage === 0 ? 'hidden' : 'visible';
+    $('btnNextPage').style.visibility = companyPage >= maxPage ? 'hidden' : 'visible';
+  }
+
+  function showCompanyDetails(id) {
+    const c = allCompanies.find(x => String(x.id) === String(id));
+    if (!c) return;
+    if (window.uiConfirm) {
+      const lines = [
+        (c.company || c.name),
+        (c.email || ''),
+        '',
+        'Abonnement : ' + (c.plan_name || '—') + ' (' + (c.sub_status || '—') + ')',
+        'Factures : ' + fmtInt(c.invoices_count),
+        'Inscrit le : ' + (c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'),
+      ];
+      window.uiConfirm({
+        title: 'Entreprise #' + c.id,
+        text: lines.join('\n'),
+        confirmText: 'Fermer',
+        cancelText: '',
+        danger: false,
+      }).then(() => {});
+    } else {
+      alert('Entreprise #' + c.id + '\n' + (c.company || c.name) + '\n' + (c.email || '') + '\nAbonnement : ' + (c.plan_name || '—') + ' (' + (c.sub_status || '—') + ')\nFactures : ' + fmtInt(c.invoices_count));
+    }
+  }
+
+  let logLimit = 20;
+  async function loadLogs() {
+    try {
+      const data = await fetchJSON('backend/admin.php?action=activity_logs&limit=' + logLimit);
+      const logs = data.logs || [];
+      const container = $('activityLogs');
+      if (!logs.length) {
+        container.innerHTML = '<div style="color:var(--gray-400);font-size:.85rem;text-align:center;padding:20px;">Aucune activité enregistrée.</div>';
+      } else {
+        container.innerHTML = logs.map(l => {
+          const map = { info: ['info-circle', 'var(--info-light)', 'var(--info)'], warning: ['exclamation-triangle', 'var(--warning-light)', 'var(--warning)'], error: ['x-circle', 'var(--danger-light)', 'var(--danger)'] };
+          const m = map[l.level] || map.info;
+          const rel = timeAgo(l.created_at);
+          return `
+            <div class="activity-item">
+              <div class="activity-item__icon" style="background:${m[1]};color:${m[2]};"><i class="bi bi-${m[0]}"></i></div>
+              <div class="activity-item__content">
+                <div class="activity-item__title">${l.message}</div>
+                <div class="activity-item__time">${(l.user_name || 'SYSTÈME').toUpperCase()} • ${rel}</div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+      const showMore = logs.length >= logLimit;
+      $('btnMoreLogs').style.display = showMore ? '' : 'none';
+    } catch (e) {
+      $('activityLogs').innerHTML = '<div style="color:var(--gray-400);font-size:.85rem;text-align:center;padding:20px;">' + e.message + '</div>';
+    }
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return "Il y a quelques secondes";
+    if (diff < 3600) return "Il y a " + Math.floor(diff / 60) + " min";
+    if (diff < 86400) return "Il y a " + Math.floor(diff / 3600) + "h";
+    if (diff < 604800) return "Il y a " + Math.floor(diff / 86400) + " jour(s)";
+    return d.toLocaleDateString('fr-FR');
+  }
+
+  function exportCSV() {
+    if (!allCompanies.length) { toast('Aucune entreprise à exporter', 'error'); return; }
+    const rows = [['ID', 'Nom', 'Société', 'Email', 'Abonnement', 'Statut', 'Factures', 'Prix €/m', 'Inscrit le']];
+    allCompanies.forEach(c => {
+      rows.push([c.id, c.name || '', c.company || '', c.email || '', c.plan_name || '', c.sub_status || '', c.invoices_count || 0, c.price !== null && c.price !== undefined ? c.price : '', c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '']);
+    });
+    const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'facto-entreprises.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast('Export CSV généré (' + allCompanies.length + ' lignes)', 'success');
+  }
+
+  function bindEvents() {
+    $('btnRefresh').addEventListener('click', () => { loadOverview(); loadChart(); loadCompanies(); loadLogs(); toast('Données actualisées', 'success'); });
+    $('btnRefresh2').addEventListener('click', () => { loadOverview(); loadChart(); loadCompanies(); loadLogs(); toast('Données actualisées', 'success'); });
+    $('btnExportCsv').addEventListener('click', exportCSV);
+    $('toggleMrr').addEventListener('click', () => { $('toggleMrr').classList.add('active'); $('toggleUsers').classList.remove('active'); renderChart('mrr'); });
+    $('toggleUsers').addEventListener('click', () => { $('toggleUsers').classList.add('active'); $('toggleMrr').classList.remove('active'); renderChart('users'); });
+    $('btnMoreLogs').addEventListener('click', e => { e.preventDefault(); logLimit = 100; loadLogs(); });
+    $('btnClearFilter').addEventListener('click', () => { $('companySearchInput').value = ''; loadCompanies(); });
+    $('companySearchInput').addEventListener('input', debounce(loadCompanies, 350));
+    $('btnPrevPage').addEventListener('click', e => { e.preventDefault(); if (companyPage > 0) { companyPage--; renderCompanies(); } });
+    $('btnNextPage').addEventListener('click', e => { e.preventDefault(); companyPage++; renderCompanies(); });
+  }
+
+  function debounce(fn, ms) {
+    let t;
+    return function () { clearTimeout(t); t = setTimeout(fn, ms); };
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    bindEvents();
+    loadOverview();
+    loadChart();
+    loadCompanies();
+    loadLogs();
+  });
+})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="scripts/main.js"></script>

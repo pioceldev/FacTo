@@ -188,7 +188,84 @@ async function apiCall(action, body) {
   return response.json();
 }
 
+let compareCycle = 'monthly';
+
+function planLabel(name) {
+  const n = (name || '').toLowerCase();
+  if (n === 'free' || n === 'gratuit') return 'Gratuit';
+  if (n === 'premium') return 'Premium';
+  if (n === 'standard') return 'Standard';
+  return name || '—';
+}
+
+function planFeatures(plan) {
+  const raw = (plan.features || '').split(';').map(s => s.trim()).filter(Boolean);
+  return raw.length ? raw : ['Fonctionnalités à venir'];
+}
+
+function renderComparePlans() {
+  const grid = document.getElementById('comparePlansGrid');
+  if (!grid) return;
+
+  const plans = [...subscriptionState.plans].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  if (!plans.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--gray-500);padding:24px;">Aucune offre disponible pour le moment.</div>';
+    return;
+  }
+
+  const currentPlan = (subscriptionState.subscription?.plan_name || '').toLowerCase();
+  const isYearly = compareCycle === 'yearly';
+
+  grid.innerHTML = plans.map((plan) => {
+    const name = planLabel(plan.name);
+    const isCurrent = currentPlan === (plan.name || '').toLowerCase();
+    const isPremium = (plan.name || '').toLowerCase() === 'premium';
+    const monthly = Number(plan.price_monthly) || 0;
+    const yearly = Number(plan.price_yearly) || 0;
+    const displayPrice = isYearly && yearly > 0 ? yearly / 12 : monthly;
+    const priceStr = displayPrice === 0
+      ? '0 €'
+      : displayPrice.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: displayPrice % 1 === 0 ? 0 : 2 });
+
+    const icon = isPremium ? 'bi-crown' : isCurrent ? 'bi-star-fill' : 'bi-lightning-charge';
+    const iconBg = isPremium
+      ? 'background:var(--gray-800);color:#fff;'
+      : isCurrent
+        ? 'background:var(--primary-light);color:var(--primary);margin-top:20px;'
+        : 'background:var(--gray-100);color:var(--gray-600);';
+
+    return `
+      <div class="compare-card ${isCurrent ? 'compare-card--current' : ''}">
+        ${isCurrent ? '<div class="compare-card__current-badge">PLAN ACTUEL</div>' : ''}
+        <div class="compare-card__icon" style="${iconBg}"><i class="bi ${icon}"></i></div>
+        <div class="compare-card__name" ${isPremium ? 'style="color:var(--primary);"' : ''}>${name}</div>
+        <div class="compare-card__desc">${plan.description || ''}</div>
+        <div class="compare-card__price">${priceStr}<span>/mois</span></div>
+        ${isYearly && yearly > 0 ? '<div style="font-size:.72rem;color:var(--success);font-weight:600;margin-top:-8px;margin-bottom:12px;">Facturation annuelle (−20%)</div>' : ''}
+        <ul class="compare-card__features">
+          ${planFeatures(plan).map(f => `<li><i class="bi bi-check-lg"></i> ${f}</li>`).join('')}
+        </ul>
+        ${isCurrent
+          ? '<button class="btn btn-outline-secondary compare-card__btn" style="border-color:var(--gray-200);color:var(--gray-500);" disabled>Votre plan actuel</button>'
+          : `<a href="choix-abonnement.html" class="btn btn-primary compare-card__btn">${isPremium ? 'Passer à Premium' : 'Choisir ce plan'}</a>`}
+      </div>`;
+  }).join('');
+}
+
 function attachActions() {
+  const toggleMonthly = document.getElementById('toggleMonthly');
+  const toggleYearly = document.getElementById('toggleYearly');
+  if (toggleMonthly && toggleYearly) {
+    const setToggle = (cycle, btn) => {
+      compareCycle = cycle;
+      toggleMonthly.classList.toggle('active', cycle === 'monthly');
+      toggleYearly.classList.toggle('active', cycle === 'yearly');
+      renderComparePlans();
+    };
+    toggleMonthly.addEventListener('click', () => setToggle('monthly', toggleMonthly));
+    toggleYearly.addEventListener('click', () => setToggle('yearly', toggleYearly));
+  }
+
   const btnChange = document.getElementById('btnChangePlan');
   if (btnChange) {
     btnChange.addEventListener('click', () => {
@@ -261,6 +338,7 @@ async function initSubscriptionPage() {
       updateSubscriptionUI(data.subscription);
     }
     renderPaymentHistory();
+    renderComparePlans();
   } catch (error) {
     console.error(error);
   }

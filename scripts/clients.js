@@ -188,7 +188,7 @@ function openNewClient(event) {
   document.getElementById('clientModalTitle').textContent = 'Nouveau client';
   document.getElementById('clientId').value = '';
   document.getElementById('clientForm').reset();
-  getModal('clientModal').show();
+  openModal('clientModal');
 }
 
 function openEditClient(clientId) {
@@ -206,7 +206,7 @@ function openEditClient(clientId) {
       document.getElementById('clientCity').value = c.city || '';
       document.getElementById('clientZip').value = c.zip || '';
       document.getElementById('clientCountry').value = c.country || '';
-      getModal('clientModal').show();
+      openModal('clientModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -234,7 +234,7 @@ async function submitClient(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Client enregistre', 'success');
-    getModal('clientModal').hide();
+    closeModal('clientModal');
     await refreshClients();
   } catch (error) {
     toast(error.message, 'error');

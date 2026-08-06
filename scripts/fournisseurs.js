@@ -143,7 +143,7 @@ function openNewSupplier(event) {
   document.getElementById('supplierModalTitle').textContent = 'Nouveau fournisseur';
   document.getElementById('supplierId').value = '';
   document.getElementById('supplierForm').reset();
-  getModal('supplierModal').show();
+  openModal('supplierModal');
 }
 
 function openEditSupplier(supplierId) {
@@ -158,7 +158,7 @@ function openEditSupplier(supplierId) {
       document.getElementById('supplierEmail').value = s.email || '';
       document.getElementById('supplierPhone').value = s.phone || '';
       document.getElementById('supplierAddress').value = s.address || '';
-      getModal('supplierModal').show();
+      openModal('supplierModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -183,7 +183,7 @@ async function submitSupplier(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Fournisseur enregistre', 'success');
-    getModal('supplierModal').hide();
+    closeModal('supplierModal');
     await refreshSuppliers();
   } catch (error) {
     toast(error.message, 'error');

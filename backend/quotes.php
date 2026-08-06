@@ -90,6 +90,20 @@ try {
             echo json_encode(['success' => true, 'quote' => $quote]);
             break;
 
+        case 'clients':
+            // Sélecteur client du formulaire devis (devis.js -> loadClients())
+            $stmt = $pdo->prepare("SELECT id, name, company, email, phone FROM clients WHERE user_id = :uid ORDER BY name");
+            $stmt->execute([':uid' => $userId]);
+            echo json_encode(['success' => true, 'clients' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+
+        case 'products':
+            // Sélecteur produit du formulaire devis (devis.js -> loadProducts())
+            $stmt = $pdo->prepare("SELECT id, name, sku, unit_price, vat_rate FROM products WHERE user_id = :uid AND is_active = 1 ORDER BY name");
+            $stmt->execute([':uid' => $userId]);
+            echo json_encode(['success' => true, 'products' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+
         case 'create':
             $body = readBody();
             $clientId = intval($body['client_id'] ?? 0);
@@ -98,11 +112,12 @@ try {
             $validUntil = $body['valid_until'] ?? null;
             $items = $body['items'] ?? [];
 
-            if ($clientId <= 0) { http_response_code(400); echo json_encode(['error' => 'client_id requis']); exit; }
-
-            $clientCheck = $pdo->prepare("SELECT id FROM clients WHERE id = :cid AND user_id = :uid");
-            $clientCheck->execute([':cid' => $clientId, ':uid' => $userId]);
-            if (!$clientCheck->fetch()) { http_response_code(400); echo json_encode(['error' => 'Client introuvable']); exit; }
+            // Le client est optionnel (devis sans client). S'il est fourni, il doit appartenir à l'utilisateur.
+            if ($clientId > 0) {
+                $clientCheck = $pdo->prepare("SELECT id FROM clients WHERE id = :cid AND user_id = :uid");
+                $clientCheck->execute([':cid' => $clientId, ':uid' => $userId]);
+                if (!$clientCheck->fetch()) { http_response_code(400); echo json_encode(['error' => 'Client introuvable']); exit; }
+            }
 
             if ($ref === '') {
                 $ref = 'DEV-' . strtoupper(substr(uniqid(), -6));
@@ -119,9 +134,9 @@ try {
             }
             $total = $amount + $vat;
 
-            $stmt = $pdo->prepare("INSERT INTO quotes (user_id, client_id, ref, status, amount, vat, total, valid_until) VALUES (:uid, :cid, :ref, :status, :amount, :vat, :total, :valid_until)");
+            $stmt = $pdo->prepare("INSERT INTO quotes (user_id, client_id, ref, status, amount, vat, total, valid_until, created_at) VALUES (:uid, :cid, :ref, :status, :amount, :vat, :total, :valid_until, NOW())");
             $stmt->execute([
-                ':uid' => $userId, ':cid' => $clientId, ':ref' => $ref,
+                ':uid' => $userId, ':cid' => $clientId ?: null, ':ref' => $ref,
                 ':status' => $status, ':amount' => $amount, ':vat' => $vat,
                 ':total' => $total, ':valid_until' => $validUntil,
             ]);
@@ -144,7 +159,7 @@ try {
 
             $stmt = $pdo->prepare("SELECT q.*, c.name AS client_name FROM quotes q LEFT JOIN clients c ON q.client_id = c.id WHERE q.id = :id");
             $stmt->execute([':id' => $newId]);
-            echo json_encode(['success' => true, 'message' => 'Devis ' . $ref . ' cr��', 'quote' => $stmt->fetch(PDO::FETCH_ASSOC)]);
+            echo json_encode(['success' => true, 'message' => 'Devis ' . $ref . ' créé', 'quote' => $stmt->fetch(PDO::FETCH_ASSOC)]);
             break;
 
         case 'update':

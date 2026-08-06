@@ -91,21 +91,6 @@ if ($action === 'list') {
     // Stats globales (indépendantes du filtre courant)
     $stats = $pdo->prepare(
         'SELECT
-            COUNT(*) AS total_clients,
-            COALESCE(SUM(has.inv), 0) AS with_invoices,
-            COALESCE(SUM(has.total_billed), 0) AS total_billed
-         FROM clients cl
-         LEFT JOIN (
-            SELECT c.id, 1 AS inv,
-                   COALESCE((SELECT SUM(i.total) FROM invoices i WHERE i.client_id = c.id AND i.status = "payee"), 0) AS total_billed
-            FROM clients c
-            WHERE c.user_id = ?
-         ) has ON has.id = cl.id
-         WHERE cl.user_id = ?'
-    )->execute([$userId, $userId])->fetch();
-
-    $stats = $pdo->prepare(
-        'SELECT
             (SELECT COUNT(*) FROM clients WHERE user_id = ?) AS total_clients,
             (SELECT COUNT(DISTINCT client_id) FROM invoices WHERE user_id = ? AND client_id IS NOT NULL) AS with_invoices,
             (SELECT COALESCE(SUM(total), 0) FROM invoices WHERE user_id = ? AND status = "payee") AS total_billed'

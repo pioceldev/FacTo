@@ -72,46 +72,75 @@ function renderWelcome() {
   }
 }
 
+function pctChange(current, previous) {
+  if (previous > 0) {
+    return Math.round(((current - previous) / previous) * 100);
+  }
+  return null; // pas de base de comparaison
+}
+
+function changeLabel(current, previous, unit) {
+  const pct = pctChange(current, previous);
+  if (pct === null) {
+    return current > 0
+      ? { text: 'Nouveau', variant: 'up' }
+      : { text: 'Aucune activité', variant: 'down' };
+  }
+  const sign = pct >= 0 ? '+' : '−';
+  return {
+    text: `${sign}${Math.abs(pct)}% ${unit}`,
+    variant: pct >= 0 ? 'up' : 'down',
+  };
+}
+
 function renderStats() {
   const statsContainer = document.getElementById('dashboardStatsCards');
   if (!statsContainer) return;
 
   const stats = state.stats || {
     monthly_revenue: 0,
+    revenue_prev_month: 0,
     invoice_count: 0,
+    invoice_count_month: 0,
+    invoice_count_prev_month: 0,
     new_clients: 0,
+    new_clients_prev: 0,
     ticket_response_rate: 0,
   };
+
+  const revenueChange = changeLabel(stats.monthly_revenue, stats.revenue_prev_month, 'vs mois dernier');
+  const invoicesChange = changeLabel(stats.invoice_count_month, stats.invoice_count_prev_month, 'vs mois dernier');
+  const clientsChange = changeLabel(stats.new_clients, stats.new_clients_prev, 'vs 30 jours avant');
 
   const cards = [
     {
       label: "Chiffre d'affaires",
       value: formatCurrency(stats.monthly_revenue),
-      change: "+12% ce mois",
-      variant: 'up',
+      change: revenueChange.text,
+      variant: revenueChange.variant,
       icon: 'bi-currency-euro',
       gradient: 'linear-gradient(135deg, #f97316, #fb923c)',
     },
     {
       label: "Factures émises",
-      value: stats.invoice_count.toString(),
-      change: "+8% cette semaine",
-      variant: 'up',
+      value: `${stats.invoice_count_month} ce mois`,
+      change: invoicesChange.text,
+      variant: invoicesChange.variant,
       icon: 'bi-receipt',
       gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
     },
     {
       label: "Nouveaux clients",
       value: stats.new_clients.toString(),
-      change: "+30 derniers jours",
-      variant: 'up',
+      change: clientsChange.text,
+      variant: clientsChange.variant,
       icon: 'bi-people',
       gradient: 'linear-gradient(135deg, #10b981, #34d399)',
     },
     {
       label: "Taux de réponse",
       value: `${stats.ticket_response_rate}%`,
-      change: "Support client",
+      change: "Tickets traités",
       variant: 'up',
       icon: 'bi-chat-dots',
       gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
@@ -294,9 +323,24 @@ function renderCharts() {
   const donutCanvas = document.getElementById('donutChart');
 
   if (evolutionCanvas && typeof Chart !== 'undefined') {
-    const labels = state.stats?.chart_labels || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'];
-    const revenueData = state.stats?.revenue_data || [0, 0, 0, 0, 0, 0];
+    const labels = state.charts?.month_labels || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'];
+    const revenueData = state.charts?.month_revenue || [];
 
+    // Tendances réelles : dernier mois vs mois précédent
+    const trendBadge = document.getElementById('evolutionTrendBadge');
+    if (trendBadge && revenueData.length >= 2) {
+      const last = revenueData[revenueData.length - 1];
+      const prev = revenueData[revenueData.length - 2];
+      const trend = pctChange(last, prev);
+      if (trend === null) {
+        trendBadge.className = 'badge-soft badge-soft-secondary';
+        trendBadge.innerHTML = '<i class="bi bi-dash"></i> ' + (last > 0 ? 'Nouveau' : 'Pas de revenus');
+      } else {
+        const up = trend >= 0;
+        trendBadge.className = 'badge-soft ' + (up ? 'badge-soft-success' : 'badge-soft-danger');
+        trendBadge.innerHTML = `<i class="bi bi-arrow-${up ? 'up' : 'down'}"></i> ${up ? '+' : '−'}${Math.abs(trend)}%`;
+      }
+    }
     new Chart(evolutionCanvas, {
       type: 'line',
       data: {
@@ -351,12 +395,20 @@ function renderCharts() {
   }
 
   if (donutCanvas && typeof Chart !== 'undefined') {
-    const donutData = state.stats?.donut_data || [45, 30, 15, 10];
+    const counts = state.charts?.status_counts || { payee: 0, en_attente: 0, en_retard: 0, brouillon: 0 };
+    const donutData = [
+      counts.payee || 0,
+      counts.en_attente || 0,
+      counts.en_retard || 0,
+      counts.brouillon || 0,
+    ];
+    const total = donutData.reduce((a, b) => a + b, 0);
+    const pctOf = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
-    document.getElementById('legendPaid').textContent = donutData[0] + '%';
-    document.getElementById('legendPending').textContent = donutData[1] + '%';
-    document.getElementById('legendOverdue').textContent = donutData[2] + '%';
-    document.getElementById('legendDraft').textContent = donutData[3] + '%';
+    document.getElementById('legendPaid').textContent = donutData[0] + (total > 0 ? ` (${pctOf(donutData[0])}%)` : '');
+    document.getElementById('legendPending').textContent = donutData[1] + (total > 0 ? ` (${pctOf(donutData[1])}%)` : '');
+    document.getElementById('legendOverdue').textContent = donutData[2] + (total > 0 ? ` (${pctOf(donutData[2])}%)` : '');
+    document.getElementById('legendDraft').textContent = donutData[3] + (total > 0 ? ` (${pctOf(donutData[3])}%)` : '');
 
     new Chart(donutCanvas, {
       type: 'doughnut',
@@ -380,7 +432,7 @@ function renderCharts() {
             padding: 10,
             cornerRadius: 8,
             callbacks: {
-              label: (ctx) => `${ctx.label}: ${ctx.raw}%`,
+              label: (ctx) => `${ctx.label}: ${ctx.raw} facture(s)`,
             },
           },
         },
@@ -440,6 +492,7 @@ async function loadDashboard() {
 
     state.user = dashboardData.user || null;
     state.stats = dashboardData.stats || null;
+    state.charts = dashboardData.charts || null;
     state.invoices = invoicesData.invoices || [];
     state.notifications = notificationsData.notifications || [];
     state.subscription = subscriptionData.subscription || null;

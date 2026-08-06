@@ -127,7 +127,7 @@ try {
             $html .= '<p>Bonjour ' . htmlspecialchars($invoice['client_name']) . ',</p>';
             $html .= '<p>Votre facture d\'un montant de ' . number_format($invoice['total'], 0, ',', ' ') . ' FCFA est disponible.</p>';
             $html .= '<p>Statut : <strong>' . htmlspecialchars($invoice['status']) . '</strong></p>';
-            $html .= '<p>Cordialement,<br>L\'�quipe FacTo</p>';
+            $html .= '<p>Cordialement,<br>L\'équipe FacTo</p>';
 
             $text = "Facture " . $invoice['ref'] . "\n";
             $text .= "Bonjour " . $invoice['client_name'] . ",\n";
@@ -165,7 +165,7 @@ try {
             $html .= '<p>Bonjour ' . htmlspecialchars($quote['client_name']) . ',</p>';
             $html .= '<p>Votre devis d\'un montant de ' . number_format($quote['total'], 0, ',', ' ') . ' FCFA est disponible.</p>';
             $html .= '<p>Statut : <strong>' . htmlspecialchars($quote['status']) . '</strong></p>';
-            $html .= '<p>Cordialement,<br>L\'�quipe FacTo</p>';
+            $html .= '<p>Cordialement,<br>L\'équipe FacTo</p>';
 
             $text = "Devis " . $quote['ref'] . "\n";
             $text .= "Bonjour " . $quote['client_name'] . ",\n";

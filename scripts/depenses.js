@@ -196,7 +196,7 @@ function openNewExpense(event) {
   document.getElementById('expenseId').value = '';
   document.getElementById('expenseForm').reset();
   loadCategories().catch(() => {});
-  getModal('expenseModal').show();
+  openModal('expenseModal');
 }
 
 function openEditExpense(expenseId) {
@@ -212,7 +212,7 @@ function openEditExpense(expenseId) {
       document.getElementById('expenseAmount').value = expense.amount;
       document.getElementById('expenseReceipt').value = expense.receipt_path || '';
       loadCategories().catch(() => {});
-      getModal('expenseModal').show();
+      openModal('expenseModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -237,7 +237,7 @@ async function submitExpense(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Dépense enregistrée', 'success');
-    getModal('expenseModal').hide();
+    closeModal('expenseModal');
     await refreshExpenses();
   } catch (error) {
     toast(error.message, 'error');

@@ -47,6 +47,23 @@ $closedTickets = (int) $closedTicketsStmt->fetchColumn();
 
 $responseRate = $totalTickets > 0 ? round(($closedTickets / $totalTickets) * 100) : 100;
 
+// Variations réelles (mois précédent / période précédente)
+$prevRevenueStmt = $pdo->prepare('SELECT COALESCE(SUM(total), 0) FROM invoices WHERE user_id = ? AND LOWER(status) = ? AND YEAR(due_date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND MONTH(due_date) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))');
+$prevRevenueStmt->execute([$userId, 'payee']);
+$prevMonthRevenue = (float) $prevRevenueStmt->fetchColumn();
+
+$prevInvoiceCountStmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ? AND YEAR(created_at) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND MONTH(created_at) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))');
+$prevInvoiceCountStmt->execute([$userId]);
+$prevMonthInvoices = (int) $prevInvoiceCountStmt->fetchColumn();
+
+$monthInvoiceCountStmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ? AND YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())');
+$monthInvoiceCountStmt->execute([$userId]);
+$monthInvoices = (int) $monthInvoiceCountStmt->fetchColumn();
+
+$prevClientsStmt = $pdo->prepare('SELECT COUNT(*) FROM clients WHERE user_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) AND created_at < DATE_SUB(CURDATE(), INTERVAL 30 DAY)');
+$prevClientsStmt->execute([$userId]);
+$prev30Clients = (int) $prevClientsStmt->fetchColumn();
+
 $months = [];
 for ($i = 5; $i >= 0; $i--) {
     $m = date('Y-m', strtotime("-$i months"));
@@ -80,6 +97,10 @@ echo json_encode([
         'invoice_count' => $invoiceCount,
         'new_clients' => $newClients,
         'ticket_response_rate' => $responseRate,
+        'revenue_prev_month' => $prevMonthRevenue,
+        'invoice_count_month' => $monthInvoices,
+        'invoice_count_prev_month' => $prevMonthInvoices,
+        'new_clients_prev' => $prev30Clients,
     ],
     'charts' => [
         'month_labels' => $monthLabels,

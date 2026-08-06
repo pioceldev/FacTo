@@ -186,7 +186,7 @@ function openNewProduct(event) {
   document.getElementById('productIsActive').value = '1';
   document.getElementById('productVatRate').value = '0';
   document.getElementById('productStock').value = '0';
-  getModal('productModal').show();
+  openModal('productModal');
 }
 
 function openEditProduct(productId) {
@@ -203,7 +203,7 @@ function openEditProduct(productId) {
       document.getElementById('productVatRate').value = p.vat_rate;
       document.getElementById('productStock').value = p.stock_quantity || 0;
       document.getElementById('productIsActive').value = p.is_active ? '1' : '0';
-      getModal('productModal').show();
+      openModal('productModal');
     })
     .catch(error => toast(error.message, 'error'));
 }
@@ -229,7 +229,7 @@ async function submitProduct(event) {
       body: JSON.stringify(payload),
     });
     toast(data.message || 'Produit enregistre', 'success');
-    getModal('productModal').hide();
+    closeModal('productModal');
     await refreshProducts();
   } catch (error) {
     toast(error.message, 'error');

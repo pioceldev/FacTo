@@ -56,7 +56,7 @@
           <div class="facto-modal__title"></div>
           <div class="facto-modal__text"></div>
           <div class="facto-modal__actions">
-            <button type="button" class="btn btn-outline-secondary" data-facto-cancel>${cancelText}</button>
+            <button type="button" class="btn btn-outline-secondary" data-facto-cancel ${cancelText ? '' : 'style="display:none;"'}>${cancelText}</button>
             <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-facto-ok>${confirmText}</button>
           </div>
         </div>`;
@@ -95,4 +95,53 @@
     container.dataset.rendered = '1';
     return animate;
   };
+
+  /* Ouverture robuste de modale : Bootstrap si disponible, sinon fallback manuel.
+     Garantit que les boutons « Nouveau / Ajouter » affichent toujours leur modale. */
+  window.openModal = function (id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (window.bootstrap && window.bootstrap.Modal) {
+      try {
+        bootstrap.Modal.getOrCreateInstance(el).show();
+        return;
+      } catch (e) { /* fallback ci-dessous */ }
+    }
+    el.classList.add('show');
+    el.style.display = 'block';
+    el.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    if (!document.querySelector('.modal-backdrop')) {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      document.body.appendChild(backdrop);
+    }
+  };
+
+  /* Fermeture robuste de modale (Bootstrap si disponible, sinon fallback manuel) */
+  window.closeModal = function (id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (window.bootstrap && window.bootstrap.Modal) {
+      try {
+        bootstrap.Modal.getOrCreateInstance(el).hide();
+        return;
+      } catch (e) { /* fallback ci-dessous */ }
+    }
+    el.classList.remove('show');
+    el.style.display = 'none';
+    el.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+  };
+
+  /* Au clic sur un bouton data-bs-target, ouvre la modale même si le script
+     de la page a échoué à se charger (action garantie sur les boutons d'ajout). */
+  document.addEventListener('click', function (e) {
+    const trigger = e.target.closest('[data-facto-modal]');
+    if (trigger) {
+      e.preventDefault();
+      window.openModal(trigger.getAttribute('data-facto-modal'));
+    }
+  });
 })();

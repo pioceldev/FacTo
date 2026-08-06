@@ -86,7 +86,7 @@ try {
 
             if ($amount <= 0) { http_response_code(400); echo json_encode(['error' => 'Montant invalide']); exit; }
 
-            $stmt = $pdo->prepare("INSERT INTO expenses (user_id, category, description, amount, expense_date, receipt_path) VALUES (:uid, :cat, :desc, :amount, :edate, :receipt)");
+            $stmt = $pdo->prepare("INSERT INTO expenses (user_id, category, description, amount, expense_date, receipt_path, created_at) VALUES (:uid, :cat, :desc, :amount, :edate, :receipt, NOW())");
             $stmt->execute([
                 ':uid' => $userId, ':cat' => $category ?: null,
                 ':desc' => $description ?: null, ':amount' => $amount,
@@ -112,7 +112,7 @@ try {
             $check->execute([':id' => $id, ':uid' => $userId]);
             if (!$check->fetch()) { http_response_code(404); echo json_encode(['error' => 'Dépense introuvable']); exit; }
 
-            $pdo->prepare("UPDATE expenses SET category = :cat, description = :desc, amount = :amount, expense_date = :edate, receipt_path = :receipt, updated_at = NOW() WHERE id = :id AND user_id = :uid")
+            $pdo->prepare("UPDATE expenses SET category = :cat, description = :desc, amount = :amount, expense_date = :edate, receipt_path = :receipt WHERE id = :id AND user_id = :uid")
                 ->execute([
                     ':cat' => $category ?: null, ':desc' => $description ?: null,
                     ':amount' => $amount, ':edate' => $expenseDate,

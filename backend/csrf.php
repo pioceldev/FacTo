@@ -35,3 +35,18 @@ function csrfHeader() {
     header('X-CSRF-Token: ' . $token);
     return $token;
 }
+
+// Endpoint HTTP : GET backend/csrf.php?action=token  =>  { "csrf_token": "..." }
+// Utilisé par fetchCsrfToken() côté client (scripts/*.js).
+// On réutilise le token de session existant s'il est encore valide, pour ne pas
+// invalider les autres onglets ouverts par le même utilisateur.
+if (($_GET['action'] ?? '') === 'token') {
+    header('Content-Type: application/json; charset=utf-8');
+    $token = $_SESSION['csrf_token'] ?? '';
+    $storedTime = $_SESSION['csrf_token_time'] ?? 0;
+    if (empty($token) || (time() - $storedTime) > 3600) {
+        $token = csrfGenerateToken();
+    }
+    echo json_encode(['csrf_token' => $token]);
+    exit;
+}

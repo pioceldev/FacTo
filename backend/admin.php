@@ -29,7 +29,8 @@ try {
             $totalInvoices->execute();
             $totalInvoices = (int)$totalInvoices->fetchColumn();
 
-            $totalRevenue = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status = 'payée'");
+            // Les statuts sont stockés sans accents ('payee'), on couvre les deux cas
+            $totalRevenue = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('payee', 'payée')");
             $totalRevenue->execute();
             $totalRevenue = (float)$totalRevenue->fetchColumn();
 
@@ -45,6 +46,14 @@ try {
             $activeUsers->execute();
             $activeUsers = (int)$activeUsers->fetchColumn();
 
+            $revenueThisMonth = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('payee', 'payée') AND DATE_FORMAT(created_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')");
+            $revenueThisMonth->execute();
+            $revenueThisMonth = (float)$revenueThisMonth->fetchColumn();
+
+            $mrrTotal = $pdo->prepare("SELECT COALESCE(SUM(price), 0) FROM subscriptions WHERE status = 'active'");
+            $mrrTotal->execute();
+            $mrrTotal = (float)$mrrTotal->fetchColumn();
+
             echo json_encode([
                 'success' => true,
                 'overview' => [
@@ -52,8 +61,10 @@ try {
                     'total_clients' => $totalClients,
                     'total_invoices' => $totalInvoices,
                     'total_revenue' => $totalRevenue,
+                    'revenue_this_month' => $revenueThisMonth,
                     'total_expenses' => $totalExpenses,
                     'total_subscriptions' => $totalSubscriptions,
+                    'mrr_total' => $mrrTotal,
                     'active_users' => $activeUsers,
                 ],
             ]);
@@ -63,7 +74,7 @@ try {
             $months = [];
             for ($i = 5; $i >= 0; $i--) {
                 $month = date('Y-m', strtotime("-$i months"));
-                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status = 'payée' AND DATE_FORMAT(created_at, '%Y-%m') = :month");
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('payee', 'payée') AND DATE_FORMAT(created_at, '%Y-%m') = :month");
                 $stmt->execute([':month' => $month]);
                 $months[] = ['month' => $month, 'revenue' => (float)$stmt->fetchColumn()];
             }
@@ -85,6 +96,56 @@ try {
             $stmt = $pdo->prepare("SELECT plan_name, COUNT(*) as count FROM subscriptions GROUP BY plan_name ORDER BY count DESC");
             $stmt->execute();
             echo json_encode(['success' => true, 'subscription_stats' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+
+        case 'companies':
+            $q = trim($_GET['q'] ?? '');
+            $where = 'WHERE 1=1';
+            $params = [];
+            if ($q !== '') {
+                $where .= ' AND (u.name LIKE :q OR u.company LIKE :q OR u.email LIKE :q)';
+                $params[':q'] = '%' . $q . '%';
+            }
+
+            $countStmt = $pdo->prepare("SELECT COUNT(*) FROM users u $where");
+            $countStmt->execute($params);
+            $totalCompanies = (int) $countStmt->fetchColumn();
+
+            $stmt = $pdo->prepare("
+                SELECT u.id, u.name, u.email, u.company, u.role, u.created_at,
+                       s.plan_name, s.status AS sub_status, s.price,
+                       (SELECT COUNT(*) FROM invoices i WHERE i.user_id = u.id) AS invoices_count
+                FROM users u
+                LEFT JOIN (
+                    SELECT user_id, plan_name, status, price,
+                           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY id DESC) AS rn
+                    FROM subscriptions
+                ) s ON s.user_id = u.id AND s.rn = 1
+                $where
+                ORDER BY u.created_at DESC
+                LIMIT 100
+            ");
+            $stmt->execute($params);
+            $companies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'companies' => $companies,
+                'total' => $totalCompanies,
+            ]);
+            break;
+
+        case 'activity_logs':
+            $limit = max(1, min(200, (int)($_GET['limit'] ?? 20)));
+            $stmt = $pdo->prepare("
+                SELECT al.id, al.level, al.message, al.created_at, u.name AS user_name
+                FROM activity_logs al
+                LEFT JOIN users u ON al.user_id = u.id
+                ORDER BY al.created_at DESC
+                LIMIT $limit
+            ");
+            $stmt->execute();
+            echo json_encode(['success' => true, 'logs' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             break;
 
         default:
