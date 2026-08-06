@@ -22,13 +22,39 @@ function respond($data, int $code = 200)
     exit;
 }
 
+// --- Rate limiting simple (anti bruteforce / spam) ---
+function throttleAllowed(string $name, int $max, int $window = 900): bool
+{
+    $now = time();
+    $data = $_SESSION['throttle_' . $name] ?? ['count' => 0, 'start' => $now];
+    if ($now - $data['start'] > $window) {
+        $data = ['count' => 0, 'start' => $now];
+    }
+    $_SESSION['throttle_' . $name] = $data;
+    return $data['count'] < $max;
+}
+
+function throttleHit(string $name, int $window = 900): void
+{
+    $now = time();
+    $data = $_SESSION['throttle_' . $name] ?? ['count' => 0, 'start' => $now];
+    if ($now - $data['start'] > $window) {
+        $data = ['count' => 0, 'start' => $now];
+    }
+    $data['count']++;
+    $_SESSION['throttle_' . $name] = $data;
+}
+
 if ($action === 'register') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $name = trim($_POST['name'] ?? '');
     $company = trim($_POST['company'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
-    $plan = trim($_POST['plan'] ?? 'free');
+    // Sécurité : un compte qui s'inscrit ne peut pas s'attribuer un plan payant.
+    // L'abonnement est toujours initialisé sur le plan gratuit ; les plans payants
+    // ne peuvent être activés qu'après paiement via la page abonnement.
+    $plan = 'free';
 
     if (!$email || !$password || !$name) {
         respond(['error' => "Le nom, l'adresse e-mail et le mot de passe sont requis"], 422);
@@ -99,6 +125,10 @@ if ($action === 'register') {
 }
 
 if ($action === 'login') {
+    if (!throttleAllowed('login', 5)) {
+        respond(['error' => 'Trop de tentatives de connexion. Réessayez dans quelques minutes.'], 429);
+    }
+
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -111,8 +141,12 @@ if ($action === 'login') {
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
+        throttleHit('login');
         respond(['error' => 'Identifiants invalides'], 401);
     }
+
+    // Connexion réussie : on remet le compteur à zéro
+    unset($_SESSION['throttle_login']);
 
     // Regenerate session id to prevent fixation
     if (function_exists('session_regenerate_id')) {
@@ -145,6 +179,11 @@ if ($action === 'logout') {
 }
 
 if ($action === 'forgot_password') {
+    if (!throttleAllowed('forgot', 3)) {
+        respond(['error' => 'Trop de demandes. Réessayez plus tard.'], 429);
+    }
+    throttleHit('forgot');
+
     $email = trim($_POST['email'] ?? '');
 
     if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -193,14 +232,20 @@ if ($action === 'forgot_password') {
 }
 
 if ($action === 'reset_password') {
+    if (!throttleAllowed('reset', 5)) {
+        respond(['error' => 'Trop de tentatives. Réessayez plus tard.'], 429);
+    }
+
     $token = trim($_POST['token'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if (!$token) {
+        throttleHit('reset');
         respond(['error' => 'Lien de réinitialisation invalide'], 422);
     }
 
     if (strlen($password) < 8 || !preg_match('/\d/', $password)) {
+        throttleHit('reset');
         respond(['error' => 'Le mot de passe doit contenir au moins 8 caractères et inclure au moins un chiffre.'], 422);
     }
 
@@ -210,13 +255,18 @@ if ($action === 'reset_password') {
     $record = $stmt->fetch();
 
     if (!$record) {
+        throttleHit('reset');
         respond(['error' => 'Lien de réinitialisation invalide ou déjà utilisé'], 422);
     }
 
     if (strtotime($record['expires_at']) < time()) {
+        throttleHit('reset');
         $pdo->prepare('DELETE FROM password_reset_tokens WHERE id = ?')->execute([$record['id']]);
         respond(['error' => 'Ce lien a expiré. Veuillez refaire une demande.'], 422);
     }
+
+    // Succès : on remet le compteur à zéro
+    unset($_SESSION['throttle_reset']);
 
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     $pdo->prepare('UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?')

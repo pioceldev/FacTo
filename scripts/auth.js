@@ -1,4 +1,4 @@
-let _csrfToken = null; async function fetchCsrfToken() { if (_csrfToken) return _csrfToken; try { const r = await fetch("backend/csrf.php?action=token", { credentials: "same-origin" }); const d = await r.json(); _csrfToken = d.csrf_token; } catch(e) {} return _csrfToken; } function csrfToken() { return _csrfToken ?? ``; } function showFormAlert(container, message, type = 'error') {
+function showFormAlert(container, message, type = 'error') {
   if (!container) return;
   container.textContent = message;
   container.className = 'auth-form__alert auth-form__alert--' + (type === 'success' ? 'success' : 'error');

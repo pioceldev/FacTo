@@ -123,6 +123,8 @@
 </div>
 
 <script src="scripts/main.js"></script>
+<script src="scripts/ui.js"></script>
+<script src="scripts/auth.js"></script>
 <script>
 const defaultAvatar = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 fill=%27%23f3f4f6%27/%3E%3Ccircle cx=%2732%27 cy=%2718%27 r=%2714%27 fill=%279ca3af%27/%3E%3Cpath d=%27M16 52c0-8.837 7.163-16 16-16s16 7.163 16 16%27 stroke=%23717a86%27 stroke-width=%274%27 fill=%27none%27/%3E%3C/svg%3E';
 
@@ -173,7 +175,7 @@ async function loadProfile() {
     try {
       const res = await fetch('backend/profile.php?action=delete_account', {
         method: 'POST',
-        body: new URLSearchParams({ password }),
+        body: new URLSearchParams({ password, _csrf: await fetchCsrfToken() || '' }),
         credentials: 'same-origin',
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
@@ -194,6 +196,7 @@ async function loadProfile() {
     e.preventDefault();
     alertBox.textContent = '';
     const fd = new FormData(profileForm);
+    fd.append('_csrf', (await fetchCsrfToken()) || '');
     try {
       const res = await fetch('backend/profile.php?action=update', { method: 'POST', body: fd, credentials: 'same-origin' });
       const data = await res.json();

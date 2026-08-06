@@ -53,7 +53,7 @@
 
 ### Intégrations
 - ✅ **FedaPay** — Paiements en ligne (XOF/FCFA, Afrique de l'Ouest)
-- ✅ **PDF** — Génération de factures et devis
+- ✅ **Impression** — Factures et devis imprimables en PDF via le navigateur
 - ✅ **Email** — Notifications par email
 
 ---
@@ -64,7 +64,7 @@
 |--------|-------------|
 | **Backend** | PHP 8.x, PDO MySQL |
 | **Frontend** | HTML5, CSS3, Bootstrap 5.3, Chart.js |
-| **Auth** | Sessions PHP, CSRF tokens |
+| **Auth** | Sessions PHP, CSRF tokens (24 h) |
 | **PDF** | HTML → Print PDF (navigateur) |
 | **Email** | PHP mail() avec mode debug |
 | **DB** | MySQL 8.x / MariaDB |
@@ -79,6 +79,9 @@ FacTo/
 ├── index.html                  # Page d'accueil publique
 ├── connexion.html              # Connexion utilisateur
 ├── inscription.html            # Inscription utilisateur
+├── mot-de-passe-oublie.html    # Mot de passe oublié
+├── reinitialiser-mot-de-passe.html  # Réinitialisation du mot de passe
+├── paiement-return.html        # Retour de paiement FedaPay
 ├── dashboard.html              # Tableau de bord
 │
 ├── clients.html                # Gestion des clients
@@ -135,10 +138,8 @@ FacTo/
 │   ├── paiements.js
 │   ├── depenses.js
 │   ├── rapports.js
-│   ├── admin.js
 │   ├── notifications.js
-│   ├── support.js
-│   ├── ui.js                   # Toasts, confirmations, helpers
+│   ├── ui.js                   # Toasts, modales, helpers + token CSRF (source unique)
 │   ├── main.js
 │   ├── inscription.js
 │   ├── choix-abonnement.js
@@ -167,14 +168,22 @@ FacTo/
 │   ├── support.php             # API support (tickets)
 │   ├── fedapay.php             # API FedaPay (paiements en ligne)
 │   ├── subscription.php        # API abonnements
-│   ├── pdf.php                 # Génération PDF (factures/devis)
+│   ├── gate.php                # Garde d'accès des pages privées
+│   ├── session.php             # Gestion de session
+│   ├── tools.php               # Outils partagés
+│   ├── notifications.php       # API notifications
 │   ├── email.php               # Notifications email
 │   └── ...
 │
-├── vendor/                     # Dépendances tierces (FPDF, etc.)
+├── vendor/                     # Dépendances tierces (composer)
 ├── logs/                       # Logs d'erreurs et d'accès
 ├── .gitignore
 ├── docker-compose.yml
+├── tests/
+│   ├── bootstrap.php           # Bootstrap PHPUnit
+│   ├── DatabaseTest.php        # Tests de base de données
+│   ├── e2e-smoke.sh            # Smoke test des flux de création
+│   └── csrf-harness.js         # Harnais JS (chargement modules + token CSRF)
 ├── .github/
 │   └── workflows/
 │       └── ci.yml              # Pipeline CI/CD
@@ -235,7 +244,8 @@ return [
     'admin_emails' => [],
 
     // Mode debug (affiche les emails dans la réponse JSON)
-    'app_debug' => true,
+    // ⚠️ false par défaut : en local, définir APP_DEBUG=true pour voir les liens de réinitialisation
+    'app_debug' => false,
     'app_name' => 'FacTo',
     'app_url' => 'http://localhost/FacTo',
 
@@ -282,9 +292,14 @@ FEDAPAY_ENABLED=false
 - **Email** : `test@exemple.fr`
 - **Mot de passe** : `Test1234`
 
+### Inscription
+> ⚠️ L'inscription démarre toujours avec le **plan gratuit**. Les plans payants
+> (Standard, Premium) ne sont attribués qu'après un paiement FedaPay réussi.
+
 ### Sécurité
-- Tokens CSRF sur toutes les requêtes POST
-- Protection brute-force sur la connexion (10 tentatives max)
+- Tokens CSRF validés sur toutes les mutations (factures, devis, clients, produits, fournisseurs, paiements, dépenses, stock, abonnement, profil, notifications)
+- Protection brute-force : connexion 5 essais / 15 min, mot de passe oublié 3 / 15 min, réinitialisation 5 / 15 min
+- Rate limiting support : 5 tickets / heure / email
 - Sessions sécurisées (HttpOnly, SameSite=Lax)
 - Passwords hashés avec `password_hash()`
 
@@ -301,14 +316,16 @@ CRUD complet : ajouter, modifier, supprimer des clients avec coordonnées compl�
 ### 🧾 Factures
 - Créer des factures avec lignes d'articles
 - Statuts : brouillon → envoyé → payée / refusée
+- Références automatiques sans doublon (FAC-AAAA-XXX)
+- Quota mensuel selon le plan (hors brouillons/annulées)
 - Suivi des paiements associés
-- Génération PDF
+- Impression PDF (navigateur)
 
 ### 📝 Devis
 - Créer des devis avec lignes d'articles
 - Statuts : brouillon → envoyé → accepté / refusé
 - Date de validité configurable
-- Génération PDF
+- Impression PDF (navigateur)
 
 ### 📦 Produits & Stock
 - Gestion des produits (nom, référence, prix, catégorie)
@@ -335,9 +352,10 @@ CRUD complet pour gérer les fournisseurs.
 - Méthodes de paiement (barres)
 
 ### ⚙️ Administration
-- Tableau de bord admin avec stats plateforme
-- Gestion des entreprises
+- Tableau de bord admin avec stats plateforme (revenus, utilisateurs, factures)
+- Gestion des entreprises (recherche, pagination)
 - Croissance des utilisateurs
+- 🔒 **Accès réservé au rôle administrateur** (l'API renvoie 403 aux autres)
 
 ---
 
@@ -379,13 +397,15 @@ MYSQL_PASSWORD=facto
 
 ## 🔒 Sécurité
 
-- [x] Protection CSRF sur toutes les requêtes POST
-- [x] Rate limiting sur l'authentification
+- [x] Protection CSRF sur toutes les mutations (token 24 h)
+- [x] Rate limiting sur l'authentification (login, mot de passe oublié, reset)
+- [x] Admin API protégée par le rôle administrateur
+- [x] Plan gratuit forcé à l'inscription (pas d'auto-attribution de plans payants)
+- [x] Pages privées protégées côté serveur (gate.php + .htaccess)
 - [x] Sessions sécurisées (HttpOnly, SameSite)
 - [x] Passwords hashés (password_hash)
 - [x] Validation des entrées côté serveur
 - [x] Prepared statements (protection SQL injection)
-- [x] Headers de sécurité
 - [x] Logging structuré
 
 ### À faire en production
@@ -415,6 +435,7 @@ mysql -u root -p facto < backend/database.sql
 # 4. Configurer le fichier config.php
 cp backend/config.example.php backend/config.php
 # Éditer backend/config.php avec les identifiants de production
+# (penser à définir APP_DEBUG=false en production)
 
 # 5. Configurer le serveur web (Nginx/Apache)
 # Voir le fichier nginx.conf.example (à créer)
@@ -443,6 +464,41 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASS=votre_cle_sendgrid
+```
+
+---
+
+## 🧪 Tests
+
+### Tests automatisés (PHPUnit)
+
+```bash
+php tests/bootstrap.php
+# ou, si PHPUnit est installé :
+composer test
+```
+
+### Smoke test de bout en bout (WAMP)
+
+Le script `tests/e2e-smoke.sh` vérifie les flux de création complets
+(inscription → connexion → CSRF → client, produit, facture, devis,
+paiement, dépense, stock → rapports, admin, abonnement) :
+
+```bash
+bash tests/e2e-smoke.sh
+```
+
+> Il attend un serveur PHP sur `127.0.0.1:8123` (il en démarre un lui-même)
+> et une base `facto` importée avec `backend/database.sql`.
+
+### Harnais JavaScript (chargement des modules)
+
+Le script `tests/csrf-harness.js` simule un navigateur (stubs DOM/fetch) pour
+vérifier que `ui.js` + `auth.js` + chaque module se chargent sans erreur et que
+le token CSRF centralisé dans `scripts/ui.js` est bien disponible :
+
+```bash
+node tests/csrf-harness.js
 ```
 
 ---

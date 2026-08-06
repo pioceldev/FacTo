@@ -127,12 +127,23 @@ function attachNotificationHandlers() {
 
   const markReadBtn = document.getElementById('notificationsMarkReadBtn');
   if (markReadBtn) {
-    markReadBtn.addEventListener('click', () => {
+    markReadBtn.addEventListener('click', async () => {
+      // Persiste côté serveur (sinon tout redevient non-lu au rechargement).
+      try {
+        const _csrf = (typeof fetchCsrfToken === 'function') ? (await fetchCsrfToken() || '') : '';
+        await fetch('backend/notifications.php?action=mark_all_read', {
+          method: 'POST',
+          body: new URLSearchParams({ _csrf }),
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+      } catch (e) { /* même en cas d'échec réseau, on met à jour l'interface */ }
       notificationState.notifications = notificationState.notifications.map((notification) => ({
         ...notification,
         is_read: true,
       }));
       renderNotifications();
+      updateTopbarNotificationBadge();
     });
   }
 }

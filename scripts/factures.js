@@ -54,7 +54,16 @@ async function api(path, options = {}) {
   if (options.body) { headers["Content-Type"] = "application/json"; }
   if (options.headers) Object.assign(headers, options.headers);
 
-  if (options.body && ['POST','PUT','DELETE','PATCH'].includes(options.method)) { try { const _b = JSON.parse(options.body); _b._csrf = await fetchCsrfToken(); options.body = JSON.stringify(_b); } catch(e) {} }
+  if (options.body && ['POST','PUT','DELETE','PATCH'].includes(options.method)) {
+    try {
+      const _b = JSON.parse(options.body);
+      _b._csrf = await fetchCsrfToken();
+      if (!_b._csrf) throw new Error('Token de sécurité indisponible');
+      options.body = JSON.stringify(_b);
+    } catch (e) {
+      throw new Error(e.message || 'Token de sécurité manquant');
+    }
+  }
   const response = await fetch('backend/invoices.php?action=' + path, {
     credentials: 'same-origin',
     headers,
@@ -71,6 +80,17 @@ async function api(path, options = {}) {
     data = await response.json();
   } catch (e) {
     // réponse non JSON
+  }
+
+  // Token CSRF expiré ou invalidé : on le rafraîchit et on réessaie une seule fois
+  if (response.status === 403 && String(data.error || '').includes('CSRF') && !options._csrfRetried) {
+    options._csrfRetried = true;
+    try {
+      const _b = JSON.parse(options.body);
+      _b._csrf = await fetchCsrfToken(true);
+      options.body = JSON.stringify(_b);
+      return api(path, options);
+    } catch (e) { /* on laisse tomber : l'erreur d'origine est renvoyée ci-dessous */ }
   }
 
   if (!response.ok) {
@@ -192,7 +212,7 @@ function renderTable() {
   }).join('');
 }
 
-let _csrfToken = null; async function fetchCsrfToken() { if (_csrfToken) return _csrfToken; try { const r = await fetch("backend/csrf.php?action=token", { credentials: "same-origin" }); const d = await r.json(); _csrfToken = d.csrf_token; } catch(e) {} return _csrfToken; } function csrfToken() { return _csrfToken ?? ``; } function esc(value) {
+function esc(value) {
   return String(value == null ? '' : value)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');

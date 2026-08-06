@@ -164,7 +164,7 @@
     try {
       const res = await fetch('backend/profile.php?action=delete_account', {
         method: 'POST',
-        body: new URLSearchParams({ password }),
+        body: new URLSearchParams({ password, _csrf: await fetchCsrfToken() || '' }),
         credentials: 'same-origin',
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });

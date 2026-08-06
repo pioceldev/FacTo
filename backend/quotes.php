@@ -106,6 +106,7 @@ try {
 
         case 'create':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $clientId = intval($body['client_id'] ?? 0);
             $ref = trim($body['ref'] ?? '');
             $status = trim($body['status'] ?? 'brouillon');
@@ -164,8 +165,16 @@ try {
 
         case 'update':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? 0);
             $clientId = intval($body['client_id'] ?? 0);
+
+            // Si un client est fourni, il doit appartenir à l'utilisateur courant.
+            if ($clientId > 0) {
+                $clientCheck = $pdo->prepare("SELECT id FROM clients WHERE id = :cid AND user_id = :uid");
+                $clientCheck->execute([':cid' => $clientId, ':uid' => $userId]);
+                if (!$clientCheck->fetch()) { http_response_code(400); echo json_encode(['error' => 'Client introuvable']); exit; }
+            }
             $ref = trim($body['ref'] ?? '');
             $status = trim($body['status'] ?? 'brouillon');
             $validUntil = $body['valid_until'] ?? null;
@@ -216,6 +225,7 @@ try {
 
         case 'delete':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? 0);
 
             $check = $pdo->prepare("SELECT id FROM quotes WHERE id = :id AND user_id = :uid");

@@ -3,5 +3,14 @@
 RewriteEngine On
 
 RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^(dashboard|administration|notifications|mon-abonnement|choix-abonnement|support|profile)\.html$ backend/gate.php?page=$1.html [L,QSA]
+RewriteRule ^(dashboard|administration|clients|produits|fournisseurs|stock|devis|factures|paiements|depenses|rapports|parametres|notifications|mon-abonnement|choix-abonnement|support|profile)\.html$ backend/gate.php?page=$1.html [L,QSA]
+</IfModule>
+
+# Les scripts/feuilles de style sont toujours revalidés : un fichier modifié
+# est re-téléchargé immédiatement (évite les « Token CSRF invalide » causés
+# par un ancien JS resté dans le cache du navigateur).
+<IfModule mod_headers.c>
+<FilesMatch "\.(js|css)$">
+Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>
 </IfModule>

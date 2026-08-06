@@ -107,6 +107,7 @@ if ($action === 'get') {
 // ============================================================
 if ($action === 'create') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
 
     $name = esc($body['name'] ?? '');
     $contactName = esc($body['contact_name'] ?? '');
@@ -146,6 +147,7 @@ if ($action === 'create') {
 // ============================================================
 if ($action === 'update') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $id = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     if (!supplierExists($pdo, $userId, $id)) {
@@ -186,6 +188,7 @@ if ($action === 'update') {
 // ============================================================
 if ($action === 'delete') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $id = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     if (!supplierExists($pdo, $userId, $id)) {

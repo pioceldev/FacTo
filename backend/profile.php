@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
+require __DIR__ . '/csrf.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -13,9 +14,21 @@ if (empty($_SESSION['user_id'])) {
 $pdo = getPDO();
 $userId = $_SESSION['user_id'];
 
-// Ensure logo_path column exists (best-effort)
+// Ensure logo_path / signature columns exist (best-effort, compatible MySQL 5.7+ :
+// pas de « ADD COLUMN IF NOT EXISTS » avant MySQL 8.0.29).
 try {
-    $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_path VARCHAR(255) DEFAULT NULL");
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'logo_path'");
+    if (!(int) $stmt->fetchColumn()) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN logo_path VARCHAR(255) DEFAULT NULL');
+    }
+} catch (Exception $e) {
+    // ignore if not supported
+}
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'signature'");
+    if (!(int) $stmt->fetchColumn()) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN signature LONGTEXT DEFAULT NULL');
+    }
 } catch (Exception $e) {
     // ignore if not supported
 }
@@ -23,7 +36,7 @@ try {
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get';
 
 if ($action === 'get') {
-    $stmt = $pdo->prepare('SELECT id, name, email, company, phone, role, created_at, logo_path FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, name, email, company, phone, role, created_at, logo_path, signature FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     if (!$user) {
@@ -35,7 +48,38 @@ if ($action === 'get') {
     exit;
 }
 
+if ($action === 'save_signature') {
+    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
+
+    // Corps JSON (comme les autres endpoints) ou formulaire classique
+    $raw = file_get_contents('php://input');
+    $body = json_decode($raw, true);
+    if (!is_array($body)) { $body = $_POST; }
+
+    $sig = (string) ($body['signature'] ?? '');
+
+    // Signature vide => suppression
+    if ($sig === '') {
+        $pdo->prepare('UPDATE users SET signature = NULL, updated_at = NOW() WHERE id = ?')->execute([$userId]);
+        echo json_encode(['success' => true, 'message' => 'Signature supprimée']);
+        exit;
+    }
+
+    // Validation : data URL d'image (png/jpeg/webp), taille raisonnable
+    if (strlen($sig) > 2 * 1024 * 1024 || !preg_match('#^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$#', $sig)) {
+        http_response_code(422);
+        echo json_encode(['error' => 'Image de signature invalide (PNG, JPEG ou WebP, max 2 Mo)']);
+        exit;
+    }
+
+    $pdo->prepare('UPDATE users SET signature = ?, updated_at = NOW() WHERE id = ?')->execute([$sig, $userId]);
+    echo json_encode(['success' => true, 'message' => 'Signature enregistrée']);
+    exit;
+}
+
 if ($action === 'update') {
+    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
+
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $company = trim($_POST['company'] ?? '');
@@ -181,14 +225,18 @@ if ($action === 'update') {
                 $stmtOld->execute([$userId]);
                 $prev = $stmtOld->fetchColumn();
                 if ($prev) {
-                    $prevPath = __DIR__ . '/' . $prev;
+                    // $prev est stocké sous la forme « backend/uploads/logos/... » :
+                    // le chemin réel part de la racine du projet (un niveau au-dessus de backend/).
+                    $prevPath = dirname(__DIR__) . '/' . $prev;
                     if (strpos(realpath($prevPath) ?: '', realpath($uploadDir)) === 0 && file_exists($prevPath)) {
                         @unlink($prevPath);
                     }
-                    // also try removing non-thumb variants with same basename
+                    // Supprime aussi le variant principal (non-thumb) de l'ancien logo.
                     $prevBase = pathinfo($prev, PATHINFO_FILENAME);
-                    $alt1 = __DIR__ . '/uploads/logos/' . $prevBase . '.webp';
-                    $alt2 = __DIR__ . '/uploads/logos/' . $prevBase . '_thumb.webp';
+                    $mainBase = preg_replace('/_thumb$/', '', $prevBase);
+                    $uploadsAbs = __DIR__ . '/uploads/logos';
+                    $alt1 = $uploadsAbs . '/' . $prevBase . '.webp';
+                    $alt2 = $uploadsAbs . '/' . $mainBase . '.webp';
                     if (file_exists($alt1)) @unlink($alt1);
                     if (file_exists($alt2)) @unlink($alt2);
                 }
@@ -223,6 +271,8 @@ if ($action === 'update') {
 }
 
 if ($action === 'delete_account') {
+    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
+
     $password = $_POST['password'] ?? '';
 
     $stmt = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?');

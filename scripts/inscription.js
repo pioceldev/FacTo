@@ -22,7 +22,9 @@ function initInscriptionPlan() {
 
   if (plan) {
     planInput.value = plan;
-    banner.textContent = `Vous avez sélectionné : ${getPlanLabel(plan)}. Vous pourrez modifier ce choix plus tard.`;
+    // Le compte démarre toujours sur le plan gratuit (sécurité) : le plan
+    // sélectionné ici pourra être activé après paiement depuis la page abonnement.
+    banner.textContent = `Vous avez sélectionné : ${getPlanLabel(plan)}. Votre compte démarre avec le plan gratuit — vous pourrez activer ce plan après votre inscription.`;
     banner.style.display = 'block';
   } else {
     banner.style.display = 'none';

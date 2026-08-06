@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/csrf.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,10 +15,9 @@ function readBody()
 }
 
 $action = $_GET['action'] ?? 'list';
-$method = $_SERVER['REQUEST_METHOD'];
 
 $userId = $_SESSION['user_id'] ?? null;
-if (!$userId && $action !== 'list') {
+if (!$userId) {
     http_response_code(401);
     echo json_encode(['error' => 'Non autorise']);
     exit;
@@ -45,7 +45,7 @@ try {
 
             $stmt = $pdo->prepare("
                 SELECT s.id, s.product_id, s.quantity, s.reorder_level, s.updated_at,
-                       p.name AS product_name, p.sku, p.unit_price, p.is_active
+                       p.name AS product_name, p.sku, p.sku AS reference, p.unit_price, p.is_active
                 FROM stock s JOIN products p ON s.product_id = p.id
                 $where ORDER BY s.updated_at DESC LIMIT :limit OFFSET :offset
             ");
@@ -73,7 +73,7 @@ try {
             break;
 
         case 'products':
-            $stmt = $pdo->prepare("SELECT id, name, sku, unit_price FROM products WHERE user_id = :uid AND is_active = 1 ORDER BY name");
+            $stmt = $pdo->prepare("SELECT id, name, sku, unit_price, sku AS reference FROM products WHERE user_id = :uid AND is_active = 1 ORDER BY name");
             $stmt->execute([':uid' => $userId]);
             echo json_encode(['success' => true, 'products' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             break;
@@ -93,11 +93,13 @@ try {
 
         case 'create':
             $input = json_decode(file_get_contents('php://input'), true) ?? [];
+            if (!csrfValidateToken($input['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $productId = intval($input['product_id'] ?? 0);
             $quantity = intval($input['quantity'] ?? 0);
             $reorderLevel = intval($input['reorder_level'] ?? 0);
 
             if ($productId <= 0) { http_response_code(400); echo json_encode(['error' => 'product_id requis']); exit; }
+            if ($quantity < 0 || $reorderLevel < 0) { http_response_code(400); echo json_encode(['error' => 'Quantité ou seuil négatif invalide']); exit; }
 
             $check = $pdo->prepare("SELECT id FROM products WHERE id = :pid AND user_id = :uid");
             $check->execute([':pid' => $productId, ':uid' => $userId]);
@@ -118,9 +120,12 @@ try {
 
         case 'update':
             $input = json_decode(file_get_contents('php://input'), true) ?? [];
+            if (!csrfValidateToken($input['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($input['id'] ?? 0);
             $quantity = intval($input['quantity'] ?? 0);
             $reorderLevel = intval($input['reorder_level'] ?? 0);
+
+            if ($quantity < 0 || $reorderLevel < 0) { http_response_code(400); echo json_encode(['error' => 'Quantité ou seuil négatif invalide']); exit; }
 
             $stmt = $pdo->prepare("UPDATE stock SET quantity = :qty, reorder_level = :rl, updated_at = NOW() WHERE id = :id AND user_id = :uid");
             $stmt->execute([':qty' => $quantity, ':rl' => $reorderLevel, ':id' => $id, ':uid' => $userId]);
@@ -133,6 +138,7 @@ try {
 
         case 'delete':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? $_GET['id'] ?? 0);
             $stmt = $pdo->prepare("DELETE FROM stock WHERE id = :id AND user_id = :uid");
             $stmt->execute([':id' => $id, ':uid' => $userId]);

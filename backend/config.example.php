@@ -8,7 +8,9 @@ return [
 
     'admin_emails' => explode(',', getenv('ADMIN_EMAILS') ?: ''),
 
-    'app_debug' => filter_var(getenv('APP_DEBUG') ?: 'true', FILTER_VALIDATE_BOOLEAN),
+    // Attention : en production, laisser APP_DEBUG à false (sinon les liens de
+    // réinitialisation sont exposés dans les réponses et les e-mails ne partent pas).
+    'app_debug' => filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN),
     'app_name' => getenv('APP_NAME') ?: 'FacTo',
     'app_url' => getenv('APP_URL') ?: 'http://localhost/FacTo',
 

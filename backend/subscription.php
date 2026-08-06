@@ -2,6 +2,7 @@
 require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
 require __DIR__ . '/fedapay.php';
+require __DIR__ . '/csrf.php';
 
 $config = $config ?? require __DIR__ . '/config.php';
 
@@ -129,6 +130,7 @@ if ($action === 'plans') {
 }
 
 if ($action === 'subscribe') {
+    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $planId = (int) ($_POST['plan_id'] ?? 0);
     $cycle = ($_POST['cycle'] ?? 'monthly') === 'yearly' ? 'yearly' : 'monthly';
     $paymentMethod = trim($_POST['payment_method'] ?? 'carte');
@@ -308,6 +310,7 @@ if ($action === 'confirm') {
 }
 
 if ($action === 'cancel') {
+    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $current = getCurrentSubscription($pdo, $userId);
     if (!$current) {
         respond(['error' => 'Aucun abonnement actif'], 422);
@@ -322,6 +325,7 @@ if ($action === 'cancel') {
 }
 
 if ($action === 'update_payment') {
+    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $paymentMethod = trim($_POST['payment_method'] ?? '');
     if (!$paymentMethod) {
         respond(['error' => 'Méthode de paiement requise'], 422);

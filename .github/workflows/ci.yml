@@ -50,6 +50,8 @@ jobs:
         run: composer install --no-interaction
       - name: Copy config
         run: cp backend/config.example.php backend/config.php
+      - name: Import schema
+        run: mysql -h 127.0.0.1 -P 3306 -u root -proot facto < backend/database.sql
       - name: Run tests
         env:
           DB_HOST: 127.0.0.1
@@ -67,4 +69,5 @@ jobs:
       - name: Deploy to production
         run: |
           echo "Deploying FacTo to production..."
-          ssh user@server "cd /var/www/facto && git pull && composer install --optimize-autoloader --no-dev && php artisan migrate --force"
+          # Adapter l'hôte, le chemin et éventuellement importer le schéma :
+          # ssh user@server "cd /var/www/facto && git pull && composer install --optimize-autoloader --no-dev"

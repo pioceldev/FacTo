@@ -38,7 +38,8 @@ function getPlanName(PDO $pdo, int $userId)
 
 function getMonthlyInvoiceCount(PDO $pdo, int $userId)
 {
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ? AND created_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")');
+    // Les brouillons et les factures annulées ne comptent pas dans le quota.
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ? AND created_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01") AND status NOT IN ("brouillon", "annulee")');
     $stmt->execute([$userId]);
     return (int) $stmt->fetchColumn();
 }
@@ -83,9 +84,16 @@ function getInvoiceStats(PDO $pdo, int $userId)
 function nextInvoiceRef(PDO $pdo, int $userId)
 {
     $year = date('Y');
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ? AND ref LIKE ?');
+    // Basée sur la dernière référence existante (pas de COUNT) : pas de doublon
+    // après suppression de factures, et fonctionne au-delà de 999.
+    $stmt = $pdo->prepare('SELECT ref FROM invoices WHERE user_id = ? AND ref LIKE ? ORDER BY id DESC LIMIT 1');
     $stmt->execute([$userId, 'FAC-' . $year . '-%']);
-    $n = (int) $stmt->fetchColumn() + 1;
+    $last = $stmt->fetchColumn();
+    $n = 1;
+    if ($last) {
+        $suffix = substr(strrchr((string) $last, '-') ?: '-0', 1);
+        $n = ((int) $suffix) + 1;
+    }
     return sprintf('FAC-%d-%03d', $year, $n);
 }
 
@@ -403,6 +411,7 @@ if ($action === 'create') {
 // ============================================================
 if ($action === 'update') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $invoiceId = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     $current = getInvoice($pdo, $userId, $invoiceId);
@@ -411,6 +420,20 @@ if ($action === 'update') {
     }
     if ($current['status'] === 'annulee') {
         respond(['error' => 'Une facture annulée ne peut pas être modifiée'], 422);
+    }
+
+    // Quota vérifié aussi en édition : si le quota est atteint, on n'autorise que
+    // la modification d'une facture de ce mois qui compte déjà dans le quota.
+    $usage = usageInfo($pdo, $userId);
+    if ($usage['invoice_limit'] < 999999 && $usage['invoice_count_month'] >= $usage['invoice_limit']) {
+        $createdThisMonth = (strtotime((string) $current['created_at']) ?: 0) >= strtotime(date('Y-m-01'));
+        $countsTowardQuota = $createdThisMonth && !in_array($current['status'], ['brouillon', 'annulee'], true);
+        if (!$countsTowardQuota) {
+            respond([
+                'error' => 'Quota de factures mensuel atteint (' . $usage['invoice_limit'] . '). Passez à un plan supérieur pour continuer.',
+                'usage' => $usage,
+            ], 403);
+        }
     }
 
     $clientId = findClient($pdo, $userId, $body['client_id'] ?? 0);
@@ -490,6 +513,7 @@ if ($action === 'update') {
 // ============================================================
 if ($action === 'status') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $invoiceId = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     $current = getInvoice($pdo, $userId, $invoiceId);
@@ -530,6 +554,7 @@ if ($action === 'status') {
 // ============================================================
 if ($action === 'delete') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $invoiceId = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     $current = getInvoice($pdo, $userId, $invoiceId);

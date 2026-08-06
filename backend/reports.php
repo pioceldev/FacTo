@@ -21,11 +21,11 @@ try {
             $totalInvoices->execute([':uid' => $userId]);
             $totalInvoices = (int)$totalInvoices->fetchColumn();
 
-            $paidInvoices = $pdo->prepare("SELECT COUNT(*) FROM invoices WHERE user_id = :uid AND status = 'payée'");
+            $paidInvoices = $pdo->prepare("SELECT COUNT(*) FROM invoices WHERE user_id = :uid AND status = 'payee'");
             $paidInvoices->execute([':uid' => $userId]);
             $paidInvoices = (int)$paidInvoices->fetchColumn();
 
-            $totalRevenue = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE user_id = :uid AND status = 'payée'");
+            $totalRevenue = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE user_id = :uid AND status = 'payee'");
             $totalRevenue->execute([':uid' => $userId]);
             $totalRevenue = (float)$totalRevenue->fetchColumn();
 
@@ -68,7 +68,7 @@ try {
             $months = [];
             for ($i = 5; $i >= 0; $i--) {
                 $month = date('Y-m', strtotime("-$i months"));
-                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE user_id = :uid AND status = 'payée' AND DATE_FORMAT(created_at, '%Y-%m') = :month");
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE user_id = :uid AND status = 'payee' AND DATE_FORMAT(created_at, '%Y-%m') = :month");
                 $stmt->execute([':uid' => $userId, ':month' => $month]);
                 $months[] = ['month' => $month, 'revenue' => (float)$stmt->fetchColumn()];
             }
@@ -96,7 +96,7 @@ try {
         case 'top_clients':
             $stmt = $pdo->prepare("
                 SELECT c.name, c.email, COALESCE(SUM(i.total), 0) as total_billed, COUNT(i.id) as invoice_count
-                FROM clients c LEFT JOIN invoices i ON c.id = i.client_id AND i.status = 'payée'
+                FROM clients c LEFT JOIN invoices i ON c.id = i.client_id AND i.status = 'payee'
                 WHERE c.user_id = :uid GROUP BY c.id ORDER BY total_billed DESC LIMIT 5
             ");
             $stmt->execute([':uid' => $userId]);

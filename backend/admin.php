@@ -10,6 +10,13 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
+// Sécurité : l'administration (toutes les actions) est réservée aux admins.
+if (($_SESSION['user_role'] ?? 'user') !== 'admin') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Accès réservé aux administrateurs']);
+    exit;
+}
+
 $pdo = getPDO();
 $userId = $_SESSION['user_id'];
 $action = $_GET['action'] ?? 'overview';

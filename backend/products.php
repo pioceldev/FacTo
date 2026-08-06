@@ -122,6 +122,7 @@ if ($action === 'get') {
 // ============================================================
 if ($action === 'create') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
 
     $name = trim((string) ($body['name'] ?? ''));
     $sku = trim((string) ($body['sku'] ?? ''));
@@ -168,6 +169,7 @@ if ($action === 'create') {
 // ============================================================
 if ($action === 'update') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $id = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     if (!productExists($pdo, $userId, $id)) {
@@ -215,6 +217,7 @@ if ($action === 'update') {
 // ============================================================
 if ($action === 'toggle_active') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $id = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     if (!productExists($pdo, $userId, $id)) {
@@ -241,6 +244,7 @@ if ($action === 'toggle_active') {
 // ============================================================
 if ($action === 'delete') {
     $body = readBody();
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
     $id = (int) ($body['id'] ?? $_GET['id'] ?? 0);
 
     if (!productExists($pdo, $userId, $id)) {
@@ -251,8 +255,10 @@ if ($action === 'delete') {
     $stmt->execute([$id, $userId]);
     $name = $stmt->fetchColumn();
 
-    // Détacher du stock et des factures (soft: on ne supprime pas les lignes d'historique)
-    $pdo->prepare('UPDATE invoice_items SET product_id = NULL WHERE product_id = ?')->execute([$id]);
+    // Détacher les références (lignes de factures et de devis) en veillant à ne
+    // toucher que les lignes de l'utilisateur courant (les ids produits sont globaux).
+    $pdo->prepare('UPDATE invoice_items ii JOIN products p ON p.id = ii.product_id SET ii.product_id = NULL WHERE ii.product_id = ? AND p.user_id = ?')->execute([$id, $userId]);
+    $pdo->prepare('UPDATE quote_items qi JOIN products p ON p.id = qi.product_id SET qi.product_id = NULL WHERE qi.product_id = ? AND p.user_id = ?')->execute([$id, $userId]);
 
     $pdo->prepare('DELETE FROM products WHERE id = ? AND user_id = ?')->execute([$id, $userId]);
 

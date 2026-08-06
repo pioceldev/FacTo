@@ -5,8 +5,7 @@
     "license": "MIT",
     "require": {
         "php": ">=8.0",
-        "setasign/fpdf": "^1.8",
-        "phpmailer/phpmailer": "^6.9"
+        "ext-curl": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^10",
@@ -17,7 +16,6 @@
             "FacTo\\": "backend/"
         },
         "files": [
-            "backend/config.php",
             "backend/db.php",
             "backend/init.php"
         ]

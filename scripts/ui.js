@@ -144,4 +144,32 @@
       window.openModal(trigger.getAttribute('data-facto-modal'));
     }
   });
+
+  /* ===== Token CSRF partagé — SOURCE UNIQUE =====
+     fetchCsrfToken() récupère le token (et le met en cache) ; csrfToken() le relit.
+     Tous les modules l'utilisent pour injecter _csrf dans leurs requêtes de mutation.
+     force=true contourne le cache (utilisé pour retenter après un 403 CSRF). */
+  let _csrfToken = null;
+  let _csrfInflight = null;
+  window.fetchCsrfToken = async function (force) {
+    if (_csrfToken && !force) return _csrfToken;
+    if (_csrfInflight && !force) return _csrfInflight;
+    _csrfInflight = (async () => {
+      try {
+        const r = await fetch('backend/csrf.php?action=token', { credentials: 'same-origin' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d || !d.csrf_token) throw new Error('Réponse inattendue du serveur');
+        _csrfToken = d.csrf_token;
+      } catch (e) {
+        console.error('[FacTo] Impossible de récupérer le token CSRF :', e);
+        _csrfToken = null;
+      } finally {
+        _csrfInflight = null;
+      }
+      return _csrfToken;
+    })();
+    return _csrfInflight;
+  };
+  window.csrfToken = function () { return _csrfToken ?? ''; };
 })();

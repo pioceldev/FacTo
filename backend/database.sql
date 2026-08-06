@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(30) DEFAULT NULL,
   role VARCHAR(20) NOT NULL DEFAULT 'user',           -- 'user' | 'admin'
   logo_path VARCHAR(255) DEFAULT NULL,
+  signature LONGTEXT DEFAULT NULL,                    -- image PNG (data URL) signée par l'émetteur
   email_verified_at DATETIME DEFAULT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME DEFAULT NULL

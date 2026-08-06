@@ -134,6 +134,7 @@ function attachPlanButtons() {
             plan_id: plan.id,
             cycle: choiceState.cycle,
             payment_method: choiceState.paymentMethod,
+            _csrf: _csrf || '',
           }),
           credentials: 'same-origin',
           headers: { 'X-Requested-With': 'XMLHttpRequest' }

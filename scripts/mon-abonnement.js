@@ -179,9 +179,12 @@ function startSubscriptionCountdown(targetDate) {
 }
 
 async function apiCall(action, body) {
-  const _csrf = await fetchCsrfToken(); const response = await fetch('backend/subscription.php?action=' + action, {
+  const _csrf = await fetchCsrfToken();
+  const payload = new URLSearchParams(body);
+  payload.set('_csrf', _csrf || '');
+  const response = await fetch('backend/subscription.php?action=' + action, {
     method: 'POST',
-    body: new URLSearchParams(body),
+    body: payload,
     credentials: 'same-origin',
     headers: { 'X-Requested-With': 'XMLHttpRequest' }
   });

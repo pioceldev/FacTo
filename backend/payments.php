@@ -61,11 +61,7 @@ try {
                 COALESCE(SUM(CASE WHEN p.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_count
                 FROM payments p LEFT JOIN invoices i ON p.invoice_id = i.id LEFT JOIN clients c ON i.client_id = c.id $where");
             $statsStmt->execute($statsParams);
-            $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
-
-            echo json_encode([
-                'success' => true,
-                'payments' => $items,
+            $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);            echo json_encode(['success' => true, 'payments' => $items,
                 'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => $pages],
                 'stats' => $stats,
             ]);
@@ -84,8 +80,16 @@ try {
             echo json_encode(['success' => true, 'payment' => $payment]);
             break;
 
+        case 'invoices':
+            // Sélecteur de facture du formulaire paiement (paiements.js -> loadInvoices())
+            $stmt = $pdo->prepare("SELECT i.id, i.ref, i.total, COALESCE(c.name, 'Client inconnu') AS client_name FROM invoices i LEFT JOIN clients c ON c.id = i.client_id WHERE i.user_id = :uid ORDER BY i.created_at DESC LIMIT 100");
+            $stmt->execute([':uid' => $userId]);
+            echo json_encode(['success' => true, 'invoices' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+
         case 'create':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $invoiceId = intval($body['invoice_id'] ?? 0);
             $amount = floatval($body['amount'] ?? 0);
             $paymentMethod = trim($body['payment_method'] ?? 'virement');
@@ -117,6 +121,7 @@ try {
 
         case 'update':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? 0);
             $amount = floatval($body['amount'] ?? 0);
             $paymentMethod = trim($body['payment_method'] ?? 'virement');
@@ -142,6 +147,7 @@ try {
 
         case 'delete':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? 0);
 
             $check = $pdo->prepare("SELECT id FROM payments WHERE id = :id AND user_id = :uid");

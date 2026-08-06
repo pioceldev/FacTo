@@ -76,8 +76,16 @@ try {
             echo json_encode(['success' => true, 'expense' => $expense]);
             break;
 
+        case 'categories':
+            // Liste des catégories existantes (depenses.js -> loadCategories())
+            $stmt = $pdo->prepare("SELECT DISTINCT category FROM expenses WHERE user_id = :uid AND category IS NOT NULL AND category != '' ORDER BY category");
+            $stmt->execute([':uid' => $userId]);
+            echo json_encode(['success' => true, 'categories' => $stmt->fetchAll(PDO::FETCH_COLUMN)]);
+            break;
+
         case 'create':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $category = trim($body['category'] ?? '');
             $description = trim($body['description'] ?? '');
             $amount = floatval($body['amount'] ?? 0);
@@ -101,6 +109,7 @@ try {
 
         case 'update':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? 0);
             $category = trim($body['category'] ?? '');
             $description = trim($body['description'] ?? '');
@@ -126,6 +135,7 @@ try {
 
         case 'delete':
             $body = readBody();
+            if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $id = intval($body['id'] ?? 0);
 
             $check = $pdo->prepare("SELECT id FROM expenses WHERE id = :id AND user_id = :uid");
