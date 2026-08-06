@@ -147,7 +147,8 @@ CREATE TABLE IF NOT EXISTS invoices (
   ref VARCHAR(100) NOT NULL,                          -- ex: FAC-2026-001
   amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,         -- total HT
   vat DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  total DECIMAL(10,2) NOT NULL DEFAULT 0.00,          -- total TTC
+  discount DECIMAL(10,2) NOT NULL DEFAULT 0.00,       -- remise en € (modèle : ligne DISCOUNT)
+  total DECIMAL(10,2) NOT NULL DEFAULT 0.00,          -- total TTC (HT + TVA - remise)
   status VARCHAR(50) NOT NULL DEFAULT 'brouillon',    -- 'brouillon' | 'en_attente' | 'payee' | 'en_retard' | 'annulee'
   due_date DATE NOT NULL,
   issued_at DATETIME DEFAULT NULL,

@@ -5,6 +5,12 @@ const choiceState = {
   paymentMethod: 'carte',
 };
 
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 async function fetchSubscriptionData() {
   const response = await fetch('backend/subscription.php?action=get', { credentials: 'same-origin' });
   if (!response.ok) {
@@ -19,9 +25,12 @@ function formatPlanLabel(planName) {
 }
 
 function planPrice(plan) {
-  const price = choiceState.cycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
-  const per = choiceState.cycle === 'yearly' ? 'an' : 'mois';
-  return { price, per };
+  const yearly = choiceState.cycle === 'yearly';
+  const price = yearly ? plan.price_yearly : plan.price_monthly;
+  const per = yearly ? 'an' : 'mois';
+  // Ancien prix affiché en annuel (équivalent 12 × mensuel, sans la réduction)
+  const oldPrice = yearly && Number(plan.price_monthly) > 0 ? Number(plan.price_monthly) * 12 : 0;
+  return { price, per, oldPrice };
 }
 
 function planFeatures(plan) {
@@ -55,7 +64,7 @@ function updateSubscriptionBanner(subscription) {
   const nextBilling = subscription.next_billing_date || 'Non défini';
 
   banner.innerHTML = `
-    <strong>${planLabel}</strong> • Statut : ${status} • Prochaine facturation : ${nextBilling}
+    <strong>${esc(planLabel)}</strong> • Statut : ${esc(status)} • Prochaine facturation : ${esc(nextBilling)}
     ${subscription.status?.toLowerCase().includes('cancel') ? ' • <a href="mon-abonnement.html" style="color:var(--primary);font-weight:600;">Réactiver</a>' : ''}
   `;
   banner.style.display = 'block';
@@ -74,7 +83,8 @@ function renderPlans() {
   const isCancelled = choiceState.subscription?.status?.toLowerCase().includes('cancel');
 
   grid.innerHTML = choiceState.plans.map((plan, index) => {
-    const { price, per } = planPrice(plan);
+    const priceInfo = planPrice(plan);
+    const { price, per } = priceInfo;
     const colors = getPlanColor(plan.name);
     const isCurrent = plan.name.toLowerCase() === currentName.toLowerCase() && !isCancelled;
     const isPremium = plan.name.toLowerCase() === 'premium';
@@ -82,20 +92,25 @@ function renderPlans() {
 
     let buttonHtml = '';
     if (isCurrent) {
-      buttonHtml = `<button type="button" class="btn btn-outline-secondary w-100" style="border-radius:8px;padding:10px;" disabled>Plan actuel</button>`;
+      buttonHtml = `<button type="button" class="plan-action-button" style="background:var(--gray-200);color:var(--gray-600);box-shadow:none;cursor:default;" disabled><i class="bi bi-check-lg"></i> Plan actuel</button>`;
     } else {
-      buttonHtml = `<button type="button" class="btn w-100 plan-action-button" data-plan-id="${plan.id}" style="border-radius:8px;padding:10px;">Passer à ${plan.name} <i class="bi bi-arrow-right"></i></button>`;
+      buttonHtml = `<button type="button" class="plan-action-button" data-plan-id="${plan.id}">Passer à ${plan.name} <i class="bi bi-arrow-right"></i></button>`;
     }
+
+    const oldPriceHtml = priceInfo.oldPrice > 0
+      ? `<span class="plan-card__old-price">${priceInfo.oldPrice.toLocaleString('fr-FR')} € / an</span>`
+      : '';
 
     return `
       <div class="plan-card h-100 ${isPremium ? 'plan-card--popular' : ''} animate-in" style="animation-delay:${index * 80}ms">
         ${isPremium ? '<div class="plan-card__badge">LE PLUS POPULAIRE</div>' : ''}
+        ${isCurrent ? '<div class="plan-card__current-tag">Actuel</div>' : ''}
         <div class="plan-card__icon" style="background:${colors.bg};color:${colors.color};"><i class="bi ${colors.icon}"></i></div>
-        <div class="plan-card__name">${plan.name}</div>
-        <div class="plan-card__desc">${plan.description || ''}</div>
-        <div class="plan-card__price">${Number(price).toLocaleString('fr-FR')}€<span>/${per}</span></div>
+        <div class="plan-card__name">${esc(plan.name)}</div>
+        <div class="plan-card__desc">${esc(plan.description || '')}</div>
+        <div class="plan-card__price">${Number(price).toLocaleString('fr-FR')}€<small>/${per}</small>${oldPriceHtml}</div>
         <ul class="plan-card__features">
-          ${features.map(f => `<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> ${f}</li>`).join('') || '<li class="not-included"><i class="bi bi-circle"></i> Fonctionnalités à venir</li>'}
+          ${features.map(f => `<li class="included"><i class="bi bi-check-circle-fill"></i> ${esc(f)}</li>`).join('') || '<li class="not-included"><i class="bi bi-circle"></i> Fonctionnalités à venir</li>'}
         </ul>
         ${buttonHtml}
       </div>
@@ -158,26 +173,39 @@ function attachPlanButtons() {
         toast('Impossible de contacter le serveur.', 'error');
       } finally {
         button.disabled = false;
-        button.innerHTML = `Passer à ${plan.name} <i class="bi bi-arrow-right"></i>`;
+        button.innerHTML = `Passer à ${esc(plan.name)} <i class="bi bi-arrow-right"></i>`;
       }
     });
   });
 }
 
 function attachCycleToggle() {
-  const toggleBtns = document.querySelectorAll('.toggle-switch .toggle-btn');
+  const toggleBtns = document.querySelectorAll('.choice-billing__btn');
   if (!toggleBtns.length) return;
 
   toggleBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      const text = btn.textContent.toLowerCase();
-      const nextCycle = text.includes('annuel') ? 'yearly' : 'monthly';
+      const nextCycle = btn.getAttribute('data-cycle') === 'yearly' ? 'yearly' : 'monthly';
       if (nextCycle === choiceState.cycle) return;
       choiceState.cycle = nextCycle;
       toggleBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderPlans();
       attachPlanButtons();
+    });
+  });
+}
+
+/* Accordéon FAQ : ouverture/fermeture fluide au clic */
+function attachFaqToggle() {
+  document.querySelectorAll('.faq-item__question').forEach((question) => {
+    question.addEventListener('click', () => {
+      const item = question.closest('.faq-item');
+      if (!item) return;
+      const wasOpen = item.classList.contains('is-open');
+      // Ferme les autres pour garder un accordéon propre
+      document.querySelectorAll('.faq-item.is-open').forEach((open) => open.classList.remove('is-open'));
+      if (!wasOpen) item.classList.add('is-open');
     });
   });
 }
@@ -201,5 +229,6 @@ async function initChoiceSubscriptionPage() {
 
 document.addEventListener('DOMContentLoaded', () => {
   attachCycleToggle();
+  attachFaqToggle();
   initChoiceSubscriptionPage();
 });

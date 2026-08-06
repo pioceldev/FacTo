@@ -49,12 +49,12 @@ if ($action === 'get') {
 }
 
 if ($action === 'save_signature') {
-    if (!csrfValidateToken($_POST['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
-
     // Corps JSON (comme les autres endpoints) ou formulaire classique
     $raw = file_get_contents('php://input');
     $body = json_decode($raw, true);
     if (!is_array($body)) { $body = $_POST; }
+
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
 
     $sig = (string) ($body['signature'] ?? '');
 

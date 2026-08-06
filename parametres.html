@@ -14,6 +14,10 @@
 <link rel="stylesheet" href="styles/dashboard.css">
 <link rel="stylesheet" href="styles/animations.css">
 <link rel="stylesheet" href="styles/responsive.css">
+<style>
+  .sig-pad { border: 1px solid var(--gray-200); border-radius: 10px; background: #fff; max-width: 560px; }
+  .sig-pad canvas { display: block; width: 100%; height: auto; cursor: crosshair; touch-action: none; }
+</style>
 </head>
 <body>
 
@@ -119,6 +123,26 @@
           <button class="btn btn-outline-danger" id="btnDeleteAccount" style="white-space:nowrap;">Supprimer mon compte</button>
         </div>
       </div>
+
+      <div class="dashboard__card" style="grid-column:1/-1;">
+        <div class="dashboard__card-header">
+          <div class="dashboard__card-title"><i class="bi bi-pen"></i> Signature de facture</div>
+        </div>
+        <p class="text-muted" style="font-size:.85rem;max-width:640px;">Cette signature apparaîtra en bas de vos factures (aperçu et impression). Dessinez-la à la souris ou au doigt, ou importez une image.</p>
+        <div id="sigPreviewWrap" class="mb-2" style="display:none;">
+          <label class="form-label">Signature actuelle</label>
+          <div><img id="sigPreviewImg" alt="Signature actuelle" style="height:64px;border:1px dashed var(--gray-300);border-radius:8px;padding:4px;background:#fff;"></div>
+        </div>
+        <div class="sig-pad">
+          <canvas id="signaturePad" width="560" height="200"></canvas>
+        </div>
+        <div class="d-flex gap-2 mt-2 flex-wrap">
+          <button type="button" class="btn btn-outline-secondary" id="sigUploadBtn"><i class="bi bi-image"></i> Importer une image</button>
+          <input type="file" id="sigFileInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+          <button type="button" class="btn btn-outline-secondary" id="sigClearBtn"><i class="bi bi-eraser"></i> Effacer</button>
+          <button type="button" class="btn btn-primary" id="sigSaveBtn"><i class="bi bi-check-lg"></i> Enregistrer la signature</button>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -179,6 +203,121 @@
       (window.toast || alert)('Impossible de contacter le serveur.', 'error');
     }
   });
+
+  /* ===== Signature : pavé de dessin + import d'image ===== */
+  const pad = document.getElementById('signaturePad');
+  if (pad) {
+    const ctx = pad.getContext('2d');
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#4c1d95';
+
+    const EMPTY_PNG = (function () {
+      const c = document.createElement('canvas');
+      c.width = pad.width; c.height = pad.height;
+      return c.toDataURL('image/png');
+    })();
+
+    let drawing = false;
+    function pos(e) {
+      const r = pad.getBoundingClientRect();
+      return {
+        x: (e.clientX - r.left) * (pad.width / r.width),
+        y: (e.clientY - r.top) * (pad.height / r.height),
+      };
+    }
+    pad.addEventListener('pointerdown', (e) => {
+      drawing = true;
+      try { pad.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      const p = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    });
+    pad.addEventListener('pointermove', (e) => {
+      if (!drawing) return;
+      const p = pos(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    });
+    const stop = () => { drawing = false; };
+    pad.addEventListener('pointerup', stop);
+    pad.addEventListener('pointercancel', stop);
+
+    function clearPad() { ctx.clearRect(0, 0, pad.width, pad.height); }
+
+    const previewWrap = document.getElementById('sigPreviewWrap');
+    const previewImg = document.getElementById('sigPreviewImg');
+
+    function drawImgOnPad(img) {
+      clearPad();
+      const s = Math.min(pad.width / img.width, pad.height / img.height);
+      const w = img.width * s, h = img.height * s;
+      ctx.drawImage(img, (pad.width - w) / 2, (pad.height - h) / 2, w, h);
+    }
+
+    // Charger la signature déjà enregistrée (modifiable)
+    fetch('backend/profile.php?action=get', { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.user && d.user.signature) {
+          previewWrap.style.display = '';
+          previewImg.src = d.user.signature;
+          const img = new Image();
+          img.onload = () => drawImgOnPad(img);
+          img.src = d.user.signature;
+        }
+      })
+      .catch(() => {});
+
+    document.getElementById('sigUploadBtn').addEventListener('click', () => {
+      document.getElementById('sigFileInput').click();
+    });
+    document.getElementById('sigFileInput').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          drawImgOnPad(img);
+          previewWrap.style.display = '';
+          previewImg.src = pad.toDataURL('image/png');
+        };
+        img.src = String(reader.result);
+      };
+      reader.readAsDataURL(f);
+      e.target.value = '';
+    });
+
+    document.getElementById('sigClearBtn').addEventListener('click', () => {
+      clearPad();
+      previewWrap.style.display = 'none';
+    });
+
+    document.getElementById('sigSaveBtn').addEventListener('click', async () => {
+      const dataUrl = pad.toDataURL('image/png');
+      const isEmpty = dataUrl === EMPTY_PNG;
+      try {
+        const res = await fetch('backend/profile.php?action=save_signature', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ signature: isEmpty ? '' : dataUrl, _csrf: (await fetchCsrfToken()) || '' }),
+          credentials: 'same-origin',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          (window.toast || alert)(data.error || 'Enregistrement impossible.', 'error');
+          return;
+        }
+        (window.toast || alert)(data.message || 'Signature enregistrée', 'success');
+        if (isEmpty) { previewWrap.style.display = 'none'; }
+        else { previewWrap.style.display = ''; previewImg.src = dataUrl; }
+      } catch (err) {
+        (window.toast || alert)('Impossible de contacter le serveur.', 'error');
+      }
+    });
+  }
 })();
 </script>
 </body>

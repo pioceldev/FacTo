@@ -10,6 +10,7 @@ const invoiceState = {
   filters: { status: 'all', q: '', client_id: '', page: 1 },
   editingId: null,
   detail: null,
+  issuer: null,
 };
 
 const STATUS_LABELS = {
@@ -357,7 +358,11 @@ function recalcTotals() {
     ht += lineTotal;
     vat += Math.round(lineTotal * item.vat_rate) / 100;
   });
-  const ttc = ht + vat;
+  ht = Math.round(ht * 100) / 100;
+  vat = Math.round(vat * 100) / 100;
+  const discountInput = document.getElementById('invoiceDiscount');
+  const discount = Math.min(parseFloat(discountInput ? discountInput.value : 0) || 0, ht + vat);
+  const ttc = Math.round((ht + vat - discount) * 100) / 100;
   document.getElementById('invoiceTotalHt').textContent = formatCurrency(ht);
   document.getElementById('invoiceTotalVat').textContent = formatCurrency(vat);
   document.getElementById('invoiceTotalTtc').textContent = formatCurrency(ttc);
@@ -386,6 +391,7 @@ function openNewInvoice(event) {
   document.getElementById('invoiceDueDate').value = due.toISOString().slice(0, 10);
   document.getElementById('invoiceStatus').value = 'brouillon';
   document.getElementById('invoicePaymentMethod').value = 'carte';
+  document.getElementById('invoiceDiscount').value = '0';
   document.getElementById('invoiceNotes').value = '';
   updatePaymentMethodVisibility();
 
@@ -408,7 +414,9 @@ function openEditInvoice(invoiceId) {
       document.getElementById('invoiceDueDate').value = (inv.due_date || '').slice(0, 10);
       document.getElementById('invoiceStatus').value = inv.status || 'brouillon';
       document.getElementById('invoicePaymentMethod').value = 'carte';
+      document.getElementById('invoiceDiscount').value = inv.discount || 0;
       document.getElementById('invoiceNotes').value = inv.notes || '';
+      recalcTotals();
       updatePaymentMethodVisibility();
 
       document.getElementById('invoiceItemsRows').innerHTML = '';
@@ -455,6 +463,7 @@ async function submitInvoice(event) {
     due_date: document.getElementById('invoiceDueDate').value,
     status: document.getElementById('invoiceStatus').value,
     payment_method: document.getElementById('invoicePaymentMethod').value,
+    discount: parseFloat(document.getElementById('invoiceDiscount').value) || 0,
     notes: document.getElementById('invoiceNotes').value.trim(),
     items,
   };
@@ -476,8 +485,18 @@ async function submitInvoice(event) {
 }
 
 /* ============ MODAL DÉTAIL ============ */
+async function loadIssuer() {
+  try {
+    const res = await fetch('backend/profile.php?action=get', { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    invoiceState.issuer = data.user || null;
+  } catch (e) { /* silencieux */ }
+}
+
 async function openDetail(invoiceId) {
   try {
+    if (!invoiceState.issuer) await loadIssuer();
     const data = await api('get&id=' + invoiceId);
     invoiceState.detail = data.invoice;
     renderDetail();
@@ -487,21 +506,137 @@ async function openDetail(invoiceId) {
   }
 }
 
+/* Document facture au format « modèle » (thème violet) — partagé entre
+   l'aperçu (modale) et l'impression. */
+function invoiceDocHTML(inv) {
+  const u = invoiceState.issuer || {};
+  const company = (u.company || u.name || 'FacTo');
+  const initial = (company.trim().charAt(0) || 'F').toUpperCase();
+  const logo = u.logo_path
+    ? `<img src="${esc(u.logo_path)}" alt="Logo">`
+    : `<span>${esc(initial)}</span>`;
+
+  const office = [
+    `<p><strong>${esc(company)}</strong></p>`,
+    u.phone ? `<p>${esc(u.phone)}</p>` : '',
+    u.email ? `<p>${esc(u.email)}</p>` : '',
+  ].join('');
+
+  const clientBlock = [
+    inv.client_name ? `<p><strong>${esc(inv.client_name)}</strong></p>` : '',
+    inv.client_company ? `<p>${esc(inv.client_company)}</p>` : '',
+    inv.client_email ? `<p>${esc(inv.client_email)}</p>` : '',
+    inv.client_phone ? `<p>${esc(inv.client_phone)}</p>` : '',
+    (inv.client_address || inv.client_city)
+      ? `<p>${esc(inv.client_address || '')}${inv.client_address && inv.client_city ? ', ' : ''}${esc(inv.client_city || '')}</p>`
+      : '',
+  ].join('') || '<p>—</p>';
+
+  const rows = (inv.items || []).map(item => `
+    <tr>
+      <td>${esc(item.description || '—')}</td>
+      <td>${formatCurrency(item.unit_price)}</td>
+      <td>${item.quantity}</td>
+      <td>${item.vat_rate} %</td>
+      <td>${formatCurrency(item.line_total)}</td>
+    </tr>`).join('')
+    || '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:14px;">Aucune ligne</td></tr>';
+
+  const method = String(inv.payment_method || '').replace(/_/g, ' ') || 'à convenir';
+  const terms = inv.notes || 'Merci de régler la facture à l\'échéance indiquée.';
+
+  const sum = {
+    amount: Number(inv.amount) || 0,
+    vat: Number(inv.vat) || 0,
+    discount: Number(inv.discount) || 0,
+    total: Number(inv.total) || 0,
+  };
+
+  const sign = `
+    <div class="inv-doc__sign">
+      ${u.signature ? `<img src="${esc(u.signature)}" alt="Signature de ${esc(u.name || company)}">` : ''}
+      <div class="inv-doc__sign-name">${esc(u.name || company)}</div>
+      <div class="inv-doc__sign-role">${u.signature ? 'Signature' : 'Non signé'}</div>
+    </div>`;
+
+  return `
+    <div class="inv-doc">
+      <div class="inv-doc__header">
+        <div class="inv-doc__brand">
+          <div class="inv-doc__logo">${logo}</div>
+          <div>
+            <div class="inv-doc__company">${esc(company)}</div>
+            <div class="inv-doc__slogan">${esc(u.email || 'Facturation simplifiée')}</div>
+          </div>
+        </div>
+        <div>
+          <div class="inv-doc__doclabel">FACTURE</div>
+          <div class="inv-doc__meta">
+            <div>N° <strong>${esc(inv.ref || '—')}</strong></div>
+            <div>${formatDate(inv.issued_at || inv.created_at)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-doc__addresses">
+        <div>
+          <div class="inv-doc__block-title">Adresse / Émetteur</div>
+          ${office}
+        </div>
+        <div>
+          <div class="inv-doc__block-title">Facturé à</div>
+          ${clientBlock}
+        </div>
+      </div>
+
+      <table class="inv-doc__table">
+        <thead>
+          <tr><th>Désignation</th><th>P.U. HT</th><th>Qté</th><th>TVA</th><th>Total HT</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="inv-doc__sum">
+        <div class="inv-doc__note">
+          <div class="inv-doc__block-title">Note</div>
+          <p>${esc(inv.notes || 'Merci de votre confiance.')}</p>
+        </div>
+        <div class="inv-doc__totals">
+          <div><span>Sous-total HT</span><span>${formatCurrency(sum.amount)}</span></div>
+          <div><span>TVA</span><span>${formatCurrency(sum.vat)}</span></div>
+          ${sum.discount > 0 ? `<div><span>Remise</span><span>− ${formatCurrency(sum.discount)}</span></div>` : ''}
+          <div class="inv-grand"><span>Total TTC</span><span>${formatCurrency(sum.total)}</span></div>
+        </div>
+      </div>
+
+      ${sign}
+
+      <div class="inv-doc__thanks">Merci pour votre confiance</div>
+
+      <div class="inv-doc__footer">
+        <div>
+          <b>Questions ?</b>
+          <p>${esc(u.email || '—')}</p>
+          <p>${esc(u.phone || '—')}</p>
+        </div>
+        <div>
+          <b>Paiement</b>
+          <p>${esc(method)}</p>
+          <p>Échéance : ${formatDate(inv.due_date)}</p>
+        </div>
+        <div>
+          <b>Conditions</b>
+          <p>${esc(terms)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderDetail() {
   const inv = invoiceState.detail;
   if (!inv) return;
 
   document.getElementById('invoiceDetailTitle').textContent = inv.ref || 'Détail de la facture';
-
-  const itemsRows = (inv.items || []).map(item => `
-    <tr>
-      <td>${esc(item.description)}</td>
-      <td>${item.quantity}</td>
-      <td>${formatCurrency(item.unit_price)}</td>
-      <td>${item.vat_rate} %</td>
-      <td style="font-weight:600;">${formatCurrency(item.line_total)}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);">Aucune ligne</td></tr>';
 
   const paymentsRows = (inv.payments || []).map(p => `
     <tr>
@@ -513,50 +648,14 @@ function renderDetail() {
   `).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--gray-500);">Aucun paiement enregistré</td></tr>';
 
   document.getElementById('invoiceDetailBody').innerHTML = `
-    <div class="invoice-detail__head">
-      <div>
-        <div class="invoice-detail__ref">${esc(inv.ref)}</div>
-        <div style="margin-top:6px;"><span class="badge-soft ${statusBadge(inv.status)}">${statusLabel(inv.status)}</span></div>
-      </div>
-      <div style="text-align:right;font-size:.85rem;color:var(--gray-500);">
-        <div>Émise le : <strong>${formatDate(inv.issued_at || inv.created_at)}</strong></div>
-        <div>Échéance : <strong>${formatDate(inv.due_date)}</strong></div>
-        ${inv.paid_at ? `<div>Payée le : <strong>${formatDate(inv.paid_at)}</strong></div>` : ''}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div><span class="badge-soft ${statusBadge(inv.status)}">${statusLabel(inv.status)}</span></div>
+      <div style="font-size:.82rem;color:var(--gray-500);">
+        Émise le ${formatDate(inv.issued_at || inv.created_at)} · Échéance ${formatDate(inv.due_date)}
       </div>
     </div>
-
-    <div class="row g-3 mb-3">
-      <div class="col-md-6">
-        <div class="invoice-detail__block-title">Facturé à</div>
-        <div class="invoice-detail__block">
-          <p><strong>${esc(inv.client_name || 'Client ponctuel')}</strong></p>
-          ${inv.client_company ? `<p>${esc(inv.client_company)}</p>` : ''}
-          ${inv.client_email ? `<p>${esc(inv.client_email)}</p>` : ''}
-          ${inv.client_phone ? `<p>${esc(inv.client_phone)}</p>` : ''}
-          ${inv.client_address ? `<p>${esc(inv.client_address)}${inv.client_city ? ', ' + esc(inv.client_city) : ''}</p>` : ''}
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="invoice-detail__block-title">Totaux</div>
-        <div class="invoice-detail__block">
-          <p>Total HT : <strong>${formatCurrency(inv.amount)}</strong></p>
-          <p>TVA : <strong>${formatCurrency(inv.vat)}</strong></p>
-          <p style="font-size:1.05rem;">Total TTC : <strong style="color:var(--primary);">${formatCurrency(inv.total)}</strong></p>
-        </div>
-        ${inv.notes ? `<div class="invoice-detail__block-title" style="margin-top:12px;">Notes</div>
-          <div class="invoice-detail__block"><p>${esc(inv.notes)}</p></div>` : ''}
-      </div>
-    </div>
-
-    <div class="invoice-detail__block-title">Lignes de facture</div>
-    <div class="table-responsive mb-3">
-      <table class="custom-table">
-        <thead><tr><th>Désignation</th><th>Qté</th><th>P.U. HT</th><th>TVA</th><th>Total HT</th></tr></thead>
-        <tbody>${itemsRows}</tbody>
-      </table>
-    </div>
-
-    <div class="invoice-detail__block-title">Paiements reçus</div>
+    ${invoiceDocHTML(inv)}
+    <div class="inv-doc__block-title" style="margin-top:18px;">Paiements reçus</div>
     <div class="table-responsive">
       <table class="custom-table">
         <thead><tr><th>Référence</th><th>Date</th><th>Moyen</th><th>Montant</th></tr></thead>
@@ -567,67 +666,19 @@ function renderDetail() {
 }
 
 /* ============ IMPRESSION ============ */
-function printInvoice(invoiceId) {
-  const fetchPromise = invoiceState.detail && invoiceState.detail.id === invoiceId
-    ? Promise.resolve({ invoice: invoiceState.detail })
-    : api('get&id=' + invoiceId);
-
-  fetchPromise.then(data => {
+async function printInvoice(invoiceId) {
+  try {
+    if (!invoiceState.issuer) await loadIssuer();
+    const data = invoiceState.detail && invoiceState.detail.id === invoiceId
+      ? { invoice: invoiceState.detail }
+      : await api('get&id=' + invoiceId);
     const inv = data.invoice;
     const printArea = document.getElementById('printArea');
-
-    const itemsRows = (inv.items || []).map(item => `
-      <tr>
-        <td>${esc(item.description)}</td>
-        <td style="text-align:right;">${item.quantity}</td>
-        <td style="text-align:right;">${formatCurrency(item.unit_price)}</td>
-        <td style="text-align:right;">${item.vat_rate} %</td>
-        <td style="text-align:right;">${formatCurrency(item.line_total)}</td>
-      </tr>
-    `).join('');
-
-    printArea.innerHTML = `
-      <div class="invoice-print__head">
-        <div>
-          <div class="invoice-print__brand">FacTo</div>
-          <div>${esc(inv.client_company || 'FacTo')}</div>
-        </div>
-        <div class="invoice-print__ref">
-          <div>${esc(inv.ref)}</div>
-          <div>${formatDate(inv.issued_at || inv.created_at)}</div>
-        </div>
-      </div>
-      <div class="invoice-print__grid">
-        <div class="invoice-print__block">
-          <strong>Facturé à</strong>
-          <p>${esc(inv.client_name || 'Client ponctuel')}</p>
-          ${inv.client_email ? `<p>${esc(inv.client_email)}</p>` : ''}
-          ${inv.client_phone ? `<p>${esc(inv.client_phone)}</p>` : ''}
-          ${inv.client_address ? `<p>${esc(inv.client_address)}</p>` : ''}
-        </div>
-        <div class="invoice-print__block">
-          <strong>Détails</strong>
-          <p>Échéance : ${formatDate(inv.due_date)}</p>
-          <p>Statut : ${statusLabel(inv.status)}</p>
-        </div>
-      </div>
-      <table>
-        <thead><tr><th>Désignation</th><th>Qté</th><th>P.U. HT</th><th>TVA</th><th>Total HT</th></tr></thead>
-        <tbody>${itemsRows}</tbody>
-      </table>
-      <div class="invoice-print__totals">
-        <div><span>Total HT</span><span>${formatCurrency(inv.amount)}</span></div>
-        <div><span>TVA</span><span>${formatCurrency(inv.vat)}</span></div>
-        <div class="grand"><span>Total TTC</span><span>${formatCurrency(inv.total)}</span></div>
-      </div>
-      ${inv.notes ? `<div class="invoice-print__block" style="margin-top:16px;"><strong>Notes</strong><p>${esc(inv.notes)}</p></div>` : ''}
-      <div class="invoice-print__foot">
-        <p>Document généré par FacTo le ${new Date().toLocaleDateString('fr-FR')}. Merci de votre confiance.</p>
-      </div>
-    `;
-
+    printArea.innerHTML = invoiceDocHTML(inv);
     setTimeout(() => window.print(), 60);
-  }).catch(error => toast(error.message, 'error'));
+  } catch (error) {
+    toast(error.message, 'error');
+  }
 }
 
 /* ============ ACTIONS ============ */
@@ -679,6 +730,11 @@ function attachEvents() {
   document.getElementById('invoiceForm').addEventListener('submit', submitInvoice);
 
   document.getElementById('invoiceStatus').addEventListener('change', updatePaymentMethodVisibility);
+
+  const discountInput = document.getElementById('invoiceDiscount');
+  if (discountInput) {
+    discountInput.addEventListener('input', recalcTotals);
+  }
 
   document.getElementById('btnAddItem').addEventListener('click', () => addItemRow());
 
@@ -827,7 +883,7 @@ function populateClientFilter() {
 
 async function init() {
   try {
-    await Promise.all([loadSelectors(), loadList()]);
+    await Promise.all([loadSelectors(), loadList(), loadIssuer()]);
   } catch (error) {
     toast(error.message, 'error');
     return;

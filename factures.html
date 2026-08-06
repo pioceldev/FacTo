@@ -78,7 +78,7 @@
 </div>
 <div class="page-header__actions">
 <span id="quotaBadge" class="badge-soft badge-soft-secondary" style="align-self:center;display:none;"></span>
-<button type="button" class="btn btn-primary" id="btnNewInvoice" data-facto-modal="invoiceModal"><i class="bi bi-plus"></i> Nouvelle Facture</button>
+<button type="button" class="btn btn-primary" id="btnNewInvoice"><i class="bi bi-plus"></i> Nouvelle Facture</button>
 </div>
 </div>
 
@@ -202,6 +202,13 @@
 <div class="invoice-totals">
 <div class="invoice-totals__row"><span>Total HT</span><strong id="invoiceTotalHt">0,00 €</strong></div>
 <div class="invoice-totals__row"><span>TVA</span><strong id="invoiceTotalVat">0,00 €</strong></div>
+<div class="invoice-totals__row">
+<span>Remise</span>
+<div style="display:flex;align-items:center;gap:6px;">
+<input type="number" id="invoiceDiscount" class="form-control form-control-sm" min="0" step="0.01" value="0" style="width:90px;text-align:right;" title="Remise en € (le modèle affiche la ligne DISCOUNT)">
+<span>€</span>
+</div>
+</div>
 <div class="invoice-totals__row invoice-totals__row--grand"><span>Total TTC</span><strong id="invoiceTotalTtc">0,00 €</strong></div>
 </div>
 

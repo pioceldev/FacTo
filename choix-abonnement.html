@@ -8,7 +8,7 @@
 <title>Choisir l'abonnement - FacTo</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/global.css">
 <link rel="stylesheet" href="styles/components.css">
 <link rel="stylesheet" href="styles/sidebar.css">
@@ -72,10 +72,10 @@
 <div class="choice-hero__badge">Nos Tarifs</div>
 <h1 class="choice-hero__title">Choisissez l'abonnement qui vous ressemble</h1>
 <p class="choice-hero__desc">Simple, transparent et conçu pour booster votre productivité. Changez de forfait à tout moment selon vos besoins.</p>
-<div id="currentSubscriptionBanner" class="choice-hero__current-plan" style="display:none;margin-top:22px;padding:18px;border:1px solid rgba(13,110,253,.15);border-radius:16px;background:rgba(13,110,253,.06);color:var(--primary);"></div>
-<div class="toggle-switch" style="margin:0 auto;">
-<button class="toggle-btn active">Mensuel</button>
-<button class="toggle-btn">Annuel <span style="font-size:.7rem;opacity:.8;">-20%</span></button>
+<div id="currentSubscriptionBanner" class="choice-hero__current-plan" style="display:none;"></div>
+<div class="choice-billing" role="group" aria-label="Cycle de facturation">
+<button type="button" class="choice-billing__btn active" data-cycle="monthly">Mensuel</button>
+<button type="button" class="choice-billing__btn" data-cycle="yearly">Annuel <span class="choice-billing__save">-20%</span></button>
 </div>
 </div>
 
@@ -119,9 +119,9 @@
 </div>
 </div>
 
-<div style="margin-bottom:32px;">
-<h3 style="font-size:1.25rem;font-weight:700;text-align:center;margin-bottom:24px;">Questions fréquentes</h3>
-<p style="text-align:center;color:var(--gray-500);font-size:.9rem;margin-bottom:24px;">Tout ce que vous devez savoir pour bien démarrer.</p>
+<div style="margin-bottom:40px;">
+<h3 class="choice-faq__title">Questions fréquentes</h3>
+<p class="choice-faq__subtitle">Tout ce que vous devez savoir pour bien démarrer.</p>
 <div class="row g-3">
 <div class="col-md-6">
 <div class="faq-item is-open">

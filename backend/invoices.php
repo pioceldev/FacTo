@@ -14,6 +14,16 @@ if (empty($_SESSION['user_id'])) {
 $pdo = getPDO();
 $userId = $_SESSION['user_id'];
 
+// Ensure discount column exists (best-effort, MySQL 5.7 compatible)
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'invoices' AND COLUMN_NAME = 'discount'");
+    if (!(int) $stmt->fetchColumn()) {
+        $pdo->exec('ALTER TABLE invoices ADD COLUMN discount DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER vat');
+    }
+} catch (Exception $e) {
+    // ignore
+}
+
 function respond($data, int $code = 200)
 {
     http_response_code($code);
@@ -113,7 +123,7 @@ function findClient(PDO $pdo, int $userId, $clientId): ?int
     return $stmt->fetchColumn() ? $clientId : null;
 }
 
-function parseItems($items)
+function parseItems($items, $discount = 0)
 {
     if (!is_array($items) || !count($items)) {
         return ['error' => 'Au moins une ligne de facture est requise'];
@@ -122,6 +132,8 @@ function parseItems($items)
     $lines = [];
     $amount = 0.0;
     $vat = 0.0;
+
+    $discount = max(0, (float) $discount);
 
     foreach ($items as $index => $item) {
         if (!is_array($item)) continue;
@@ -163,11 +175,16 @@ function parseItems($items)
         return ['error' => 'Au moins une ligne de facture est requise'];
     }
 
+    $amount = round($amount, 2);
+    $vat = round($vat, 2);
+    $discount = round(min($discount, $amount + $vat), 2);
+
     return [
         'lines' => $lines,
-        'amount' => round($amount, 2),
-        'vat' => round($vat, 2),
-        'total' => round($amount + $vat, 2),
+        'amount' => $amount,
+        'vat' => $vat,
+        'discount' => $discount,
+        'total' => round($amount + $vat - $discount, 2),
     ];
 }
 
@@ -351,7 +368,7 @@ if ($action === 'create') {
         ], 403);
     }
 
-    $parsed = parseItems($body['items'] ?? []);
+    $parsed = parseItems($body['items'] ?? [], $body['discount'] ?? 0);
     if (isset($parsed['error'])) {
         respond(['error' => $parsed['error']], 422);
     }
@@ -366,8 +383,8 @@ if ($action === 'create') {
         $paidAt = $status === 'payee' ? date('Y-m-d H:i:s') : null;
 
         $stmt = $pdo->prepare(
-            'INSERT INTO invoices (user_id, client_id, ref, amount, vat, total, status, due_date, issued_at, paid_at, notes, created_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())'
+            'INSERT INTO invoices (user_id, client_id, ref, amount, vat, discount, total, status, due_date, issued_at, paid_at, notes, created_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW())'
         );
         $stmt->execute([
             $userId,
@@ -375,6 +392,7 @@ if ($action === 'create') {
             $ref,
             $parsed['amount'],
             $parsed['vat'],
+            $parsed['discount'],
             $parsed['total'],
             $status,
             $dueDate,
@@ -446,7 +464,7 @@ if ($action === 'update') {
         respond(['error' => 'Date d\'échéance requise'], 422);
     }
 
-    $parsed = isset($body['items']) ? parseItems($body['items']) : null;
+    $parsed = isset($body['items']) ? parseItems($body['items'], $body['discount'] ?? 0) : null;
     if (is_array($parsed) && isset($parsed['error'])) {
         respond(['error' => $parsed['error']], 422);
     }
@@ -456,7 +474,11 @@ if ($action === 'update') {
 
     $amount = $parsed['amount'] ?? (float) $current['amount'];
     $vat = $parsed['vat'] ?? (float) $current['vat'];
-    $total = $parsed['total'] ?? (float) $current['total'];
+    $discount = $parsed['discount'] ?? (float) ($current['discount'] ?? 0);
+    // Clamp de symétrie : la remise ne peut jamais dépasser HT + TVA (même
+    // quand les lignes ne sont pas renvoyées lors de la mise à jour).
+    $discount = round(min(max(0, $discount), $amount + $vat), 2);
+    $total = $parsed['total'] ?? round($amount + $vat - $discount, 2);
 
     $wasPaid = $current['status'] === 'payee';
     $paidAt = $wasPaid ? $current['paid_at'] : null;
@@ -467,12 +489,13 @@ if ($action === 'update') {
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare(
-            'UPDATE invoices SET client_id = ?, amount = ?, vat = ?, total = ?, status = ?, due_date = ?, issued_at = ?, paid_at = ?, notes = ?, updated_at = NOW() WHERE id = ? AND user_id = ?'
+            'UPDATE invoices SET client_id = ?, amount = ?, vat = ?, discount = ?, total = ?, status = ?, due_date = ?, issued_at = ?, paid_at = ?, notes = ?, updated_at = NOW() WHERE id = ? AND user_id = ?'
         );
         $stmt->execute([
             $clientId,
             $amount,
             $vat,
+            $discount,
             $total,
             $status,
             $dueDate,

@@ -281,4 +281,18 @@
   .page {
     display: block !important;
   }
+
+  /* Isolation du document facture (modèle violet) */
+  body * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea {
+    display: block !important;
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    margin: 0; padding: 0;
+    box-shadow: none;
+  }
+  .inv-doc { border-radius: 0; padding: 0; }
+  @page { margin: 12mm; }
 }

@@ -116,6 +116,112 @@ async function loadProducts() {
   }
 }
 
+/* Normalisation des statuts (avec ou sans accents) */
+function normalizeStatus(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function statusBadge(status) {
+  const s = normalizeStatus(status);
+  const map = {
+    brouillon: ['badge-soft-secondary', 'Brouillon'],
+    envoye: ['badge-soft-info', 'Envoyé'],
+    accepte: ['badge-soft-success', 'Accepté'],
+    refuse: ['badge-soft-danger', 'Refusé'],
+  };
+  const m = map[s] || ['badge-soft-secondary', status || '—'];
+  return `<span class="badge-soft ${m[0]}">${esc(m[1])}</span>`;
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  try {
+    return new Date(value).toLocaleDateString('fr-FR');
+  } catch (e) {
+    return value;
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('quotesTableBody');
+  if (!tbody) return;
+
+  if (!quoteState.quotes.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:40px 16px;">
+        Aucun devis trouvé. <a href="#" onclick="openNewQuote(event)" style="color:var(--primary);font-weight:600;">Créer votre premier devis</a>.
+      </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = quoteState.quotes.map(quote => `
+    <tr>
+      <td style="font-weight:600;color:var(--gray-800);">${esc(quote.ref || '—')}</td>
+      <td style="font-weight:500;">${esc(quote.client_name || 'Client ponctuel')}</td>
+      <td>${formatCurrency(quote.amount)}</td>
+      <td>${formatCurrency(quote.vat)}</td>
+      <td style="font-weight:700;">${formatCurrency(quote.total)}</td>
+      <td style="color:var(--gray-500);">${formatDate(quote.valid_until)}</td>
+      <td>${statusBadge(quote.status)}</td>
+      <td>
+        <div class="invoice-table-actions" style="justify-content:flex-end;">
+          <button type="button" title="Modifier" data-edit="${quote.id}"><i class="bi bi-pencil"></i></button>
+          <button type="button" title="Supprimer" class="is-danger" data-del="${quote.id}"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderPagination() {
+  const nav = document.getElementById('quotePagination');
+  const info = document.getElementById('quoteTableInfo');
+  const p = quoteState.pagination;
+
+  if (info) {
+    const start = p.total === 0 ? 0 : (p.page - 1) * p.per_page + 1;
+    const end = Math.min(p.total, p.page * p.per_page);
+    info.textContent = `${start}–${end} sur ${p.total} devis`;
+  }
+  if (!nav) return;
+
+  if (p.pages <= 1) {
+    nav.innerHTML = '';
+    return;
+  }
+
+  const pages = [];
+  for (let i = 1; i <= p.pages; i++) {
+    if (p.pages > 7 && i > 2 && i < p.pages - 1 && Math.abs(i - p.page) > 1) {
+      if (pages[pages.length - 1] !== '…') pages.push('…');
+      continue;
+    }
+    pages.push(i);
+  }
+
+  const prevDisabled = p.page <= 1 ? ' disabled' : '';
+  const nextDisabled = p.page >= p.pages ? ' disabled' : '';
+
+  nav.innerHTML = `
+    <button type="button" class="pagination-custom__link ${prevDisabled}" data-page="${p.page - 1}"><i class="bi bi-chevron-left"></i></button>
+    ${pages.map(pg => pg === '…'
+      ? '<span class="pagination-custom__link disabled">…</span>'
+      : `<button type="button" class="pagination-custom__link ${pg === p.page ? 'active' : ''}" data-page="${pg}">${pg}</button>`
+    ).join('')}
+    <button type="button" class="pagination-custom__link ${nextDisabled}" data-page="${p.page + 1}"><i class="bi bi-chevron-right"></i></button>
+  `;
+}
+
+function renderSearchClear() {
+  const topSearch = document.getElementById('quoteFilterSearch');
+  const bottomSearch = document.getElementById('quoteSearchInput');
+  const active = quoteState.filters.q || '';
+
+  [topSearch, bottomSearch].forEach(input => {
+    if (!input) return;
+    if (document.activeElement !== input) input.value = active;
+  });
+}
+
 function renderStats() {
   const container = document.getElementById('quoteStatsCards');
   if (!container) return;
@@ -324,6 +430,20 @@ function getModal(id) {
 function attachEvents() {
   document.getElementById('btnNewQuote').addEventListener('click', openNewQuote);
   document.getElementById('quoteForm').addEventListener('submit', submitQuote);
+
+  // Recherche basse (filtre principal de la carte)
+  const bottomSearch = document.getElementById('quoteSearchInput');
+  if (bottomSearch) {
+    let timer;
+    bottomSearch.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        quoteState.filters.q = bottomSearch.value.trim();
+        quoteState.filters.page = 1;
+        refreshQuotes().catch(error => toast(error.message, 'error'));
+      }, 350);
+    });
+  }
 
   document.getElementById('quotesTableBody').addEventListener('click', event => {
     const editBtn = event.target.closest('[data-edit]');
