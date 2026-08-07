@@ -65,6 +65,14 @@
         <img id="companyLogo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' fill='%23f3f4f6'/%3E%3Ccircle cx='80' cy='55' r='40' fill='%239ca3af'/%3E%3Cpath d='M40 130c0-22 18-40 40-40s40 18 40 40' stroke='%23717a86' stroke-width='8' fill='none'/%3E%3C/svg%3E" alt="Logo" style="width:160px;height:160px;border-radius:12px;object-fit:cover;margin-bottom:12px;">
         <div id="profileName" class="h5">—</div>
         <div id="profileEmail" class="text-muted">—</div>
+        <div class="profile-business-code mt-3">
+          <div class="profile-business-code__label"><i class="bi bi-gift"></i> Mon code business</div>
+          <div class="profile-business-code__row">
+            <span id="profileBusinessCode" class="profile-business-code__value">—</span>
+            <button type="button" id="btnCopyBusinessCode" class="btn btn-sm btn-outline-primary" title="Copier le code"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <small class="d-block text-muted mt-1">Partagez ce code : quand quelqu'un s'abonne avec, vous gagnez 10 % de réduction sur votre prochain renouvellement.</small>
+        </div>
         <div class="mt-3"><small id="profileCreated">—</small></div>
       </div>
     </div>
@@ -140,6 +148,7 @@ async function loadProfile() {
     const user = data.user || {};
     document.getElementById('profileName').textContent = user.name || '';
     document.getElementById('profileEmail').textContent = user.email || '';
+    document.getElementById('profileBusinessCode').textContent = user.business_code || '—';
     document.getElementById('profileCreated').textContent = user.created_at ? new Date(user.created_at).toLocaleString() : '';
     document.getElementById('inputName').value = user.name || '';
     document.getElementById('inputCompany').value = user.company || '';
@@ -159,6 +168,14 @@ async function loadProfile() {
 
   document.addEventListener('DOMContentLoaded', () => {
   loadProfile();
+  document.getElementById('btnCopyBusinessCode').addEventListener('click', async () => {
+    const code = document.getElementById('profileBusinessCode').textContent;
+    if (!code || code === '—') return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(code); toast('Code copié : ' + code, 'success'); return; } catch (e) {}
+    }
+    toast('Votre code : ' + code, 'info');
+  });
   document.getElementById('btnLogout').addEventListener('click', async () => {
     try { await fetch('backend/auth.php?action=logout', { method: 'POST', credentials: 'same-origin' }); } catch (e) {}
     window.location.href = 'connexion.html';

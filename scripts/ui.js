@@ -172,4 +172,48 @@
     return _csrfInflight;
   };
   window.csrfToken = function () { return _csrfToken ?? ''; };
+
+  /* ===== Devise de l'utilisateur — SOURCE UNIQUE =====
+     AppCurrency est préchargé depuis session.php au démarrage, puis chaque module
+     peut le lire (window.AppCurrency) ou formater un montant (window.formatMoney).
+     Valeurs : 'EUR' | 'USD' | 'XOF' (défaut EUR).
+
+     NB : le nom formatMoney est volontairement DIFFÉRENT de formatCurrency :
+     chaque module déclare sa propre fonction globale formatCurrency() (ce qui
+     écraserait window.formatCurrency et provoquerait une récursion infinie).
+     Le point d'entrée partagé est donc window.formatMoney. */
+  let _appCurrency = 'EUR';
+  Object.defineProperty(window, 'AppCurrency', {
+    get: () => _appCurrency,
+    set: (v) => { if (['EUR', 'USD', 'XOF'].includes(String(v || '').toUpperCase())) _appCurrency = String(v).toUpperCase(); },
+    configurable: true,
+  });
+
+  window.formatMoney = function (amount) {
+    const cur = _appCurrency;
+    const opts = {
+      style: 'currency',
+      currency: cur,
+      // Symboles courts : € , $ , FCFA (narrowSymbol) plutôt que $US / F CFA
+      currencyDisplay: 'narrowSymbol',
+      // Le FCFA n'a pas de subdivision courante : on évite les décimales
+      maximumFractionDigits: cur === 'XOF' ? 0 : 2,
+    };
+    try {
+      return new Intl.NumberFormat('fr-FR', opts).format(Number(amount) || 0);
+    } catch (e) {
+      // Fallback (anciens navigateurs / Intl indisponible)
+      const sym = cur === 'XOF' ? 'FCFA' : cur === 'USD' ? '$' : '€';
+      return (Number(amount) || 0).toFixed(cur === 'XOF' ? 0 : 2).replace('.', ',') + ' ' + sym;
+    }
+  };
+
+  // Préchargement de la devise au démarrage (léger : un seul appel session.php)
+  (async function loadAppCurrency() {
+    try {
+      const r = await fetch('backend/session.php', { credentials: 'same-origin' });
+      const d = await r.json();
+      if (d && d.currency) window.AppCurrency = d.currency;
+    } catch (e) { /* EUR par défaut */ }
+  })();
 })();

@@ -9,7 +9,7 @@ const productState = {
 };
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+  return window.formatMoney ? window.formatMoney(amount) : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
 }
 
 async function api(path, options = {}) {

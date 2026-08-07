@@ -30,7 +30,7 @@ const STATUS_BADGES = {
 };
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+  return window.formatMoney ? window.formatMoney(amount) : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
 }
 
 function formatDate(value) {
@@ -207,6 +207,7 @@ function renderTable() {
         <td>
           <div class="invoice-table-actions" style="justify-content:flex-end;">
             <button type="button" title="Voir" data-view="${invoice.id}"><i class="bi bi-eye"></i></button>
+            <button type="button" title="Télécharger PDF" data-download="${invoice.id}"><i class="bi bi-download"></i></button>
             <button type="button" title="Modifier" data-edit="${invoice.id}" ${isCancelled ? 'disabled style="opacity:.4;cursor:not-allowed;"' : ''}><i class="bi bi-pencil"></i></button>
             <button type="button" title="Imprimer" data-print="${invoice.id}"><i class="bi bi-printer"></i></button>
             <button type="button" title="Supprimer" class="is-danger" data-del="${invoice.id}"><i class="bi bi-trash"></i></button>
@@ -668,6 +669,39 @@ function renderDetail() {
   `;
 }
 
+/* ============ TÉLÉCHARGEMENT PDF ============ */
+async function downloadInvoice(invoiceId) {
+  try {
+    const res = await fetch('backend/pdf.php?action=invoice&id=' + encodeURIComponent(invoiceId), { credentials: 'same-origin' });
+    if (res.status === 401) {
+      window.location.href = 'connexion.html';
+      return;
+    }
+    if (!res.ok) {
+      let msg = 'Erreur lors de la génération du PDF (' + res.status + ')';
+      try {
+        const data = await res.json();
+        if (data && data.error) msg = data.error;
+      } catch (e) { /* réponse non JSON */ }
+      toast(msg, 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const invoice = invoiceState.invoices.find(i => String(i.id) === String(invoiceId));
+    a.href = url;
+    a.download = (invoice && invoice.ref ? invoice.ref : 'facture-' + invoiceId) + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Facture téléchargée', 'success');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
 /* ============ IMPRESSION ============ */
 async function printInvoice(invoiceId) {
   try {
@@ -782,11 +816,13 @@ function attachEvents() {
 
   document.getElementById('invoicesTableBody').addEventListener('click', (event) => {
     const viewBtn = event.target.closest('[data-view]');
+    const downloadBtn = event.target.closest('[data-download]');
     const editBtn = event.target.closest('[data-edit]');
     const printBtn = event.target.closest('[data-print]');
     const delBtn = event.target.closest('[data-del]');
 
     if (viewBtn) openDetail(viewBtn.getAttribute('data-view'));
+    else if (downloadBtn) downloadInvoice(downloadBtn.getAttribute('data-download'));
     else if (editBtn) openEditInvoice(editBtn.getAttribute('data-edit'));
     else if (printBtn) printInvoice(printBtn.getAttribute('data-print'));
     else if (delBtn) deleteInvoice(delBtn.getAttribute('data-del'));
@@ -856,6 +892,10 @@ function attachEvents() {
 
   document.getElementById('btnRefreshInvoices').addEventListener('click', () => {
     refresh().catch(error => toast(error.message, 'error'));
+  });
+
+  document.getElementById('btnDownloadInvoice').addEventListener('click', () => {
+    if (invoiceState.detail) downloadInvoice(invoiceState.detail.id);
   });
 
   document.getElementById('btnPrintInvoice').addEventListener('click', () => {

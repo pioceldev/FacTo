@@ -105,6 +105,45 @@
 
       <div class="dashboard__card">
         <div class="dashboard__card-header">
+          <div class="dashboard__card-title"><i class="bi bi-currency-exchange"></i> Devise de l'application</div>
+        </div>
+        <p class="text-muted" style="font-size:.85rem;margin-bottom:14px;">
+          Choisissez la devise affichée sur vos documents (factures, devis, paiements, dépenses, produits, stocks et rapports).
+        </p>
+        <div class="currency-picker">
+          <label class="currency-option">
+            <input type="radio" name="appCurrency" value="EUR">
+            <span class="currency-option__card">
+              <span class="currency-option__symbol">€</span>
+              <span class="currency-option__name">Euro</span>
+              <span class="currency-option__code">EUR</span>
+            </span>
+          </label>
+          <label class="currency-option">
+            <input type="radio" name="appCurrency" value="USD">
+            <span class="currency-option__card">
+              <span class="currency-option__symbol">$</span>
+              <span class="currency-option__name">Dollar US</span>
+              <span class="currency-option__code">USD</span>
+            </span>
+          </label>
+          <label class="currency-option">
+            <input type="radio" name="appCurrency" value="XOF">
+            <span class="currency-option__card">
+              <span class="currency-option__symbol">CFA</span>
+              <span class="currency-option__name">Franc CFA</span>
+              <span class="currency-option__code">FCFA</span>
+            </span>
+          </label>
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-3">
+          <button class="btn btn-primary" id="btnSaveCurrency"><i class="bi bi-check-lg"></i> Enregistrer la devise</button>
+          <span class="text-muted" style="font-size:.8rem;" id="currencySavedMsg"></span>
+        </div>
+      </div>
+
+      <div class="dashboard__card">
+        <div class="dashboard__card-header">
           <div class="dashboard__card-title">Notifications</div>
         </div>
         <div class="mb-3 form-check">
@@ -164,6 +203,45 @@
 <script src="scripts/auth.js"></script>
 <script>
 (function () {
+  /* ===== Devise de l'application ===== */
+  const btnSaveCurrency = document.getElementById('btnSaveCurrency');
+  if (btnSaveCurrency) {
+    (async () => {
+      try {
+        const res = await fetch('backend/profile.php?action=get', { credentials: 'same-origin' });
+        const data = await res.json();
+        const cur = String(data.user?.currency || 'EUR').toUpperCase();
+        const radio = document.querySelector(`input[name="appCurrency"][value="${cur}"]`);
+        if (radio) radio.checked = true;
+      } catch (e) { /* défaut EUR */ }
+    })();
+
+    btnSaveCurrency.addEventListener('click', async () => {
+      const selected = document.querySelector('input[name="appCurrency"]:checked');
+      if (!selected) return;
+      const msg = document.getElementById('currencySavedMsg');
+      try {
+        const res = await fetch('backend/profile.php?action=save_currency', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ currency: selected.value, _csrf: (await fetchCsrfToken()) || '' }),
+          credentials: 'same-origin',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          (window.toast || alert)(data.error || 'Enregistrement impossible.', 'error');
+          return;
+        }
+        window.AppCurrency = data.currency || selected.value;
+        if (msg) msg.textContent = '✓ ' + (data.message || 'Devise enregistrée');
+        (window.toast || alert)(data.message || 'Devise enregistrée', 'success');
+        setTimeout(() => { if (msg) msg.textContent = ''; }, 4000);
+      } catch (err) {
+        (window.toast || alert)('Impossible de contacter le serveur.', 'error');
+      }
+    });
+  }
+
   const btnDelete = document.getElementById('btnDeleteAccount');
   if (!btnDelete) return;
 

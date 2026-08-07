@@ -8,7 +8,7 @@ const supplierState = {
 };
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+  return window.formatMoney ? window.formatMoney(amount) : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
 }
 
 async function api(path, options = {}) {
@@ -100,7 +100,7 @@ function renderTable() {
     <tr>
       <td>
         <div class="supplier-table-cell">
-          <div class="company-avatar" style="background:var(--gray-200);color:var(--gray-700);">${esc(supplier.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2))}</div>
+          <div class="company-avatar" style="background:var(--gray-200);color:var(--gray-700);">${esc(String(supplier.name || '').split(/\s+/).filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?')}</div>
           <span class="supplier-name">${esc(supplier.name || '')}</span>
         </div>
       </td>
@@ -266,9 +266,12 @@ function attachEvents() {
     topSearch.addEventListener('input', () => { clearTimeout(timer2); timer2 = setTimeout(onSearch, 350); });
   }
 
-  document.getElementById('btnRefreshSuppliers').addEventListener('click', () => {
-    refreshSuppliers().catch(error => toast(error.message, 'error'));
-  });
+  const refreshBtn = document.getElementById('btnRefreshSuppliers');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      refreshSuppliers().catch(error => toast(error.message, 'error'));
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

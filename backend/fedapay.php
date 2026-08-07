@@ -56,12 +56,11 @@ function fedapayRequest(string $method, string $path, array $body = null)
     return ['code' => $code, 'data' => $data];
 }
 
-// Convertit un montant en EUR vers la devise FedaPay (entier).
-function fedapayAmount($eurAmount)
+// Le prix des abonnements est désormais stocké directement en FCFA (XOF) :
+// plus de conversion EUR -> XOF, on passe le montant tel quel (entier).
+function fedapayAmount($xofAmount)
 {
-    $c = fedapayConfig();
-    $rate = (float) ($c['xof_per_eur'] ?? 655.957);
-    return (int) round((float) $eurAmount * $rate);
+    return (int) round((float) $xofAmount);
 }
 
 // Crée une transaction FedaPay.

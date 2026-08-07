@@ -32,11 +32,20 @@ try {
 } catch (Exception $e) {
     // ignore if not supported
 }
+// Devise d'affichage de l'utilisateur (EUR | USD | XOF)
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'currency'");
+    if (!(int) $stmt->fetchColumn()) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'");
+    }
+} catch (Exception $e) {
+    // ignore if not supported
+}
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get';
 
 if ($action === 'get') {
-    $stmt = $pdo->prepare('SELECT id, name, email, company, phone, role, created_at, logo_path, signature FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, name, email, company, phone, role, created_at, logo_path, signature, business_code, currency FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     if (!$user) {
@@ -45,6 +54,25 @@ if ($action === 'get') {
         exit;
     }
     echo json_encode(['user' => $user]);
+    exit;
+}
+
+if ($action === 'save_currency') {
+    $raw = file_get_contents('php://input');
+    $body = json_decode($raw, true);
+    if (!is_array($body)) { $body = $_POST; }
+
+    if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
+
+    $currency = strtoupper(trim($body['currency'] ?? ''));
+    if (!in_array($currency, ['EUR', 'USD', 'XOF'], true)) {
+        http_response_code(422);
+        echo json_encode(['error' => 'Devise invalide (EUR, USD ou XOF)']);
+        exit;
+    }
+
+    $pdo->prepare('UPDATE users SET currency = ?, updated_at = NOW() WHERE id = ?')->execute([$currency, $userId]);
+    echo json_encode(['success' => true, 'message' => 'Devise enregistrée : ' . $currency, 'currency' => $currency]);
     exit;
 }
 

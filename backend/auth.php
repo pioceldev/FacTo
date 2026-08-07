@@ -85,9 +85,18 @@ if ($action === 'register') {
         ? 'admin'
         : 'user';
 
+    // Code business unique (parrainage) : FAC-XXXXXX
+    $businessCode = null;
+    $codeStmt = $pdo->prepare('SELECT id FROM users WHERE business_code = ?');
+    do {
+        $candidate = 'FAC-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+        $codeStmt->execute([$candidate]);
+    } while ($codeStmt->fetchColumn());
+    $businessCode = $candidate;
+
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, company, phone, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
-    $stmt->execute([$name, $email, $passwordHash, $company, $phone, $role]);
+    $stmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, company, phone, role, business_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())');
+    $stmt->execute([$name, $email, $passwordHash, $company, $phone, $role, $businessCode]);
     $userId = $pdo->lastInsertId();
 
     if ($userId && $plan) {

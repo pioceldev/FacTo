@@ -10,6 +10,7 @@ const quoteState = {
   quoteItems: [],
   stats: null,
   issuer: null,
+  template: 'classic',
 };
 
 async function api(path, options = {}) {
@@ -67,7 +68,7 @@ function esc(value) {
 }
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+  return window.formatMoney ? window.formatMoney(amount) : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
 }
 
 async function refreshQuotes() {
@@ -135,6 +136,10 @@ function quoteDocHTML(quote) {
     ? `<img src="${esc(u.logo_path)}" alt="Logo">`
     : `<span>${esc(initial)}</span>`;
 
+  // Modèle choisi : classic (défaut) | moderne | minimal
+  const tpl = ['moderne', 'minimal'].includes(quote.template) ? quote.template : 'classic';
+  const tplClass = tpl === 'classic' ? '' : ` inv-doc--${tpl}`;
+
   const office = [
     `<p><strong>${esc(company)}</strong></p>`,
     u.phone ? `<p>${esc(u.phone)}</p>` : '',
@@ -183,7 +188,7 @@ function quoteDocHTML(quote) {
     </div>`;
 
   return `
-    <div class="inv-doc">
+    <div class="inv-doc${tplClass}">
       <div class="inv-doc__header">
         <div class="inv-doc__brand">
           <div class="inv-doc__logo">${logo}</div>
@@ -480,6 +485,18 @@ function recalcQuoteItemTotals() {
   });
 }
 
+function setQuoteTemplateUI(template) {
+  quoteState.template = template || 'classic';
+  const container = document.getElementById('quoteTemplates');
+  if (!container) return;
+  container.querySelectorAll('.quote-template').forEach(label => {
+    const selected = label.getAttribute('data-template') === quoteState.template;
+    label.classList.toggle('is-selected', selected);
+    const radio = label.querySelector('.quote-template__radio');
+    if (radio) radio.checked = selected;
+  });
+}
+
 function openNewQuote(event) {
   if (event) event.preventDefault();
   quoteState.editingId = null;
@@ -487,6 +504,7 @@ function openNewQuote(event) {
   document.getElementById('quoteId').value = '';
   document.getElementById('quoteForm').reset();
   quoteState.quoteItems = [];
+  setQuoteTemplateUI('classic');
   renderQuoteItems();
   loadClients().catch(() => {});
   loadProducts().catch(() => {});
@@ -504,6 +522,7 @@ function openEditQuote(quoteId) {
       document.getElementById('quoteRef').value = quote.ref || '';
       document.getElementById('quoteStatus').value = quote.status || 'brouillon';
       document.getElementById('quoteValidUntil').value = quote.valid_until || '';
+      setQuoteTemplateUI(quote.template || 'classic');
       quoteState.quoteItems = (quote.items || []).map(item => ({
         product_id: item.product_id,
         description: item.description,
@@ -531,6 +550,7 @@ async function submitQuote(event) {
     id: quoteState.editingId,
     client_id: clientId,
     ref: document.getElementById('quoteRef').value.trim(),
+    template: quoteState.template || 'classic',
     status: document.getElementById('quoteStatus').value,
     valid_until: document.getElementById('quoteValidUntil').value || null,
     items: quoteState.quoteItems.map(item => ({
@@ -662,6 +682,22 @@ function attachEvents() {
   document.getElementById('btnRefreshQuotes').addEventListener('click', () => {
     refreshQuotes().catch(error => toast(error.message, 'error'));
   });
+
+  const tplContainer = document.getElementById('quoteTemplates');
+  if (tplContainer) {
+    // Clic souris sur la carte
+    tplContainer.addEventListener('click', event => {
+      const label = event.target.closest('.quote-template');
+      if (!label) return;
+      setQuoteTemplateUI(label.getAttribute('data-template'));
+    });
+    // Navigation clavier (tab + flèches) sur les radios cachés
+    tplContainer.addEventListener('change', event => {
+      if (event.target.classList.contains('quote-template__radio') && event.target.checked) {
+        setQuoteTemplateUI(event.target.value);
+      }
+    });
+  }
 
   document.getElementById('btnAddQuoteItem').addEventListener('click', () => {
     quoteState.quoteItems.push({ product_id: '', description: '', quantity: 1, unit_price: 0, vat_rate: 0 });

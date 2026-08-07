@@ -67,6 +67,103 @@
 .inv-doc__footer b { display: block; color: #4c1d95; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; font-size: .66rem; }
 .inv-doc__footer p { margin: 0 0 2px; }
 
+/* ============================================================
+   MODÈLE « MODERNE » — bandeau sombre, accents orange
+   ============================================================ */
+.inv-doc--moderne {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+}
+.inv-doc--moderne .inv-doc__header {
+  background: linear-gradient(135deg, #111827, #1f2937 55%, #374151);
+  margin: -26px -28px 22px;
+  padding: 30px 28px;
+  align-items: center;
+}
+.inv-doc--moderne .inv-doc__brand { align-items: center; }
+.inv-doc--moderne .inv-doc__logo {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
+}
+.inv-doc--moderne .inv-doc__company { color: #fff; font-size: 1.3rem; }
+.inv-doc--moderne .inv-doc__slogan { color: #9ca3af; }
+.inv-doc--moderne .inv-doc__doclabel { color: #fff; }
+.inv-doc--moderne .inv-doc__meta { color: #d1d5db; }
+.inv-doc--moderne .inv-doc__meta strong { color: #f97316; }
+.inv-doc--moderne .inv-doc__block-title { color: #ea580c; }
+.inv-doc--moderne .inv-doc__table thead th { background: #111827; }
+.inv-doc--moderne .inv-doc__table thead th:first-child { border-radius: 10px 0 0 0; }
+.inv-doc--moderne .inv-doc__table thead th:last-child { border-radius: 0 10px 0 0; }
+.inv-doc--moderne .inv-doc__table tbody td { border-bottom-color: #f3f4f6; }
+.inv-doc--moderne .inv-doc__table tbody tr:nth-child(even) { background: #fafafa; }
+.inv-doc--moderne .inv-doc__totals > div.inv-grand {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.3);
+}
+.inv-doc--moderne .inv-doc__thanks { color: #ea580c; }
+.inv-doc--moderne .inv-doc__footer b { color: #111827; }
+
+/* ============================================================
+   MODÈLE « MINIMAL » — monochrome épuré
+   ============================================================ */
+.inv-doc--minimal {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  color: #111827;
+}
+.inv-doc--minimal .inv-doc__header { border-bottom: 2px solid #111827; padding-bottom: 18px; align-items: center; }
+.inv-doc--minimal .inv-doc__logo {
+  background: #111827;
+  border-radius: 6px;
+}
+.inv-doc--minimal .inv-doc__company { color: #111827; font-weight: 800; }
+.inv-doc--minimal .inv-doc__slogan { color: #6b7280; }
+.inv-doc--minimal .inv-doc__doclabel {
+  color: #111827;
+  font-size: 1.5rem;
+  letter-spacing: 4px;
+  border: 2px solid #111827;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 2px;
+  text-align: center;
+}
+.inv-doc--minimal .inv-doc__meta { color: #4b5563; }
+.inv-doc--minimal .inv-doc__block-title {
+  color: #111827;
+  letter-spacing: 1.6px;
+}
+.inv-doc--minimal .inv-doc__table thead th {
+  background: #f9fafb;
+  color: #111827;
+  border-bottom: 2px solid #111827;
+  border-radius: 0 !important;
+  text-align: left;
+}
+.inv-doc--minimal .inv-doc__table tbody td { border-bottom: 1px solid #e5e7eb; }
+.inv-doc--minimal .inv-doc__table tbody tr:nth-child(even) { background: #fff; }
+.inv-doc--minimal .inv-doc__totals { border-top: 2px solid #111827; padding-top: 10px; }
+.inv-doc--minimal .inv-doc__totals > div { color: #111827; }
+.inv-doc--minimal .inv-doc__totals > div.inv-grand {
+  background: #111827;
+  color: #fff;
+  border-radius: 0;
+}
+.inv-doc--minimal .inv-doc__thanks { color: #111827; text-transform: uppercase; letter-spacing: 3px; font-size: .8rem; }
+.inv-doc--minimal .inv-doc__footer { border-top-color: #111827; }
+.inv-doc--minimal .inv-doc__footer b { color: #111827; }
+
+/* Impression : en print le parent n'a plus de padding, on neutralise
+   les marges négatives du bandeau Moderne pour éviter un débordement */
+@media print {
+  .inv-doc--moderne .inv-doc__header {
+    margin: 0 0 18px;
+    border-radius: 0;
+  }
+}
+
 /* Zone d'impression : masquée à l'écran */
 .invoice-print { display: none; }
 

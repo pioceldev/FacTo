@@ -12,12 +12,15 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   company VARCHAR(150) DEFAULT NULL,
   phone VARCHAR(30) DEFAULT NULL,
+  business_code VARCHAR(20) DEFAULT NULL,             -- code de parrainage unique (ex: FAC-XXXXXX)
   role VARCHAR(20) NOT NULL DEFAULT 'user',           -- 'user' | 'admin'
   logo_path VARCHAR(255) DEFAULT NULL,
   signature LONGTEXT DEFAULT NULL,                    -- image PNG (data URL) signée par l'émetteur
   email_verified_at DATETIME DEFAULT NULL,
+  currency VARCHAR(3) NOT NULL DEFAULT 'EUR',          -- devise d'affichage: 'EUR' | 'USD' | 'XOF'
   created_at DATETIME NOT NULL,
-  updated_at DATETIME DEFAULT NULL
+  updated_at DATETIME DEFAULT NULL,
+  UNIQUE KEY uq_business_code (business_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -35,9 +38,9 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE TABLE IF NOT EXISTS plans (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL UNIQUE,                  -- 'Free' | 'Standard' | 'Premium'
-  price_monthly DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  price_yearly DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  name VARCHAR(100) NOT NULL UNIQUE,                  -- 'Free' | 'Business'
+  price_monthly DECIMAL(10,2) NOT NULL DEFAULT 0.00,  -- en FCFA (XOF)
+  price_yearly DECIMAL(10,2) NOT NULL DEFAULT 0.00,   -- en FCFA (XOF)
   description VARCHAR(255) DEFAULT NULL,
   features TEXT DEFAULT NULL,                         -- liste de fonctionnalités (JSON ou texte)
   is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -50,8 +53,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   user_id INT NOT NULL,
   plan_id INT DEFAULT NULL,
   plan_name VARCHAR(100) NOT NULL,
-  price DECIMAL(10,2) DEFAULT NULL,                   -- montant mensuel facturé
-  payment_method VARCHAR(50) DEFAULT NULL,            -- ex: 'carte', 'paypal', 'prelevement'
+  price DECIMAL(10,2) DEFAULT NULL,                   -- montant mensuel facturé (FCFA)
+  discount_next_pct DECIMAL(5,2) NOT NULL DEFAULT 0.00, -- réduction (%) sur le PROCHAIN renouvellement (parrainage)
+  payment_method VARCHAR(50) DEFAULT NULL,            -- ex: 'carte', 'mobile_money', 'fedapay'
   status VARCHAR(50) NOT NULL DEFAULT 'active',       -- 'active' | 'pending' | 'cancelled' | 'past_due' | 'trialing'
   next_billing_date DATE DEFAULT NULL,
   renews_at DATE DEFAULT NULL,
@@ -61,6 +65,18 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   updated_at DATETIME DEFAULT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Parrainages réussis : un filleul crédite son parrain (10 % sur le prochain renouvellement)
+CREATE TABLE IF NOT EXISTS referrals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  referrer_user_id INT NOT NULL,                      -- celui qui a partagé son code business
+  referred_user_id INT NOT NULL,                      -- le filleul qui s'est abonné
+  code_used VARCHAR(20) NOT NULL,
+  created_at DATETIME NOT NULL,
+  UNIQUE KEY uq_referred (referred_user_id),
+  FOREIGN KEY (referrer_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (referred_user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS payment_history (
@@ -178,6 +194,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   user_id INT NOT NULL,
   client_id INT DEFAULT NULL,
   ref VARCHAR(100) NOT NULL,                          -- ex: DEV-2026-001
+  template VARCHAR(50) NOT NULL DEFAULT 'classic',    -- modèle de devis: 'classic' | 'moderne' | 'minimal'
   status VARCHAR(50) NOT NULL DEFAULT 'brouillon',    -- 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire'
   amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,         -- total HT
   vat DECIMAL(10,2) NOT NULL DEFAULT 0.00,
@@ -296,8 +313,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 
 INSERT INTO plans (name, price_monthly, price_yearly, description, features, is_active, sort_order, created_at) VALUES
 ('Free', 0.00, 0.00, 'Pour découvrir FacTo', '1 utilisateur;10 factures/mois;Support par e-mail', 1, 1, NOW()),
-('Standard', 19.00, 190.00, 'L''essentiel pour gérer votre activité au quotidien', '3 utilisateurs;100 factures/mois;Devis & factures;Support prioritaire', 1, 2, NOW()),
-('Premium', 49.00, 490.00, 'La solution complète pour les entreprises exigeantes', 'Utilisateurs illimités;Factures illimitées;Gestion de stock;Rapports avancés;Support dédié', 1, 3, NOW())
+('Business', 3500.00, 42000.00, 'L''abonnement complet FacTo', 'Factures illimitées;Devis illimités;Gestion de stock;Rapports avancés;Support prioritaire', 1, 2, NOW())
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- Optionnel : données d'exemple (à décommenter après création d'un utilisateur via l'API)

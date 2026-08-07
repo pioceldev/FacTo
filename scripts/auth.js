@@ -379,6 +379,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = document.getElementById('topbarUsername');
     if (avatar) avatar.textContent = initial;
     if (username) username.textContent = firstName;
+
+    // Lien « Administration » réservé aux admins, injecté dans la sidebar
+    if (user.role === 'admin' && !document.getElementById('adminSidebarLink')) {
+      const nav = document.querySelector('.sidebar__nav');
+      if (nav) {
+        const divider = nav.querySelector('hr.sidebar__divider');
+        const link = document.createElement('a');
+        link.href = 'administration.html';
+        link.className = 'sidebar__item';
+        link.id = 'adminSidebarLink';
+        link.innerHTML = '<i class="bi bi-speedometer2"></i> Administration';
+        if (divider) nav.insertBefore(link, divider);
+        else nav.appendChild(link);
+      }
+    }
   }
 
   if (protectedPages.includes(currentPage)) {

@@ -566,3 +566,80 @@
     justify-content: center;
   }
 }
+
+/* ============================================
+   SÉLECTEUR DE DEVISE (page Paramètres)
+   ============================================ */
+.currency-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.currency-option {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.currency-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.currency-option__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 12px;
+  border: 2px solid var(--gray-200);
+  border-radius: 14px;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.currency-option:hover .currency-option__card {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.12);
+}
+
+.currency-option:focus-within .currency-option__card {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.currency-option input:checked + .currency-option__card {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.currency-option__symbol {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.currency-option__name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.currency-option__code {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gray-400);
+  text-transform: uppercase;
+}
+
+@media (max-width: 480px) {
+  .currency-picker {
+    grid-template-columns: 1fr;
+  }
+}

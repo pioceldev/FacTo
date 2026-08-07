@@ -7,7 +7,7 @@ const state = {
 };
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount || 0);
+  return window.formatMoney ? window.formatMoney(amount) : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount || 0);
 }
 
 function getStatusClass(status) {

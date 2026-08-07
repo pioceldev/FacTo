@@ -24,6 +24,10 @@ function formatPlanLabel(planName) {
   return `Vous êtes actuellement sur le plan ${planName}`;
 }
 
+function formatXOF(amount) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(Number(amount) || 0);
+}
+
 function planPrice(plan) {
   const yearly = choiceState.cycle === 'yearly';
   const price = yearly ? plan.price_yearly : plan.price_monthly;
@@ -45,8 +49,8 @@ function planFeatures(plan) {
 
 function getPlanColor(name) {
   const n = name.toLowerCase();
-  if (n === 'premium') return { bg: 'var(--primary-light)', color: 'var(--primary)', icon: 'bi-crown' };
-  if (n === 'standard') return { bg: 'var(--gray-100)', color: 'var(--gray-600)', icon: 'bi-shield-check' };
+  if (n === 'business') return { bg: 'var(--primary-light)', color: 'var(--primary)', icon: 'bi-crown' };
+  if (n === 'free') return { bg: 'var(--gray-100)', color: 'var(--gray-600)', icon: 'bi-lightning-charge' };
   return { bg: 'var(--gray-100)', color: 'var(--gray-600)', icon: 'bi-lightning-charge' };
 }
 
@@ -87,7 +91,7 @@ function renderPlans() {
     const { price, per } = priceInfo;
     const colors = getPlanColor(plan.name);
     const isCurrent = plan.name.toLowerCase() === currentName.toLowerCase() && !isCancelled;
-    const isPremium = plan.name.toLowerCase() === 'premium';
+    const isPremium = plan.name.toLowerCase() === 'business';
     const features = planFeatures(plan);
 
     let buttonHtml = '';
@@ -98,7 +102,7 @@ function renderPlans() {
     }
 
     const oldPriceHtml = priceInfo.oldPrice > 0
-      ? `<span class="plan-card__old-price">${priceInfo.oldPrice.toLocaleString('fr-FR')} € / an</span>`
+      ? `<span class="plan-card__old-price">${formatXOF(priceInfo.oldPrice)} / an</span>`
       : '';
 
     return `
@@ -108,7 +112,7 @@ function renderPlans() {
         <div class="plan-card__icon" style="background:${colors.bg};color:${colors.color};"><i class="bi ${colors.icon}"></i></div>
         <div class="plan-card__name">${esc(plan.name)}</div>
         <div class="plan-card__desc">${esc(plan.description || '')}</div>
-        <div class="plan-card__price">${Number(price).toLocaleString('fr-FR')}€<small>/${per}</small>${oldPriceHtml}</div>
+        <div class="plan-card__price">${formatXOF(price)}<small>/${per}</small>${oldPriceHtml}</div>
         <ul class="plan-card__features">
           ${features.map(f => `<li class="included"><i class="bi bi-check-circle-fill"></i> ${esc(f)}</li>`).join('') || '<li class="not-included"><i class="bi bi-circle"></i> Fonctionnalités à venir</li>'}
         </ul>
@@ -130,10 +134,20 @@ function attachPlanButtons() {
       const price = choiceState.cycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
       const isPaid = Number(price) > 0;
 
+      const discountPct = Number(choiceState.subscription?.discount_next_pct || 0);
+      const discountNote = discountPct > 0
+        ? `\n\n🎁 Réduction de parrainage : -${discountPct}% appliquée sur ce paiement.`
+        : '';
+      const referralVal = (document.getElementById('referralCodeInput')?.value || '').trim();
+      const referralFormatOk = /^FAC-[A-Z0-9]{6}$/i.test(referralVal);
+      const referralNote = isPaid && referralFormatOk
+        ? `\n\n🎁 Code business saisi : -5% de réduction filleul si le code est valide.`
+        : '';
+
       const ok = await uiConfirm({
         title: `Passer au plan ${plan.name}`,
         text: isPaid
-          ? `Cycle ${cycleLabel} — ${Number(price).toLocaleString('fr-FR')} €. Vous serez redirigé vers la page de paiement sécurisée FedaPay.`
+          ? `Cycle ${cycleLabel} — ${formatXOF(price)}${discountNote}${referralNote}. Vous serez redirigé vers la page de paiement sécurisée FedaPay.`
           : 'Ce plan est gratuit. Votre abonnement sera activé immédiatement.',
         confirmText: isPaid ? 'Payer avec FedaPay' : 'Activer',
         icon: isPaid ? 'bi-credit-card' : 'bi-lightning-charge',
@@ -149,6 +163,7 @@ function attachPlanButtons() {
             plan_id: plan.id,
             cycle: choiceState.cycle,
             payment_method: choiceState.paymentMethod,
+            referral_code: (document.getElementById('referralCodeInput')?.value || '').trim(),
             _csrf: _csrf || '',
           }),
           credentials: 'same-origin',

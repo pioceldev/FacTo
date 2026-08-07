@@ -14,6 +14,17 @@ if (empty($_SESSION['user_id'])) {
 $pdo = getPDO();
 $userId = $_SESSION['user_id'];
 
+// Migration best-effort : colonne template (modèles de devis) — compatible MySQL 5.7+
+try {
+    $chk = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'quotes' AND COLUMN_NAME = 'template'");
+    if (!$chk->fetchColumn()) {
+        $pdo->exec("ALTER TABLE quotes ADD COLUMN template VARCHAR(50) NOT NULL DEFAULT 'classic' AFTER ref");
+    }
+} catch (PDOException $e) { /* silencieux */ }
+
+// Modèles de devis autorisés
+$ALLOWED_TEMPLATES = ['classic', 'moderne', 'minimal'];
+
 function readBody()
 {
     $raw = file_get_contents('php://input');
@@ -109,6 +120,8 @@ try {
             if (!csrfValidateToken($body['_csrf'] ?? '')) { http_response_code(403); echo json_encode(['error' => 'Token CSRF invalide']); exit; }
             $clientId = intval($body['client_id'] ?? 0);
             $ref = trim($body['ref'] ?? '');
+            $template = trim($body['template'] ?? 'classic');
+            if (!in_array($template, $ALLOWED_TEMPLATES, true)) { $template = 'classic'; }
             $status = trim($body['status'] ?? 'brouillon');
             $validUntil = $body['valid_until'] ?? null;
             $items = $body['items'] ?? [];
@@ -135,9 +148,9 @@ try {
             }
             $total = $amount + $vat;
 
-            $stmt = $pdo->prepare("INSERT INTO quotes (user_id, client_id, ref, status, amount, vat, total, valid_until, created_at) VALUES (:uid, :cid, :ref, :status, :amount, :vat, :total, :valid_until, NOW())");
+            $stmt = $pdo->prepare("INSERT INTO quotes (user_id, client_id, ref, template, status, amount, vat, total, valid_until, created_at) VALUES (:uid, :cid, :ref, :template, :status, :amount, :vat, :total, :valid_until, NOW())");
             $stmt->execute([
-                ':uid' => $userId, ':cid' => $clientId ?: null, ':ref' => $ref,
+                ':uid' => $userId, ':cid' => $clientId ?: null, ':ref' => $ref, ':template' => $template,
                 ':status' => $status, ':amount' => $amount, ':vat' => $vat,
                 ':total' => $total, ':valid_until' => $validUntil,
             ]);
@@ -176,6 +189,8 @@ try {
                 if (!$clientCheck->fetch()) { http_response_code(400); echo json_encode(['error' => 'Client introuvable']); exit; }
             }
             $ref = trim($body['ref'] ?? '');
+            $template = trim($body['template'] ?? 'classic');
+            if (!in_array($template, $ALLOWED_TEMPLATES, true)) { $template = 'classic'; }
             $status = trim($body['status'] ?? 'brouillon');
             $validUntil = $body['valid_until'] ?? null;
             $items = $body['items'] ?? [];
@@ -195,9 +210,9 @@ try {
             }
             $total = $amount + $vat;
 
-            $pdo->prepare("UPDATE quotes SET client_id = :cid, ref = :ref, status = :status, amount = :amount, vat = :vat, total = :total, valid_until = :valid_until, updated_at = NOW() WHERE id = :id AND user_id = :uid")
+            $pdo->prepare("UPDATE quotes SET client_id = :cid, ref = :ref, template = :template, status = :status, amount = :amount, vat = :vat, total = :total, valid_until = :valid_until, updated_at = NOW() WHERE id = :id AND user_id = :uid")
                 ->execute([
-                    ':cid' => $clientId, ':ref' => $ref, ':status' => $status,
+                    ':cid' => $clientId ?: null, ':ref' => $ref, ':template' => $template, ':status' => $status,
                     ':amount' => $amount, ':vat' => $vat, ':total' => $total,
                     ':valid_until' => $validUntil, ':id' => $id, ':uid' => $userId,
                 ]);

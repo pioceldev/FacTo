@@ -4,7 +4,7 @@
    ============================================ */
 
 .landing-nav {
-  padding: 16px 48px;
+  padding: 14px 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,6 +13,205 @@
   position: sticky;
   top: 0;
   z-index: 1020;
+}
+
+/* Logo agrandi (90 px) dans la navbar — le logo contient déjà le texte FacTo */
+.logo--nav {
+  width: 90px;
+  height: 90px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.18);
+  transition: transform 0.2s ease;
+}
+
+.logo--nav:hover {
+  transform: scale(1.04);
+}
+
+/* Conteneur de section : base centrée (le responsive.css ne définissait que le max-width >= 1400px) */
+.section-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Vitrine Devis (modèles au choix) */
+.showcase-section {
+  padding: 88px 48px;
+  background: linear-gradient(180deg, #fff7ed 0%, #fff 55%, #fafafa 100%);
+  overflow: hidden;
+}
+
+.showcase__header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 34px;
+}
+
+.showcase__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.showcase__badge i {
+  font-size: 0.85rem;
+}
+
+.showcase__header .section-title {
+  margin-bottom: 12px;
+}
+
+.showcase__header .section-subtitle {
+  margin-bottom: 0;
+}
+
+/* Toolbar segmentée */
+.showcase__toolbar {
+  display: flex;
+  width: fit-content;
+  gap: 4px;
+  padding: 5px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.06);
+  margin: 0 auto 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.showcase__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gray-500);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showcase__btn i {
+  color: var(--gray-400);
+  transition: color 0.2s ease;
+}
+
+.showcase__btn:hover {
+  color: var(--gray-800);
+  background: var(--gray-50);
+}
+
+.showcase__btn:hover i {
+  color: var(--primary);
+}
+
+.showcase__btn.is-active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.32);
+}
+
+.showcase__btn.is-active i {
+  color: #fff;
+}
+
+/* Scène : fond « bureau » derrière le document */
+.showcase__stage {
+  max-width: 920px;
+  margin: 0 auto;
+  background: linear-gradient(165deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 1px solid var(--gray-200);
+  border-radius: 26px;
+  padding: 34px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 24px 60px rgba(17, 24, 39, 0.1);
+}
+
+.showcase__doc-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  max-width: 820px;
+  margin: 0 auto 14px;
+  padding: 0 4px;
+  color: var(--gray-500);
+  font-size: 0.78rem;
+}
+
+.showcase__doc-meta strong {
+  color: var(--primary-dark);
+}
+
+.showcase__frame {
+  max-width: 820px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(17, 24, 39, 0.16);
+  padding: 8px;
+  transition: box-shadow 0.3s ease;
+}
+
+.showcase__frame:hover {
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.2);
+}
+
+/* Animation de bascule de modèle */
+@keyframes showcaseIn {
+  from { opacity: 0.35; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.showcase__anim {
+  animation: showcaseIn 0.35s ease;
+}
+
+.showcase__hint {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.82rem;
+  margin-top: 26px;
+}
+
+.showcase__hint i {
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .logo--nav {
+    width: 64px;
+    height: 64px;
+  }
+  .showcase-section {
+    padding: 56px 20px;
+  }
+  .showcase__toolbar {
+    width: 100%;
+    border-radius: 18px;
+    padding: 6px;
+  }
+  .showcase__stage {
+    padding: 16px;
+    border-radius: 18px;
+  }
+  .showcase__doc-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 
 .landing-nav__links {

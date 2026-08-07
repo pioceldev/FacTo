@@ -149,7 +149,7 @@
             <th>Abonnement</th>
             <th>Statut</th>
             <th>Factures</th>
-            <th>Abonnement €/m</th>
+            <th>Abonnement FCFA/m</th>
             <th>Date d'inscription</th>
             <th>Actions</th>
           </tr>
@@ -172,13 +172,13 @@
     <!-- Bottom cards -->
     <div class="admin__bottom-grid">
       <div class="admin__alert-card">
-        <h5>Revenu récurrent (MRR)</h5>
+        <h5>Revenu récurrent (MRR — FCFA)</h5>
         <h4 id="alertMrr">—</h4>
         <p id="alertSubsText">Chargement des abonnements actifs…</p>
         <a href="choix-abonnement.html" class="btn-light" style="display:inline-block;text-decoration:none;">Gérer les offres <i class="bi bi-arrow-up-right"></i></a>
       </div>
       <div class="admin__alert-card admin__alert-card--dark">
-        <h5>Dépenses enregistrées</h5>
+        <h5>Dépenses enregistrées (€)</h5>
         <h4 id="alertExpenses">—</h4>
         <p id="alertExpensesText">Chargement des dépenses…</p>
         <button class="btn-outline-light" id="btnRefresh2" style="border:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);padding:8px 16px;border-radius:var(--radius-sm);font-weight:500;font-size:.85rem;"><i class="bi bi-arrow-clockwise"></i> Actualiser</button>
@@ -194,6 +194,7 @@
   const $ = id => document.getElementById(id);
   const fmtInt = v => new Intl.NumberFormat('fr-FR').format(Number(v) || 0);
   const fmtEUR = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v) || 0);
+  const fmtXOF = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(Number(v) || 0);
 
   let adminChart = null;
   let chartData = { mrr: [], users: [] };
@@ -218,10 +219,10 @@
       const data = await fetchJSON('backend/admin.php?action=overview');
       const o = data.overview;
       const cards = [
-        { label: 'Revenu total', value: fmtEUR(o.total_revenue), change: fmtEUR(o.revenue_this_month) + ' encaissés ce mois', icon: 'bi-currency-euro', up: true },
+        { label: 'Revenu total (€)', value: fmtEUR(o.total_revenue), change: fmtEUR(o.revenue_this_month) + ' encaissés ce mois', icon: 'bi-currency-euro', up: true },
         { label: 'Utilisateurs', value: fmtInt(o.total_users), change: '+' + fmtInt(o.active_users) + ' ce mois', icon: 'bi-people', up: true },
         { label: 'Clients', value: fmtInt(o.total_clients), change: fmtInt(o.total_subscriptions) + ' abonnements actifs', icon: 'bi-building', up: true },
-        { label: 'Factures', value: fmtInt(o.total_invoices), change: fmtEUR(o.total_expenses) + ' de dépenses', icon: 'bi-receipt', up: false }
+        { label: 'Factures', value: fmtInt(o.total_invoices), change: fmtEUR(o.total_expenses) + ' de dépenses (€)', icon: 'bi-receipt', up: false }
       ];
       $('adminStatsCards').innerHTML = cards.map(c => `
         <div class="stat-card">
@@ -235,7 +236,7 @@
           </div>
         </div>`).join('');
 
-      $('alertMrr').textContent = fmtEUR(o.mrr_total);
+      $('alertMrr').textContent = fmtXOF(o.mrr_total);
       $('alertSubsText').textContent = o.total_subscriptions + ' abonnement(s) actif(s) facturé(s) mensuellement.';
       $('alertExpenses').textContent = fmtEUR(o.total_expenses);
       $('alertExpensesText').textContent = 'Total des dépenses enregistrées par tous les utilisateurs.';
@@ -355,7 +356,7 @@
           <td>${planBadge(c.plan_name)}</td>
           <td>${statusBadge(c.sub_status)}</td>
           <td>${fmtInt(c.invoices_count)}</td>
-          <td>${c.price !== null && c.price !== undefined && c.price !== '' ? fmtEUR(c.price) + '/m' : '—'}</td>
+          <td>${c.price !== null && c.price !== undefined && c.price !== '' ? fmtXOF(c.price) + '/m' : '—'}</td>
           <td style="white-space:nowrap;">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
           <td>
             <div class="dashboard__invoice-actions">
@@ -440,7 +441,7 @@
 
   function exportCSV() {
     if (!allCompanies.length) { toast('Aucune entreprise à exporter', 'error'); return; }
-    const rows = [['ID', 'Nom', 'Société', 'Email', 'Abonnement', 'Statut', 'Factures', 'Prix €/m', 'Inscrit le']];
+    const rows = [['ID', 'Nom', 'Société', 'Email', 'Abonnement', 'Statut', 'Factures', 'Prix FCFA/m', 'Inscrit le']];
     allCompanies.forEach(c => {
       rows.push([c.id, c.name || '', c.company || '', c.email || '', c.plan_name || '', c.sub_status || '', c.invoices_count || 0, c.price !== null && c.price !== undefined ? c.price : '', c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '']);
     });

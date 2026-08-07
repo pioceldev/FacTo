@@ -903,3 +903,80 @@
     text-align: center;
   }
 }
+
+/* ============================================
+   PARRAINAGE (code business)
+   ============================================ */
+
+/* Carte Code business — page Mon abonnement */
+.referral-code-card { margin-top: 4px; }
+.referral-code-card__text {
+  font-size: .82rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.referral-code-card__box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gray-50, #f9fafb);
+  border: 1px dashed var(--primary, #f97316);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.referral-code-card__code {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  font-size: 1rem;
+  color: var(--gray-800, #1f2937);
+}
+.referral-code-card__discount {
+  margin-top: 10px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--success, #10b981);
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* Champ code business — page Choisir un abonnement */
+.choice-referral {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(249, 115, 22, 0.02));
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+.choice-referral > i.bi-gift {
+  font-size: 1.6rem;
+  color: var(--primary, #f97316);
+}
+.choice-referral__content { flex: 1; min-width: 200px; }
+.choice-referral__title {
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--gray-800, #1f2937);
+}
+.choice-referral__desc {
+  font-size: .8rem;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+.choice-referral__input {
+  width: 210px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+@media (max-width: 576px) {
+  .choice-referral__input { width: 100%; }
+}

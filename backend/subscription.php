@@ -28,7 +28,7 @@ function respond($data, int $code = 200)
 
 function getCurrentSubscription(PDO $pdo, int $userId)
 {
-    $stmt = $pdo->prepare('SELECT id, plan_id, plan_name, price, payment_method, status, next_billing_date, renews_at, started_at, cancelled_at FROM subscriptions WHERE user_id = ? ORDER BY renews_at DESC, id DESC LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, plan_id, plan_name, price, payment_method, status, next_billing_date, renews_at, started_at, cancelled_at, discount_next_pct FROM subscriptions WHERE user_id = ? ORDER BY renews_at DESC, id DESC LIMIT 1');
     $stmt->execute([$userId]);
     return $stmt->fetch() ?: null;
 }
@@ -38,8 +38,7 @@ function getInvoiceQuota($planName)
 {
     $name = strtolower(trim((string) $planName));
     if ($name === 'free') return 10;
-    if ($name === 'standard') return 100;
-    return 999999; // Premium : illimité
+    return 999999; // Business : illimité
 }
 
 function notify(PDO $pdo, int $userId, string $title, string $body)
@@ -49,7 +48,8 @@ function notify(PDO $pdo, int $userId, string $title, string $body)
 }
 
 // Active (ou change) l'abonnement après paiement validé.
-function activateSubscription(PDO $pdo, int $userId, int $planId, string $cycle, string $paymentMethod)
+// $effectivePrice : prix effectivement facturé (après réduction parrain éventuelle).
+function activateSubscription(PDO $pdo, int $userId, int $planId, string $cycle, string $paymentMethod, ?float $effectivePrice = null)
 {
     $stmt = $pdo->prepare('SELECT id, name, price_monthly, price_yearly FROM plans WHERE id = ? AND is_active = 1');
     $stmt->execute([$planId]);
@@ -59,7 +59,7 @@ function activateSubscription(PDO $pdo, int $userId, int $planId, string $cycle,
         return ['error' => 'Plan introuvable'];
     }
 
-    $price = $cycle === 'yearly' ? $plan['price_yearly'] : $plan['price_monthly'];
+    $price = $effectivePrice !== null ? $effectivePrice : ($cycle === 'yearly' ? $plan['price_yearly'] : $plan['price_monthly']);
     $nextBilling = $cycle === 'yearly' ? date('Y-m-d', strtotime('+1 year')) : date('Y-m-d', strtotime('+1 month'));
 
     $currentStmt = $pdo->prepare('SELECT id FROM subscriptions WHERE user_id = ? ORDER BY renews_at DESC, id DESC LIMIT 1');
@@ -79,6 +79,50 @@ function activateSubscription(PDO $pdo, int $userId, int $planId, string $cycle,
     notify($pdo, $userId, 'Abonnement ' . $plan['name'], 'Votre abonnement ' . $plan['name'] . ' (' . ($cycle === 'yearly' ? 'annuel' : 'mensuel') . ') est actif. Prochaine facturation : ' . $nextBilling . '.');
 
     return ['plan' => $plan, 'price' => $price, 'cycle' => $cycle, 'subscription_id' => $subscriptionId];
+}
+
+// Crédite un parrain : 10 % de réduction sur son PROCHAIN renouvellement.
+// Retourne true si le parrainage a été pris en compte, false sinon.
+function grantReferralBonus(PDO $pdo, int $newUserId, string $businessCode): bool
+{
+    $code = strtoupper(trim($businessCode));
+    if ($code === '') {
+        return false;
+    }
+
+    // Le code doit appartenir à un AUTRE utilisateur
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE business_code = ?');
+    $stmt->execute([$code]);
+    $referrerId = (int) $stmt->fetchColumn();
+    if (!$referrerId || $referrerId === $newUserId) {
+        return false;
+    }
+
+    // Un seul parrainage par filleul (pas de multi-crédit)
+    $dupStmt = $pdo->prepare('SELECT id FROM referrals WHERE referred_user_id = ?');
+    $dupStmt->execute([$newUserId]);
+    if ($dupStmt->fetchColumn()) {
+        return false;
+    }
+
+    $pdo->prepare('INSERT INTO referrals (referrer_user_id, referred_user_id, code_used, created_at) VALUES (?, ?, ?, NOW())')
+        ->execute([$referrerId, $newUserId, $code]);
+
+    // +10 % de réduction sur le prochain renouvellement du parrain (cumulable, plafonné à 100 %)
+    $subStmt = $pdo->prepare('SELECT id FROM subscriptions WHERE user_id = ? ORDER BY renews_at DESC, id DESC LIMIT 1');
+    $subStmt->execute([$referrerId]);
+    $subId = $subStmt->fetchColumn();
+    if ($subId) {
+        $pdo->prepare('UPDATE subscriptions SET discount_next_pct = LEAST(100, COALESCE(discount_next_pct, 0) + 10) WHERE id = ?')->execute([$subId]);
+    } else {
+        // Cas limite : le parrain n'a aucune ligne d'abonnement (rare), on la crée en Free
+        $nextBilling = date('Y-m-d', strtotime('+1 month'));
+        $pdo->prepare('INSERT INTO subscriptions (user_id, plan_name, price, status, next_billing_date, renews_at, discount_next_pct, started_at, created_at) VALUES (?, ?, 0.00, ?, ?, ?, 10, NOW(), NOW())')
+            ->execute([$referrerId, 'Free', 'active', $nextBilling, $nextBilling]);
+    }
+
+    notify($pdo, $referrerId, '🎉 Parrainage réussi !', 'Un filleul s\'est abonné avec votre code business ' . $code . '. Vous bénéficiez de 10 % de réduction sur votre prochain renouvellement.');
+    return true;
 }
 
 function getPaymentStatusLabel($status)
@@ -112,9 +156,15 @@ if ($action === 'get' || $action === 'status') {
     $planName = $subscription['plan_name'] ?? 'Free';
     $invoiceLimit = getInvoiceQuota($planName);
 
+    // Code business de l'utilisateur (affiché sur le profil / parrainage)
+    $codeStmt = $pdo->prepare('SELECT business_code FROM users WHERE id = ?');
+    $codeStmt->execute([$userId]);
+    $businessCode = $codeStmt->fetchColumn();
+
     respond([
         'subscription' => $subscription,
         'plans' => $plans,
+        'business_code' => $businessCode,
         'payment_history' => $history,
         'usage' => [
             'invoice_count' => $invoiceCount,
@@ -134,6 +184,7 @@ if ($action === 'subscribe') {
     $planId = (int) ($_POST['plan_id'] ?? 0);
     $cycle = ($_POST['cycle'] ?? 'monthly') === 'yearly' ? 'yearly' : 'monthly';
     $paymentMethod = trim($_POST['payment_method'] ?? 'carte');
+    $referralCode = strtoupper(trim($_POST['referral_code'] ?? ''));
 
     if (!$planId) {
         respond(['error' => 'Plan invalide'], 422);
@@ -150,12 +201,40 @@ if ($action === 'subscribe') {
     $price = $cycle === 'yearly' ? $plan['price_yearly'] : $plan['price_monthly'];
     $isPaidPlan = $price > 0;
 
-    // Plan gratuit : activation immédiate
+    // Le code business saisi doit appartenir à un AUTRE utilisateur pour être valide
+    $referralValid = false;
+    if ($referralCode !== '') {
+        $refStmt = $pdo->prepare('SELECT id FROM users WHERE business_code = ?');
+        $refStmt->execute([$referralCode]);
+        $refId = (int) $refStmt->fetchColumn();
+        $referralValid = $refId > 0 && $refId !== $userId;
+    }
+
+    // Réduction de parrainage : 10 % (ou plus) sur le prix si l'utilisateur en a gagné
+    // pour son prochain renouvellement. Le crédit est consommé au moment du paiement.
+    $discountPct = 0.0;
+    $currentSub = getCurrentSubscription($pdo, $userId);
+    if ($currentSub) {
+        $discountPct = (float) ($currentSub['discount_next_pct'] ?? 0);
+    }
+
+    // Bonus filleul : -5 % immédiats si un code business valide est saisi
+    // (cumulable avec le crédit de parrainage de l'utilisateur).
+    $totalDiscountPct = $discountPct + ($referralValid ? 5.0 : 0.0);
+
+    $effectivePrice = $price;
+    if ($isPaidPlan && $totalDiscountPct > 0) {
+        $effectivePrice = round($price * (1 - min(100, $totalDiscountPct) / 100), 2);
+    }
+
+    // Plan gratuit : activation immédiate (pas de crédit de parrainage :
+    // le parrain n'est récompensé que lorsqu'un filleul souscrit un plan PAYANT).
     if (!$isPaidPlan) {
-        $result = activateSubscription($pdo, $userId, $plan['id'], $cycle, $paymentMethod);
+        $result = activateSubscription($pdo, $userId, $plan['id'], $cycle, $paymentMethod, $effectivePrice);
         if (isset($result['error'])) {
             respond(['error' => $result['error']], 422);
         }
+
         respond([
             'success' => true,
             'message' => 'Abonnement ' . $plan['name'] . ' activé',
@@ -166,9 +245,14 @@ if ($action === 'subscribe') {
 
     // Plan payant : passage par FedaPay (page de paiement sécurisée)
     if (fedapayEnabled()) {
-        $meta = json_encode(['plan_id' => $plan['id'], 'cycle' => $cycle]);
+        $meta = json_encode([
+            'plan_id' => $plan['id'],
+            'cycle' => $cycle,
+            'referral_code' => $referralCode,
+            'discount_pct' => $discountPct > 0 ? $discountPct : null,
+        ]);
         $stmt = $pdo->prepare('INSERT INTO payment_history (user_id, amount, payment_method, status, meta, created_at) VALUES (?, ?, ?, ?, ?, NOW())');
-        $stmt->execute([$userId, $price, $paymentMethod, 'pending', $meta]);
+        $stmt->execute([$userId, $effectivePrice, $paymentMethod, 'pending', $meta]);
         $historyId = $pdo->lastInsertId();
 
         $customerStmt = $pdo->prepare('SELECT name, email, phone FROM users WHERE id = ?');
@@ -193,7 +277,7 @@ if ($action === 'subscribe') {
         $callbackUrl = $appUrl . '/paiement-return.html';
 
         $res = fedapayCreateTransaction(
-            fedapayAmount($price),
+            fedapayAmount($effectivePrice),
             'Abonnement ' . $plan['name'] . ' (' . ($cycle === 'yearly' ? 'annuel' : 'mensuel') . ') - ' . ($config['app_name'] ?? 'FacTo'),
             $callbackUrl,
             $customer
@@ -222,7 +306,7 @@ if ($action === 'subscribe') {
             'payment_url' => $paymentUrl,
             'payment' => [
                 'transaction_ref' => $txId,
-                'amount' => $price,
+                'amount' => $effectivePrice,
                 'currency' => fedapayConfig()['currency'] ?? 'XOF',
                 'status' => 'pending',
             ],
@@ -230,14 +314,24 @@ if ($action === 'subscribe') {
     }
 
     // FedaPay non configuré : paiement simulé (mode local)
-    $result = activateSubscription($pdo, $userId, $plan['id'], $cycle, $paymentMethod);
+    $result = activateSubscription($pdo, $userId, $plan['id'], $cycle, $paymentMethod, $effectivePrice);
     if (isset($result['error'])) {
         respond(['error' => $result['error']], 422);
     }
 
+    // Le crédit de parrainage est consommé par ce paiement
+    if ($discountPct > 0) {
+        $pdo->prepare('UPDATE subscriptions SET discount_next_pct = 0 WHERE user_id = ? ORDER BY renews_at DESC LIMIT 1')->execute([$userId]);
+    }
+
+    // Code business saisi : créditer le parrain (uniquement si le filleul paie)
+    if ($referralCode !== '') {
+        grantReferralBonus($pdo, $userId, $referralCode);
+    }
+
     $txRef = 'PAY-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
     $stmt = $pdo->prepare('INSERT INTO payment_history (user_id, subscription_id, amount, payment_method, status, transaction_ref, paid_at, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())');
-    $stmt->execute([$userId, $result['subscription_id'], $price, $paymentMethod, 'paid', $txRef]);
+    $stmt->execute([$userId, $result['subscription_id'], $effectivePrice, $paymentMethod, 'paid', $txRef]);
 
     respond([
         'success' => true,
@@ -246,7 +340,7 @@ if ($action === 'subscribe') {
         'subscription' => getCurrentSubscription($pdo, $userId),
         'payment' => [
             'transaction_ref' => $txRef,
-            'amount' => $price,
+            'amount' => $effectivePrice,
             'status' => 'paid',
         ],
     ]);
@@ -283,11 +377,23 @@ if ($action === 'confirm') {
             $userId,
             (int) ($meta['plan_id'] ?? 0),
             $meta['cycle'] ?? 'monthly',
-            $history['payment_method'] ?? 'carte'
+            $history['payment_method'] ?? 'carte',
+            (float) $history['amount']
         );
 
         if (isset($result['error'])) {
             respond(['error' => $result['error']], 422);
+        }
+
+        // Crédit de parrainage consommé par ce paiement
+        if (!empty($meta['discount_pct'])) {
+            $pdo->prepare('UPDATE subscriptions SET discount_next_pct = 0 WHERE user_id = ? ORDER BY renews_at DESC LIMIT 1')->execute([$userId]);
+        }
+
+        // Code business du filleul : créditer le parrain après paiement confirmé
+        $referralCode = strtoupper(trim((string) ($meta['referral_code'] ?? '')));
+        if ($referralCode !== '') {
+            grantReferralBonus($pdo, $userId, $referralCode);
         }
 
         $pdo->prepare('UPDATE payment_history SET subscription_id = ?, paid_at = NOW() WHERE id = ?')->execute([$result['subscription_id'], $history['id']]);

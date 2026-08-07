@@ -7,10 +7,11 @@
 <title>FacTo - Gestion d'entreprise simplifiée</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/global.css">
 <link rel="stylesheet" href="styles/components.css">
 <link rel="stylesheet" href="styles/landing.css">
+<link rel="stylesheet" href="styles/invoices.css">
 <link rel="stylesheet" href="styles/responsive.css">
 </head>
 <body>
@@ -18,10 +19,11 @@
 <!-- Navbar -->
 <nav class="landing-nav">
 <div class="d-flex align-items-center gap-2">
-<img src="images/logo.png" alt="FacTo" class="logo">
+<img src="images/logo.png" alt="FacTo" class="logo logo--nav">
 </div>
 <div class="landing-nav__links d-none d-lg-flex">
 <a href="#features" class="landing-nav__link">Fonctionnalités</a>
+<a href="#devis" class="landing-nav__link">Devis</a>
 <a href="#pricing" class="landing-nav__link">Tarifs</a>
 <a href="#faq" class="landing-nav__link">FAQ</a>
 </div>
@@ -61,10 +63,10 @@
 <div class="hero__content">
 <div class="hero__badge">Gestion d'entreprise simplifiée</div>
 <h1 class="hero__title">Propulsez votre <span>facturation</span> vers l'excellence.</h1>
-<p class="hero__subtitle">FacTo est la plateforme de gestion tout-en-un conçue pour les PME. Automatisez vos factures, gérez vos stocks et suivez votre croissance en temps réel.</p>
+<p class="hero__subtitle">FacTo est la plateforme de gestion tout-en-un conçue pour les PME. Automatisez vos factures et devis, gérez vos stocks et suivez votre croissance en temps réel.</p>
 <div class="hero__actions">
 <a href="inscription.html" class="btn btn-primary hero__btn">Commencer gratuitement <i class="bi bi-arrow-right"></i></a>
-<a href="#" class="hero__link">Voir la démo</a>
+<a href="#devis" class="hero__link">Voir les modèles de devis</a>
 </div>
 <div class="hero__trust">
 <i class="bi bi-check-circle-fill text-success"></i>
@@ -80,6 +82,103 @@
 <span>Votre facture est réglée ✓</span>
 </div>
 </div>
+</div>
+</section>
+
+<!-- Vitrine Devis : modèles au choix -->
+<section id="devis" class="showcase-section">
+<div class="section-container">
+  <div class="showcase__header">
+    <span class="showcase__badge"><i class="bi bi-file-earmark-text"></i> Modèles de devis</span>
+    <h2 class="section-title">Des devis qui vous ressemblent</h2>
+    <p class="section-subtitle">Choisissez votre modèle de devis — le rendu est identique partout : aperçu, impression, PDF.</p>
+  </div>
+
+  <div class="showcase__toolbar" aria-label="Modèles de devis">
+    <button type="button" class="showcase__btn is-active" data-template="classic" aria-pressed="true"><i class="bi bi-palette"></i> Classique</button>
+    <button type="button" class="showcase__btn" data-template="moderne" aria-pressed="false"><i class="bi bi-moon-stars"></i> Moderne</button>
+    <button type="button" class="showcase__btn" data-template="minimal" aria-pressed="false"><i class="bi bi-bezier"></i> Minimal</button>
+  </div>
+
+  <div class="showcase__stage">
+    <div class="showcase__doc-meta">
+      <span>Modèle : <strong id="showcaseModelName">Classique</strong></span>
+      <span>DEV-2026-001 · 12 juin 2026</span>
+    </div>
+    <div class="showcase__frame">
+      <div class="inv-doc" id="showcaseDoc">
+  <div class="inv-doc__header">
+    <div class="inv-doc__brand">
+      <div class="inv-doc__logo"><span>F</span></div>
+      <div>
+        <div class="inv-doc__company">FacTo Studio</div>
+        <div class="inv-doc__slogan">contact@facto.io · +33 1 23 45 67 89</div>
+      </div>
+    </div>
+    <div>
+      <div class="inv-doc__doclabel">DEVIS</div>
+      <div class="inv-doc__meta">
+        <div>N° <strong>DEV-2026-001</strong></div>
+        <div>12 juin 2026</div>
+        <div>Valide jusqu'au 12 juillet 2026</div>
+        <div>Statut : Envoyé</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-doc__addresses">
+    <div>
+      <div class="inv-doc__block-title">Adresse / Émetteur</div>
+      <p><strong>FacTo Studio</strong></p>
+      <p>contact@facto.io</p>
+      <p>+33 1 23 45 67 89</p>
+    </div>
+    <div>
+      <div class="inv-doc__block-title">Devis pour</div>
+      <p><strong>TechAvance</strong></p>
+      <p>contact@techavance.fr</p>
+      <p>12 rue de la Paix, 75002 Paris</p>
+    </div>
+  </div>
+
+  <table class="inv-doc__table">
+    <thead>
+      <tr><th>Désignation</th><th>P.U. HT</th><th>Qté</th><th>TVA</th><th>Total HT</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Abonnement Business — 12 mois</td><td>350 000 FCFA</td><td>1</td><td>0 %</td><td>350 000 FCFA</td></tr>
+      <tr><td>Formation prise en main (2 h)</td><td>50 000 FCFA</td><td>2</td><td>18 %</td><td>100 000 FCFA</td></tr>
+    </tbody>
+  </table>
+
+  <div class="inv-doc__sum">
+    <div class="inv-doc__note">
+      <div class="inv-doc__block-title">Note</div>
+      <p>Merci de votre confiance. Ce devis est valable 30 jours à compter de sa date d'émission.</p>
+    </div>
+    <div class="inv-doc__totals">
+      <div><span>Sous-total HT</span><span>450 000 FCFA</span></div>
+      <div><span>TVA</span><span>18 000 FCFA</span></div>
+      <div class="inv-grand"><span>Total TTC</span><span>468 000 FCFA</span></div>
+    </div>
+  </div>
+
+  <div class="inv-doc__sign">
+    <div class="inv-doc__sign-name">Espendi Piocel</div>
+    <div class="inv-doc__sign-role">Signature</div>
+  </div>
+
+  <div class="inv-doc__thanks">Merci pour votre confiance</div>
+
+  <div class="inv-doc__footer">
+    <div><b>Questions ?</b><p>contact@facto.io</p><p>+33 1 23 45 67 89</p></div>
+    <div><b>Devis</b><p>Réf. DEV-2026-001</p><p>Validité : 12 juillet 2026</p></div>
+    <div><b>Conditions</b><p>Paiement à 30 jours, sans escompte.</p></div>
+  </div>
+</div>
+    </div>
+  </div>
+  <p class="showcase__hint"><i class="bi bi-info-circle"></i> Dans l'application, ce modèle se choisit lors de la création de chaque devis.</p>
 </div>
 </section>
 
@@ -105,8 +204,36 @@
 <p class="feature__desc">Créez des factures professionnelles en quelques secondes. FacTo gère les taxes, les remises et les devises multiples automatiquement pour vous faire gagner un temps précieux.</p>
 <ul class="feature__list">
 <li><i class="bi bi-check-circle-fill"></i> Modèles personnalisables</li>
+<li><i class="bi bi-check-circle-fill"></i> Signature électronique sur vos documents</li>
 <li><i class="bi bi-check-circle-fill"></i> Envoi automatique par email</li>
-<li><i class="bi bi-check-circle-fill"></i> Relances automatiques</li>
+</ul>
+</div>
+</div>
+
+<div class="feature-row">
+<div class="feature__image">
+<div style="background:#fff;padding:30px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);max-width:320px;width:100%;">
+<div class="d-flex align-items-center justify-content-between mb-3"><span class="fw-bold" style="font-size:.8rem;">QUOTE</span><i class="bi bi-file-earmark-text text-primary"></i></div>
+<div style="border:1px solid var(--gray-200);border-radius:8px;padding:10px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:.68rem;font-weight:800;letter-spacing:1px;color:var(--primary);">DEVIS</span><span style="font-size:.6rem;color:var(--gray-400);">DEV-2026-001</span></div>
+<div style="height:6px;background:var(--gray-100);border-radius:3px;margin-bottom:6px;"></div>
+<div style="height:6px;background:var(--gray-100);border-radius:3px;width:70%;margin-bottom:8px;"></div>
+<div style="display:flex;gap:4px;">
+<span style="flex:1;height:22px;background:var(--primary-light);border-radius:4px;"></span>
+<span style="flex:1;height:22px;background:var(--primary-light);border-radius:4px;"></span>
+<span style="flex:1;height:22px;background:var(--primary);border-radius:4px;"></span>
+</div>
+</div>
+</div>
+</div>
+<div class="feature__content">
+<div class="feature__icon"><i class="bi bi-file-earmark-text"></i></div>
+<h3 class="feature__title">Devis professionnels</h3>
+<p class="feature__desc">Proposez des devis au design soigné avec 3 modèles au choix. Le modèle sélectionné s'applique à l'aperçu, à l'impression et à l'export — pour une image cohérente à chaque étape.</p>
+<ul class="feature__list">
+<li><i class="bi bi-check-circle-fill"></i> 3 modèles : Classique, Moderne, Minimal</li>
+<li><i class="bi bi-check-circle-fill"></i> Conversion devis → facture en un clic</li>
+<li><i class="bi bi-check-circle-fill"></i> Suivi des statuts (envoyé, accepté, refusé)</li>
 </ul>
 </div>
 </div>
@@ -153,7 +280,7 @@
 </div>
 <div class="feature__content">
 <div class="feature__icon"><i class="bi bi-bar-chart"></i></div>
-<h3 class="feature__title">Analyses & Reporting</h3>
+<h3 class="feature__title">Analyses &amp; Reporting</h3>
 <p class="feature__desc">Prenez des décisions éclairées grâce à nos tableaux de bord analytiques. Visualisez votre rentabilité, vos flux de trésorerie et vos produits phares en un clin d'oeil.</p>
 <ul class="feature__list">
 <li><i class="bi bi-check-circle-fill"></i> Rapports financiers complets</li>
@@ -167,31 +294,31 @@
 
 <!-- Stats -->
 <section class="stats-bar">
-<div><div class="stats-bar__number">0 €</div><div class="stats-bar__label">Pour démarrer</div></div>
-<div><div class="stats-bar__number">19 €</div><div class="stats-bar__label">Plan Standard / mois</div></div>
-<div><div class="stats-bar__number">49 €</div><div class="stats-bar__label">Plan Premium / mois</div></div>
-<div><div class="stats-bar__number">24/7</div><div class="stats-bar__label">Support disponible</div></div>
+<div><div class="stats-bar__number">0 FCFA</div><div class="stats-bar__label">Pour démarrer</div></div>
+<div><div class="stats-bar__number">3 500 FCFA</div><div class="stats-bar__label">Plan Business / mois</div></div>
+<div><div class="stats-bar__number">5 %</div><div class="stats-bar__label">Réduction filleul (code business)</div></div>
+<div><div class="stats-bar__number">10 %</div><div class="stats-bar__label">Réduction parrain / renouvellement</div></div>
 </section>
 
 <!-- Pricing -->
 <section id="pricing" class="pricing-section">
 <div class="section-container">
 <h2 class="section-title">Tarification transparente</h2>
-<p class="section-subtitle">Choisissez le plan qui correspond à la taille de votre entreprise. Sans engagement, annulez à tout moment.</p>
+<p class="section-subtitle">Un seul abonnement payant, simple et accessible. Sans engagement, annulez à tout moment.</p>
 <div class="row g-4 justify-content-center">
 <div class="col-lg-4 col-md-6">
 <div class="plan-card h-100">
 <div class="plan-card__name">GRATUIT</div>
-<div class="plan-card__price">0€<span>/mois</span></div>
+<div class="plan-card__price">0 FCFA<span>/mois</span></div>
 <div class="plan-card__desc">Idéal pour les auto-entrepreneurs qui débutent.</div>
 <ul class="plan-card__features">
 <li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Jusqu'à 5 clients</li>
 <li class="included"><i class="bi bi-check-circle-fill text-primary"></i> 10 factures par mois</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Tableau de bord basique</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Support communautaire</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> 10 devis par mois</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Code business personnel</li>
+<li class="not-included"><i class="bi bi-circle"></i> Factures illimitées</li>
 <li class="not-included"><i class="bi bi-circle"></i> Gestion des stocks</li>
 <li class="not-included"><i class="bi bi-circle"></i> Rapports financiers avancés</li>
-<li class="not-included"><i class="bi bi-circle"></i> Multi-utilisateurs</li>
 </ul>
 <a href="inscription.html" class="btn btn-outline-dark w-100" style="border-radius:8px;padding:10px;">Essayer maintenant</a>
 </div>
@@ -199,37 +326,25 @@
 <div class="col-lg-4 col-md-6">
 <div class="plan-card plan-card--popular h-100">
 <div class="plan-card__badge">POPULAIRE</div>
-<div class="plan-card__name">STANDARD</div>
-<div class="plan-card__price">19€<span>/mois</span></div>
-<div class="plan-card__desc">Pour les TPE en pleine croissance.</div>
+<div class="plan-card__name">BUSINESS</div>
+<div class="plan-card__price">3 500 FCFA<span>/mois</span></div>
+<div class="plan-card__desc">L'abonnement complet pour les PME ambitieuses.</div>
 <ul class="plan-card__features">
 <li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Clients illimités</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Factures illimitées</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Gestion des stocks</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Relances automatiques</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Factures &amp; devis illimités</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Gestion des stocks &amp; fournisseurs</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Rapports avancés &amp; relances</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Signature électronique</li>
 <li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Support prioritaire par email</li>
-<li class="not-included"><i class="bi bi-circle"></i> Rapports financiers avancés</li>
-<li class="not-included"><i class="bi bi-circle"></i> API développeur</li>
+<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> −5 % si vous entrez un code business</li>
 </ul>
 <a href="inscription.html" class="btn btn-primary w-100" style="border-radius:8px;padding:10px;">Commencer maintenant</a>
 </div>
 </div>
-<div class="col-lg-4 col-md-6">
-<div class="plan-card h-100">
-<div class="plan-card__name">PREMIUM</div>
-<div class="plan-card__price">49€<span>/mois</span></div>
-<div class="plan-card__desc">Solution complète pour les PME structurées.</div>
-<ul class="plan-card__features">
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Tout du plan Standard</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Reporting avancé & Analytics</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Gestion multi-utilisateurs</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> API personnalisée</li>
-<li class="included"><i class="bi bi-check-circle-fill text-primary"></i> Support dédié 24/7</li>
-</ul>
-<a href="inscription.html" class="btn btn-outline-dark w-100" style="border-radius:8px;padding:10px;">Contacter les ventes</a>
 </div>
-</div>
-</div>
+<p class="text-center mt-4" style="font-size:.85rem;color:var(--gray-500);">
+<i class="bi bi-gift me-1"></i> Parrainez un proche avec votre <strong>code business</strong> : il gagne −5 % immédiatement et vous gagnez −10 % sur votre prochain renouvellement.
+</p>
 </div>
 </section>
 
@@ -269,7 +384,7 @@
 <div class="section-container">
 <div class="row g-5">
 <div class="col-lg-4">
-<div class="faq-section__badge">Aide & Support</div>
+<div class="faq-section__badge">Aide &amp; Support</div>
 <h2 class="faq-section__title">Questions fréquemment posées</h2>
 <p class="faq-section__desc">Vous avez des questions sur FacTo ? Nous avons regroupé ici les réponses les plus courantes pour vous aider à démarrer rapidement.</p>
 <a href="#" class="faq-section__link">Consulter notre centre d'aide complet <i class="bi bi-arrow-right"></i></a>
@@ -280,20 +395,20 @@
 <div class="faq-item__answer">Oui, vos données sont chiffrées en transit et au repos, et hébergées sur des serveurs sécurisés situés en Europe.</div>
 </div>
 <div class="faq-item">
+<div class="faq-item__question">Comment fonctionne le code business et le parrainage ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Chaque compte reçoit un code unique (ex : FAC-3K9X2P) affiché sur son profil. Quand quelqu'un s'abonne au plan Business avec votre code, il obtient −5 % immédiats et vous gagnez −10 % sur votre prochain renouvellement. Le bonus se cumule jusqu'à −100 %.</div>
+</div>
+<div class="faq-item">
 <div class="faq-item__question">Puis-je changer de forfait à tout moment ?<i class="bi bi-chevron-down"></i></div>
-<div class="faq-item__answer">Absolument. Vous pouvez augmenter ou réduire votre forfait à tout moment. La différence sera calculée au prorata.</div>
+<div class="faq-item__answer">Absolument. Vous pouvez passer du plan Gratuit au plan Business à tout moment. La différence sera calculée au prorata.</div>
 </div>
 <div class="faq-item">
-<div class="faq-item__question">Y a-t-il des frais d'installation ?<i class="bi bi-chevron-down"></i></div>
-<div class="faq-item__answer">Non, FacTo est 100% cloud. Aucun frais d'installation ni de maintenance n'est requis.</div>
-</div>
-<div class="faq-item">
-<div class="faq-item__question">Puis-je importer mes données existantes ?<i class="bi bi-chevron-down"></i></div>
-<div class="faq-item__answer">Oui, nous supportons l'import depuis Excel, CSV et de nombreux logiciels comptables.</div>
+<div class="faq-item__question">Puis-je choisir le modèle de mes devis ?<i class="bi bi-chevron-down"></i></div>
+<div class="faq-item__answer">Oui. Trois modèles sont disponibles (Classique, Moderne, Minimal). Vous choisissez le modèle lors de la création de chaque devis, et il s'applique partout : aperçu, impression et export.</div>
 </div>
 <div class="faq-item">
 <div class="faq-item__question">Le support est-il disponible en français ?<i class="bi bi-chevron-down"></i></div>
-<div class="faq-item__answer">Oui, notre équipe de support est basée en France et disponible en français du lundi au vendredi de 9h à 19h.</div>
+<div class="faq-item__answer">Oui, notre équipe de support est disponible en français pour vous accompagner rapidement.</div>
 </div>
 </div>
 </div>
@@ -324,10 +439,10 @@
 <!-- CTA -->
 <section class="cta-dark">
 <h2 class="cta-dark__title">Prêt à transformer votre gestion ?</h2>
-<p class="cta-dark__text">Rejoignez des milliers d'entreprises qui font confiance à FacTo pour simplifier leur quotidien opérationnel.<br>Essai gratuit de 14 jours, sans carte bancaire.</p>
+<p class="cta-dark__text">Rejoignez des milliers d'entreprises qui font confiance à FacTo pour simplifier leur quotidien opérationnel.<br>Essai gratuit, sans carte bancaire.</p>
 <div class="cta-dark__actions">
 <a href="inscription.html" class="btn btn-primary cta-dark__btn">Commencer gratuitement</a>
-<button class="btn btn-outline-light cta-dark__btn">Parler à un expert</button>
+<a href="#devis" class="btn btn-outline-light cta-dark__btn">Voir les modèles de devis</a>
 </div>
 <div class="cta-dark__trust">
 <span><i class="bi bi-globe"></i> Disponible partout dans le monde</span>
@@ -341,12 +456,12 @@
 <div class="row">
 <div class="col-lg-4">
 <div class="footer__brand">
-<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo"></div>
+<div class="d-flex align-items-center gap-2 mb-2"><img src="images/logo.png" alt="FacTo" class="logo" style="width:72px;height:72px;"></div>
 <p>FacTo est une plateforme de facturation et de gestion d'entreprise conçue pour simplifier le quotidien des TPE et PME.</p>
 <div class="footer__socials"><a href="#"><i class="bi bi-twitter"></i></a><a href="#"><i class="bi bi-facebook"></i></a><a href="#"><i class="bi bi-instagram"></i></a><a href="#"><i class="bi bi-linkedin"></i></a><a href="#"><i class="bi bi-github"></i></a></div>
 </div>
 </div>
-<div class="col-lg-2 col-6"><div class="footer__title">Produit</div><ul class="footer__links"><li><a href="#features">Fonctionnalités</a></li><li><a href="#pricing">Tarifs</a></li><li><a href="#">Intégrations</a></li><li><a href="#">Roadmap</a></li></ul></div>
+<div class="col-lg-2 col-6"><div class="footer__title">Produit</div><ul class="footer__links"><li><a href="#features">Fonctionnalités</a></li><li><a href="#devis">Modèles de devis</a></li><li><a href="#pricing">Tarifs</a></li><li><a href="#">Roadmap</a></li></ul></div>
 <div class="col-lg-2 col-6"><div class="footer__title">Entreprise</div><ul class="footer__links"><li><a href="#">À propos</a></li><li><a href="#">Carrières</a></li><li><a href="#">Blog</a></li><li><a href="support.html">Contact</a></li></ul></div>
 <div class="col-lg-2 col-6"><div class="footer__title">Légal</div><ul class="footer__links"><li><a href="#">Politique de confidentialité</a></li><li><a href="#">Conditions d'utilisation</a></li><li><a href="#">Politique de cookies</a></li><li><a href="#">Sécurité</a></li></ul></div>
 </div>
@@ -368,11 +483,38 @@ document.querySelectorAll('.faq-item__question').forEach(q => {
   });
 });
 
+/* ---- Vitrine devis : bascule de modèle en direct ---- */
+(function () {
+  const doc = document.getElementById('showcaseDoc');
+  if (!doc) return;
+  const modelLabel = document.getElementById('showcaseModelName');
+  const names = { classic: 'Classique', moderne: 'Moderne', minimal: 'Minimal' };
+  const buttons = document.querySelectorAll('.showcase__btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => {
+        b.classList.remove('is-active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
+      const tpl = btn.getAttribute('data-template');
+      doc.classList.remove('inv-doc--moderne', 'inv-doc--minimal');
+      if (tpl !== 'classic') doc.classList.add('inv-doc--' + tpl);
+      if (modelLabel) modelLabel.textContent = names[tpl] || 'Classique';
+      // micro-animation de bascule
+      doc.classList.remove('showcase__anim');
+      void doc.offsetWidth;
+      doc.classList.add('showcase__anim');
+    });
+  });
+})();
+
 /* ---- Navbar dynamique : utilisateur connecté ou liens d'inscription ---- */
 (function () {
   const esc = (v) => String(v == null ? '' : v)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    .replace(/\"/g, '&quot;').replace(/'/g, '&#39;');
 
   const guestActions = document.getElementById('guestActions');
   const userArea = document.getElementById('userArea');

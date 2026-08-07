@@ -12,7 +12,7 @@ function esc(value) {
 }
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(amount) || 0);
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(Number(amount) || 0);
 }
 
 function formatDate(value) {
@@ -49,7 +49,7 @@ function formatPrice(price, startDate, nextBilling) {
   } catch (e) {
     // ignore
   }
-  return `${amount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })} / ${cycle}`;
+  return `${amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 })} / ${cycle}`;
 }
 
 function statusBadge(status) {
@@ -78,11 +78,9 @@ function updateSubscriptionUI(subscription) {
     planStatus.className = 'plan-current__badge ' + statusBadge(subscription.status);
   }
   if (planDesc) {
-    planDesc.textContent = subscription.plan_name === 'Premium'
-      ? 'La solution complète pour les entreprises exigeantes.'
-      : subscription.plan_name === 'Standard'
-        ? 'L’essentiel pour gérer votre activité au quotidien.'
-        : 'Un plan conçu pour accompagner votre croissance.';
+    planDesc.textContent = subscription.plan_name === 'Business'
+      ? 'L\'abonnement complet FacTo : factures, devis et stock illimités.'
+      : 'Un plan conçu pour accompagner votre croissance.';
   }
   if (renewalDate) renewalDate.textContent = subscription.next_billing_date || '-';
   if (amount) amount.textContent = formatPrice(subscription.price, subscription.started_at, subscription.next_billing_date);
@@ -112,6 +110,34 @@ function updateSubscriptionUI(subscription) {
   }
   if (paymentMeta) {
     paymentMeta.textContent = isCancelled ? 'Abonnement résilié' : `Paiement ${formatStatusLabel(subscription.status)}`;
+  }
+
+  // Code business (parrainage)
+  const codeDisplay = document.getElementById('referralCodeDisplay');
+  if (codeDisplay && subscriptionState.businessCode) {
+    codeDisplay.textContent = subscriptionState.businessCode;
+  }
+  const btnCopy = document.getElementById('btnCopyReferralCode');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      const code = (subscriptionState.businessCode || codeDisplay?.textContent || '').trim();
+      if (!code) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => toast('Code copié !', 'success')).catch(() => toast(code, 'info'));
+      } else {
+        toast(code, 'info');
+      }
+    });
+  }
+  const discountNote = document.getElementById('referralDiscountNote');
+  const discountPct = Number(subscription?.discount_next_pct || 0);
+  if (discountNote) {
+    if (discountPct > 0) {
+      discountNote.style.display = 'block';
+      discountNote.innerHTML = `<i class="bi bi-gift-fill"></i> 🎁 ${discountPct} % de réduction sur votre prochain renouvellement !`;
+    } else {
+      discountNote.style.display = 'none';
+    }
   }
 
   const btnCancel = document.getElementById('btnCancel');
@@ -150,7 +176,7 @@ function renderPaymentHistory() {
       <td>${p.transaction_ref || '—'}</td>
       <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '—'}</td>
       <td>${p.payment_method || '—'}</td>
-      <td>${Number(p.amount).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</td>
+      <td>${Number(p.amount).toLocaleString('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 })}</td>
       <td><span class="badge-soft ${statusBadge(p.status)}">${formatStatusLabel(p.status)}</span></td>
       <td><button type="button" class="btn btn-sm btn-outline-primary" data-receipt="${p.id}" title="Imprimer / télécharger le reçu"><i class="bi bi-receipt"></i> Reçu</button></td>
     </tr>
@@ -360,8 +386,7 @@ let compareCycle = 'monthly';
 function planLabel(name) {
   const n = (name || '').toLowerCase();
   if (n === 'free' || n === 'gratuit') return 'Gratuit';
-  if (n === 'premium') return 'Premium';
-  if (n === 'standard') return 'Standard';
+  if (n === 'business') return 'Business';
   return name || '—';
 }
 
@@ -386,13 +411,13 @@ function renderComparePlans() {
   grid.innerHTML = plans.map((plan) => {
     const name = planLabel(plan.name);
     const isCurrent = currentPlan === (plan.name || '').toLowerCase();
-    const isPremium = (plan.name || '').toLowerCase() === 'premium';
+    const isPremium = (plan.name || '').toLowerCase() === 'business';
     const monthly = Number(plan.price_monthly) || 0;
     const yearly = Number(plan.price_yearly) || 0;
     const displayPrice = isYearly && yearly > 0 ? yearly / 12 : monthly;
     const priceStr = displayPrice === 0
-      ? '0 €'
-      : displayPrice.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: displayPrice % 1 === 0 ? 0 : 2 });
+      ? 'Gratuit'
+      : displayPrice.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 });
 
     const icon = isPremium ? 'bi-crown' : isCurrent ? 'bi-star-fill' : 'bi-lightning-charge';
     const iconBg = isPremium
@@ -414,7 +439,7 @@ function renderComparePlans() {
         </ul>
         ${isCurrent
           ? '<button class="btn btn-outline-secondary compare-card__btn" style="border-color:var(--gray-200);color:var(--gray-500);" disabled>Votre plan actuel</button>'
-          : `<a href="choix-abonnement.html" class="btn btn-primary compare-card__btn">${isPremium ? 'Passer à Premium' : 'Choisir ce plan'}</a>`}
+          : `<a href="choix-abonnement.html" class="btn btn-primary compare-card__btn">${isPremium ? 'Passer à Business' : 'Choisir ce plan'}</a>`}
       </div>`;
   }).join('');
 }
@@ -500,6 +525,7 @@ async function initSubscriptionPage() {
     subscriptionState.plans = data.plans || [];
     subscriptionState.history = data.payment_history || [];
     subscriptionState.usage = data.usage || { invoice_count: 0, invoice_limit: 0 };
+    subscriptionState.businessCode = data.business_code || null;
 
     if (data.subscription) {
       updateSubscriptionUI(data.subscription);
