@@ -3,6 +3,7 @@ require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
 require __DIR__ . '/fedapay.php';
 require __DIR__ . '/csrf.php';
+require __DIR__ . '/plan.php';
 
 $config = $config ?? require __DIR__ . '/config.php';
 
@@ -31,14 +32,6 @@ function getCurrentSubscription(PDO $pdo, int $userId)
     $stmt = $pdo->prepare('SELECT id, plan_id, plan_name, price, payment_method, status, next_billing_date, renews_at, started_at, cancelled_at, discount_next_pct FROM subscriptions WHERE user_id = ? ORDER BY renews_at DESC, id DESC LIMIT 1');
     $stmt->execute([$userId]);
     return $stmt->fetch() ?: null;
-}
-
-// Quota de factures selon le plan (associé à la liste de fonctionnalités en base)
-function getInvoiceQuota($planName)
-{
-    $name = strtolower(trim((string) $planName));
-    if ($name === 'free') return 10;
-    return 999999; // Business : illimité
 }
 
 function notify(PDO $pdo, int $userId, string $title, string $body)
@@ -139,22 +132,21 @@ function getPaymentStatusLabel($status)
 }
 
 if ($action === 'get' || $action === 'status') {
-    $subscription = getCurrentSubscription($pdo, $userId);
+    // Un membre d'équipe n'a pas sa propre ligne d'abonnement : on lui affiche
+    // celle de l'entreprise (propriétaire) en lecture seule.
+    $isMember = planUserId($pdo, $userId) !== $userId;
+    $subscription = getCurrentSubscription($pdo, $isMember ? planUserId($pdo, $userId) : $userId);
 
     $plansStmt = $pdo->prepare('SELECT id, name, price_monthly, price_yearly, description, features FROM plans WHERE is_active = 1 ORDER BY sort_order');
     $plansStmt->execute();
     $plans = $plansStmt->fetchAll();
 
-    $countStmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ?');
-    $countStmt->execute([$userId]);
-    $invoiceCount = (int) $countStmt->fetchColumn();
-
     $histStmt = $pdo->prepare('SELECT id, amount, payment_method, status, transaction_ref, paid_at, created_at FROM payment_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 20');
     $histStmt->execute([$userId]);
     $history = $histStmt->fetchAll();
 
-    $planName = $subscription['plan_name'] ?? 'Free';
-    $invoiceLimit = getInvoiceQuota($planName);
+    // Usage complet (factures, devis, produits) centralisé dans plan.php
+    $usage = planUsage($pdo, $userId);
 
     // Code business de l'utilisateur (affiché sur le profil / parrainage)
     $codeStmt = $pdo->prepare('SELECT business_code FROM users WHERE id = ?');
@@ -166,10 +158,8 @@ if ($action === 'get' || $action === 'status') {
         'plans' => $plans,
         'business_code' => $businessCode,
         'payment_history' => $history,
-        'usage' => [
-            'invoice_count' => $invoiceCount,
-            'invoice_limit' => $invoiceLimit,
-        ],
+        'usage' => $usage,
+        'is_member' => $isMember,
     ]);
 }
 
@@ -181,6 +171,10 @@ if ($action === 'plans') {
 
 if ($action === 'subscribe') {
     if (!csrfValidateToken($_POST['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
+    // Un membre d'équipe ne peut pas changer l'abonnement de l'entreprise
+    if (planUserId($pdo, $userId) !== $userId) {
+        respond(['error' => 'Seul le propriétaire de l\'entreprise peut gérer l\'abonnement'], 403);
+    }
     $planId = (int) ($_POST['plan_id'] ?? 0);
     $cycle = ($_POST['cycle'] ?? 'monthly') === 'yearly' ? 'yearly' : 'monthly';
     $paymentMethod = trim($_POST['payment_method'] ?? 'carte');
@@ -417,6 +411,10 @@ if ($action === 'confirm') {
 
 if ($action === 'cancel') {
     if (!csrfValidateToken($_POST['_csrf'] ?? '')) { respond(['error' => 'Token CSRF invalide'], 403); }
+    // Un membre d'équipe ne peut pas résilier l'abonnement de l'entreprise
+    if (planUserId($pdo, $userId) !== $userId) {
+        respond(['error' => 'Seul le propriétaire de l\'entreprise peut gérer l\'abonnement'], 403);
+    }
     $current = getCurrentSubscription($pdo, $userId);
     if (!$current) {
         respond(['error' => 'Aucun abonnement actif'], 422);

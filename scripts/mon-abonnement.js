@@ -3,6 +3,7 @@ const subscriptionState = {
   plans: [],
   history: [],
   usage: { invoice_count: 0, invoice_limit: 0 },
+  isMember: false,
 };
 
 function esc(value) {
@@ -88,14 +89,7 @@ function updateSubscriptionUI(subscription) {
     ? subscription.payment_method.charAt(0).toUpperCase() + subscription.payment_method.slice(1)
     : 'Carte non renseignée';
 
-  const limit = subscriptionState.usage.invoice_limit || 0;
-  const count = subscriptionState.usage.invoice_count || 0;
-  if (usageCount) usageCount.textContent = limit >= 999999 ? `${count} / illimité` : `${count} / ${limit}`;
-  if (usageBar) {
-    const pct = limit >= 999999 ? (count > 0 ? Math.min(count, 100) : 0) : limit > 0 ? Math.min(100, Math.round((count / limit) * 100)) : 0;
-    usageBar.style.width = pct + '%';
-    usageBar.className = 'progress-bar' + (pct >= 80 ? ' bg-danger' : '');
-  }
+  renderQuotas();
 
   if (subscription.next_billing_date) {
     startSubscriptionCountdown(subscription.next_billing_date);
@@ -159,6 +153,41 @@ function updateSubscriptionUI(subscription) {
       const btn = event.target.closest('[data-receipt]');
       if (btn) printReceipt(btn.getAttribute('data-receipt'));
     });
+  }
+}
+
+/* ============ QUOTAS (factures / devis / produits) ============ */
+function renderQuotas() {
+  const usage = subscriptionState.usage || {};
+  const totalText = document.getElementById('subscriptionUsageCount');
+  const quotaEls = [
+    { id: 'quotaInvoices', bar: 'usageBarInvoices', count: usage.invoice_count, limit: usage.invoice_limit, label: 'Factures' },
+    { id: 'quotaQuotes', bar: 'usageBarQuotes', count: usage.quote_count, limit: usage.quote_limit, label: 'Devis' },
+    { id: 'quotaProducts', bar: 'usageBarProducts', count: usage.product_count, limit: usage.product_limit, label: 'Produits' },
+  ];
+
+  let used = 0;
+  quotaEls.forEach(({ id, bar, count, limit }) => {
+    const el = document.getElementById(id);
+    const barEl = document.getElementById(bar);
+    const c = Number(count) || 0;
+    const l = Number(limit) || 0;
+    if (el) el.textContent = l >= 999999 ? `${c} / illimité` : `${c} / ${l}`;
+    if (barEl) {
+      const pct = l >= 999999 ? (c > 0 ? Math.min(c, 100) : 0) : l > 0 ? Math.min(100, Math.round((c / l) * 100)) : 0;
+      barEl.style.width = pct + '%';
+      barEl.className = 'progress-bar' + (pct >= 80 ? ' bg-danger' : '');
+    }
+    if (l < 999999) used += c;
+  });
+
+  if (totalText) {
+    const limited = quotaEls.filter(q => Number(q.limit) < 999999);
+    const totals = limited.reduce((acc, q) => acc + (Number(q.count) || 0), 0);
+    const totalLimits = limited.reduce((acc, q) => acc + (Number(q.limit) || 0), 0);
+    totalText.textContent = limited.length
+      ? `${totals} / ${totalLimits} utilisés`
+      : 'Illimité';
   }
 }
 
@@ -445,6 +474,19 @@ function renderComparePlans() {
 }
 
 function attachActions() {
+  // Un membre d'équipe ne peut pas gérer l'abonnement (réservé au propriétaire)
+  if (subscriptionState.isMember) {
+    const ownerOnly = ['btnChangePlan', 'btnUpdatePayment', 'btnCancel'];
+    ownerOnly.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const codeCard = document.querySelector('.action-card');
+    if (codeCard && codeCard.querySelector('.referral-code-card')) codeCard.style.display = 'none';
+    const usageLabel = document.querySelector('.plan-current__usage-label');
+    if (usageLabel) usageLabel.textContent = 'Utilisation de l\'entreprise';
+  }
+
   const toggleMonthly = document.getElementById('toggleMonthly');
   const toggleYearly = document.getElementById('toggleYearly');
   if (toggleMonthly && toggleYearly) {
@@ -526,6 +568,7 @@ async function initSubscriptionPage() {
     subscriptionState.history = data.payment_history || [];
     subscriptionState.usage = data.usage || { invoice_count: 0, invoice_limit: 0 };
     subscriptionState.businessCode = data.business_code || null;
+    subscriptionState.isMember = !!data.is_member;
 
     if (data.subscription) {
       updateSubscriptionUI(data.subscription);

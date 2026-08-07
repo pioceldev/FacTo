@@ -107,9 +107,14 @@
         <div class="dashboard__card-header">
           <div class="dashboard__card-title"><i class="bi bi-currency-exchange"></i> Devise de l'application</div>
         </div>
-        <p class="text-muted" style="font-size:.85rem;margin-bottom:14px;">
+        <p class="text-muted" style="font-size:.85rem;margin-bottom:10px;">
           Choisissez la devise affichée sur vos documents (factures, devis, paiements, dépenses, produits, stocks et rapports).
         </p>
+        <div class="alert alert-warning py-2 px-3 mb-3" style="font-size:.8rem;border-radius:10px;">
+          <i class="bi bi-arrow-left-right"></i>
+          Changer de devise <strong>convertit automatiquement tous vos montants</strong> aux taux de référence
+          (1&nbsp;€&nbsp;=&nbsp;1,08&nbsp;$, 1&nbsp;€&nbsp;=&nbsp;655,957&nbsp;F&nbsp;CFA).
+        </div>
         <div class="currency-picker">
           <label class="currency-option">
             <input type="radio" name="appCurrency" value="EUR">
@@ -182,6 +187,61 @@
           <button type="button" class="btn btn-primary" id="sigSaveBtn"><i class="bi bi-check-lg"></i> Enregistrer la signature</button>
         </div>
       </div>
+
+      <!-- ===== Membres de l'équipe (plan Business) ===== -->
+      <div class="dashboard__card" style="grid-column:1/-1;">
+        <div class="dashboard__card-header">
+          <div>
+            <div class="dashboard__card-title"><i class="bi bi-people-fill"></i> Membres de l'équipe</div>
+            <div class="dashboard__card-subtitle">Les membres partagent l'accès à toutes vos données (clients, produits, factures, devis, stock) pour gérer l'entreprise ensemble.</div>
+          </div>
+          <span class="badge-soft badge-soft-primary" id="teamPlanBadge" style="align-self:flex-start;">—</span>
+        </div>
+
+        <!-- Bloc verrouillé plan Free -->
+        <div class="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 mb-3" id="teamFreeLock" style="display:none;border-radius:10px;font-size:.85rem;">
+          <i class="bi bi-lock-fill"></i>
+          <span>La gestion d'équipe est réservée au plan <strong>Business</strong>.</span>
+          <a href="choix-abonnement.html" class="ms-auto text-decoration-none fw-semibold" style="white-space:nowrap;">Passer à Business →</a>
+        </div>
+
+        <!-- Formulaire d'ajout -->
+        <div class="row g-2 mb-3" id="teamAddForm">
+          <div class="col-md-4">
+            <label class="form-label">Nom du membre</label>
+            <input type="text" id="teamMemberName" class="form-control" placeholder="Ex : Awa Dossou">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Adresse e-mail</label>
+            <input type="email" id="teamMemberEmail" class="form-control" placeholder="membre@entreprise.com">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Mot de passe <span class="text-muted fw-normal">(optionnel)</span></label>
+            <input type="password" id="teamMemberPassword" class="form-control" placeholder="Laisser vide = temporaire" autocomplete="new-password">
+          </div>
+          <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-primary" id="btnAddTeamMember"><i class="bi bi-person-plus"></i> Ajouter le membre</button>
+            <span class="text-muted" style="font-size:.78rem;"><i class="bi bi-info-circle"></i> Si vous définissez un mot de passe (8+ caractères, 1 chiffre), il sera transmis au membre — sinon un mot de passe temporaire est généré.</span>
+          </div>
+        </div>
+
+        <!-- Liste -->
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Membre</th>
+                <th>E-mail</th>
+                <th>Ajouté le</th>
+                <th style="width:90px;text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teamMembersBody">
+              <tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:20px;">Chargement des membres…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -220,6 +280,31 @@
       const selected = document.querySelector('input[name="appCurrency"]:checked');
       if (!selected) return;
       const msg = document.getElementById('currencySavedMsg');
+
+      // Récupère la devise actuelle pour savoir s'il y a réellement conversion
+      let currentCurrency = 'EUR';
+      try {
+        const cur = await fetch('backend/profile.php?action=get', { credentials: 'same-origin' }).then(r => r.json());
+        currentCurrency = String(cur.user?.currency || 'EUR').toUpperCase();
+      } catch (e) { /* défaut EUR */ }
+
+      if (currentCurrency !== selected.value) {
+        const ok = window.uiConfirm
+          ? await window.uiConfirm({
+              title: 'Changer de devise ?',
+              text: 'Tous vos montants seront convertis automatiquement de ' + currentCurrency + ' vers ' + selected.value + ' (taux de référence fixes). Cette action est irréversible.',
+              confirmText: 'Convertir et changer',
+              icon: 'bi-arrow-left-right',
+            })
+          : window.confirm('Tous vos montants seront convertis de ' + currentCurrency + ' vers ' + selected.value + '. Continuer ?');
+        if (!ok) {
+          // Réaffiche la devise actuelle dans le sélecteur
+          const radio = document.querySelector(`input[name="appCurrency"][value="${currentCurrency}"]`);
+          if (radio) radio.checked = true;
+          return;
+        }
+      }
+
       try {
         const res = await fetch('backend/profile.php?action=save_currency', {
           method: 'POST',
@@ -281,6 +366,147 @@
       (window.toast || alert)('Impossible de contacter le serveur.', 'error');
     }
   });
+
+  /* ===== Membres de l'équipe (plan Business) ===== */
+  const btnAddTeam = document.getElementById('btnAddTeamMember');
+  if (btnAddTeam) {
+    let teamPlan = 'Free';
+    let teamMembers = [];
+
+    async function loadTeam() {
+      try {
+        const res = await fetch('backend/team.php?action=members', { credentials: 'same-origin' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erreur');
+        teamPlan = data.plan || 'Free';
+        teamMembers = data.members || [];
+        renderTeam();
+      } catch (err) {
+        (window.toast || alert)(err.message || 'Impossible de charger les membres.', 'error');
+      }
+    }
+
+    function renderTeam() {
+      const isBiz = String(teamPlan).toLowerCase() !== 'free';
+      const badge = document.getElementById('teamPlanBadge');
+      const lock = document.getElementById('teamFreeLock');
+      const form = document.getElementById('teamAddForm');
+      const tbody = document.getElementById('teamMembersBody');
+      if (!tbody) return;
+
+      if (badge) {
+        badge.textContent = isBiz ? 'Plan Business' : 'Plan Free';
+        badge.className = 'badge-soft ' + (isBiz ? 'badge-soft-primary' : 'badge-soft-secondary');
+      }
+      if (lock) lock.style.display = isBiz ? 'none' : 'flex';
+      if (form) form.style.display = isBiz ? '' : 'none';
+
+      if (!isBiz) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:20px;">Passez au plan Business pour ajouter des membres et gérer l\'entreprise à plusieurs.</td></tr>';
+        return;
+      }
+
+      if (!teamMembers.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:20px;">Aucun membre pour le moment. Ajoutez votre premier collaborateur ci-dessus.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = teamMembers.map(m => `
+        <tr>
+          <td style="font-weight:600;"><i class="bi bi-person-circle me-1" style="color:var(--primary);"></i>${escHtml(m.name || '—')}</td>
+          <td>${escHtml(m.email || '—')}</td>
+          <td style="color:var(--gray-500);">${m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : '—'}</td>
+          <td style="text-align:right;">
+            <button type="button" class="btn btn-sm btn-outline-danger" data-remove="${m.member_id}" title="Retirer le membre"><i class="bi bi-person-x"></i></button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function escHtml(v) {
+      return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    btnAddTeam.addEventListener('click', async () => {
+      const name = document.getElementById('teamMemberName').value.trim();
+      const email = document.getElementById('teamMemberEmail').value.trim();
+      const password = document.getElementById('teamMemberPassword').value;
+      if (!email) {
+        (window.toast || alert)('Saisissez l\'adresse e-mail du membre.', 'error');
+        return;
+      }
+      try {
+        const res = await fetch('backend/team.php?action=add', {
+          method: 'POST',
+          body: new URLSearchParams({ name, email, password, _csrf: (await fetchCsrfToken()) || '' }),
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          (window.toast || alert)(data.error || 'Ajout impossible.', 'error');
+          return;
+        }
+        const m = data.member || {};
+        if (m.password_set_by_owner) {
+          // Le propriétaire a défini le mot de passe : rien à transmettre
+          (window.toast || alert)(data.message + ' — Le mot de passe défini est celui du membre.', 'success');
+        } else if (m.account_created && m.temp_password) {
+          const msg = data.message + ' — Compte créé. Mot de passe temporaire à transmettre au membre : ' + m.temp_password;
+          if (window.uiConfirm) {
+            await window.uiConfirm({
+              title: 'Membre ajouté — mot de passe temporaire',
+              text: 'Le compte du membre vient d\'être créé. Transmettez-lui ce mot de passe temporaire (il devra le changer dans Mon profil) : ' + m.temp_password,
+              confirmText: 'Compris',
+              icon: 'bi-key',
+            });
+          } else {
+            (window.toast || alert)(msg, 'success');
+          }
+        } else if (m.password_ignored) {
+          (window.toast || alert)(data.message + ' — Ce compte existait déjà : son mot de passe actuel est conservé.', 'info');
+        } else {
+          (window.toast || alert)(data.message || 'Membre ajouté', 'success');
+        }
+        document.getElementById('teamMemberName').value = '';
+        document.getElementById('teamMemberEmail').value = '';
+        document.getElementById('teamMemberPassword').value = '';
+        await loadTeam();
+      } catch (err) {
+        (window.toast || alert)('Impossible de contacter le serveur.', 'error');
+      }
+    });
+
+    document.getElementById('teamMembersBody').addEventListener('click', async (event) => {
+      const btn = event.target.closest('[data-remove]');
+      if (!btn) return;
+      const memberId = btn.getAttribute('data-remove');
+      const ok = window.uiConfirm
+        ? await window.uiConfirm({ title: 'Retirer ce membre ?', text: 'Le membre perdra immédiatement l\'accès aux données de l\'entreprise.', confirmText: 'Retirer', icon: 'bi-person-x', danger: true })
+        : window.confirm('Retirer ce membre ? Il perdra l\'accès aux données.');
+      if (!ok) return;
+      try {
+        const res = await fetch('backend/team.php?action=remove', {
+          method: 'POST',
+          body: new URLSearchParams({ member_id: memberId, _csrf: (await fetchCsrfToken()) || '' }),
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          (window.toast || alert)(data.error || 'Suppression impossible.', 'error');
+          return;
+        }
+        (window.toast || alert)(data.message || 'Membre retiré', 'success');
+        await loadTeam();
+      } catch (err) {
+        (window.toast || alert)('Impossible de contacter le serveur.', 'error');
+      }
+    });
+
+    loadTeam();
+  }
 
   /* ===== Signature : pavé de dessin + import d'image ===== */
   const pad = document.getElementById('signaturePad');

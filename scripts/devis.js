@@ -8,10 +8,32 @@ const quoteState = {
   clients: [],
   products: [],
   quoteItems: [],
+  editingItems: [],
+  editingReservesStock: false,
   stats: null,
+  usage: null,
   issuer: null,
   template: 'classic',
 };
+
+/* Quantité déjà réservée par le devis en cours d'édition. Uniquement si le
+   devis réserve réellement le stock (statut accepté, stock_reserved=1) : on le
+   réintègre pour ne pas se bloquer soi-même. Pour un brouillon/refusé, la
+   réservation propre n'existe pas (rien à réintégrer). */
+function ownQuoteReservedQty(productId) {
+  if (!quoteState.editingId || !quoteState.editingReservesStock) return 0;
+  return (quoteState.editingItems || [])
+    .filter(i => String(i.product_id || '') === String(productId))
+    .reduce((s, i) => s + (Number(i.quantity) || 0), 0);
+}
+
+/* Stock réellement utilisable pour ce produit dans le formulaire :
+   stock physique + réservation propre du devis accepté en cours d'édition. */
+function quoteAvailableForProduct(productId) {
+  const p = quoteState.products.find(pp => String(pp.id) === String(productId));
+  if (!p || p.stock_quantity == null) return null;
+  return Number(p.stock_quantity) + ownQuoteReservedQty(productId);
+}
 
 async function api(path, options = {}) {
   const headers = {};
@@ -84,6 +106,7 @@ async function refreshQuotes() {
     quoteState.quotes = data.quotes || [];
     quoteState.pagination = data.pagination || quoteState.pagination;
     quoteState.stats = data.stats || null;
+    quoteState.usage = data.usage || null;
   } catch (error) {
     toast(error.message, 'error');
     return;
@@ -91,6 +114,7 @@ async function refreshQuotes() {
   renderTable();
   renderPagination();
   renderStats();
+  renderQuoteQuota();
   renderSearchClear();
 }
 
@@ -279,13 +303,17 @@ function normalizeStatus(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function statusBadge(status) {
+function statusBadge(status, converted) {
+  if (converted) {
+    return `<span class="badge-soft badge-soft-primary"><i class="bi bi-arrow-repeat"></i> Converti</span>`;
+  }
   const s = normalizeStatus(status);
   const map = {
     brouillon: ['badge-soft-secondary', 'Brouillon'],
     envoye: ['badge-soft-info', 'Envoyé'],
     accepte: ['badge-soft-success', 'Accepté'],
     refuse: ['badge-soft-danger', 'Refusé'],
+    expire: ['badge-soft-secondary', 'Expiré'],
   };
   const m = map[s] || ['badge-soft-secondary', status || '—'];
   return `<span class="badge-soft ${m[0]}">${esc(m[1])}</span>`;
@@ -312,7 +340,10 @@ function renderTable() {
     return;
   }
 
-  tbody.innerHTML = quoteState.quotes.map(quote => `
+  tbody.innerHTML = quoteState.quotes.map(quote => {
+    const converted = !!(quote.converted_invoice_id);
+    const canConvert = normalizeStatus(quote.status) === 'accepte' && !converted;
+    return `
     <tr>
       <td style="font-weight:600;color:var(--gray-800);">${esc(quote.ref || '—')}</td>
       <td style="font-weight:500;">${esc(quote.client_name || 'Client ponctuel')}</td>
@@ -320,15 +351,17 @@ function renderTable() {
       <td>${formatCurrency(quote.vat)}</td>
       <td style="font-weight:700;">${formatCurrency(quote.total)}</td>
       <td style="color:var(--gray-500);">${formatDate(quote.valid_until)}</td>
-      <td>${statusBadge(quote.status)}</td>
+      <td>${statusBadge(quote.status, converted)}</td>
       <td>
         <div class="invoice-table-actions" style="justify-content:flex-end;">
+          ${canConvert ? `<button type="button" title="Convertir en facture" data-convert="${quote.id}" style="color:var(--primary);"><i class="bi bi-arrow-repeat"></i></button>` : ''}
           <button type="button" title="Imprimer" data-print="${quote.id}"><i class="bi bi-printer"></i></button>
-          <button type="button" title="Modifier" data-edit="${quote.id}"><i class="bi bi-pencil"></i></button>
+          <button type="button" title="Modifier" data-edit="${quote.id}" ${converted ? 'disabled style="opacity:.4;"' : ''}><i class="bi bi-pencil"></i></button>
           <button type="button" title="Supprimer" class="is-danger" data-del="${quote.id}"><i class="bi bi-trash"></i></button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function renderPagination() {
@@ -379,6 +412,34 @@ function renderSearchClear() {
     if (!input) return;
     if (document.activeElement !== input) input.value = active;
   });
+}
+
+/* ============ QUOTA DEVIS ============ */
+function renderQuoteQuota() {
+  const badge = document.getElementById('quoteQuotaBadge');
+  const banner = document.getElementById('quoteQuotaBanner');
+  const usage = quoteState.usage;
+  if (!usage || !badge || !banner) return;
+
+  const limit = usage.quote_limit || 0;
+  const count = usage.quote_count || 0;
+
+  if (limit >= 999999) {
+    badge.style.display = 'none';
+    banner.style.display = 'none';
+    return;
+  }
+
+  const remaining = Math.max(0, limit - count);
+  badge.style.display = 'inline-flex';
+  badge.className = 'badge-soft ' + (remaining === 0 ? 'badge-soft-danger' : remaining <= Math.ceil(limit * 0.2) ? 'badge-soft-warning' : 'badge-soft-secondary');
+  badge.innerHTML = `<i class="bi bi-file-text"></i> ${count}/${limit} devis ce mois`;
+
+  const pct = limit > 0 ? (count / limit) * 100 : 0;
+  banner.style.display = remaining === 0 || pct >= 80 ? 'flex' : 'none';
+  banner.innerHTML = remaining === 0
+    ? `<i class="bi bi-exclamation-triangle-fill"></i> <span>Quota mensuel atteint (${limit} devis). Passez au plan Business pour continuer.</span> <a href="choix-abonnement.html">Passer au plan Business →</a>`
+    : `<i class="bi bi-info-circle-fill"></i> <span>Quota de devis bientôt atteint : ${count}/${limit} devis ce mois.</span> <a href="choix-abonnement.html">Voir les offres →</a>`;
 }
 
 function renderStats() {
@@ -443,7 +504,11 @@ function renderQuoteItems() {
         <label class="form-label">Produit</label>
         <select class="form-select form-select-sm quote-item-product" data-index="${index}">
           <option value="">--</option>
-          ${quoteState.products.map(p => `<option value="${p.id}" ${item.product_id == p.id ? 'selected' : ''}>${esc(p.name)} (${esc(p.sku)})</option>`).join('')}
+          ${quoteState.products.map(p => {
+            const stock = quoteAvailableForProduct(p.id);
+            const label = stock != null ? ` — Stock : ${stock}` : '';
+            return `<option value="${p.id}" ${item.product_id == p.id ? 'selected' : ''}>${esc(p.name)}${label}</option>`;
+          }).join('')}
         </select>
       </div>
       <div class="col-md-3">
@@ -473,12 +538,21 @@ function renderQuoteItems() {
   `).join('');
 }
 
+/* Met à jour quoteState.quoteItems DEPUIS les inputs du formulaire.
+   C'est la fonction qui rend le state cohérent avec ce que l'utilisateur a saisi.
+   Elle doit être appelée à chaque saisie ET juste avant l'envoi (submitQuote). */
 function recalcQuoteItemTotals() {
   quoteState.quoteItems.forEach((item, index) => {
     const qty = parseFloat(document.querySelector(`.quote-item-qty[data-index="${index}"]`)?.value || 0);
     const price = parseFloat(document.querySelector(`.quote-item-price[data-index="${index}"]`)?.value || 0);
+    const vat = parseFloat(document.querySelector(`.quote-item-vat[data-index="${index}"]`)?.value || 0);
+    const desc = document.querySelector(`.quote-item-desc[data-index="${index}"]`)?.value || '';
+    const product = document.querySelector(`.quote-item-product[data-index="${index}"]`)?.value || '';
     item.quantity = qty;
     item.unit_price = price;
+    item.vat_rate = vat;
+    item.description = desc;
+    item.product_id = product ? Number(product) : null;
     const total = qty * price;
     const totalInput = document.querySelector(`.quote-item-total[data-index="${index}"]`);
     if (totalInput) totalInput.value = formatCurrency(total);
@@ -500,6 +574,8 @@ function setQuoteTemplateUI(template) {
 function openNewQuote(event) {
   if (event) event.preventDefault();
   quoteState.editingId = null;
+  quoteState.editingItems = [];
+  quoteState.editingReservesStock = false;
   document.getElementById('quoteModalTitle').textContent = 'Nouveau devis';
   document.getElementById('quoteId').value = '';
   document.getElementById('quoteForm').reset();
@@ -516,6 +592,8 @@ function openEditQuote(quoteId) {
     .then(data => {
       const quote = data.quote;
       quoteState.editingId = quote.id;
+      quoteState.editingItems = (quote.items || []).map(i => ({ product_id: i.product_id, quantity: Number(i.quantity) || 0 }));
+      quoteState.editingReservesStock = Number(quote.stock_reserved || 0) === 1;
       document.getElementById('quoteModalTitle').textContent = 'Modifier devis ' + quote.ref;
       document.getElementById('quoteId').value = quote.id;
       document.getElementById('quoteClient').value = quote.client_id || '';
@@ -546,6 +624,9 @@ async function submitQuote(event) {
   const clientSelect = document.getElementById('quoteClient');
   const clientId = clientSelect.value ? parseInt(clientSelect.value, 10) : 0;
 
+  // Synchronise le state avec les inputs AVANT l'envoi (corrige le bug « 0 0 0 »)
+  recalcQuoteItemTotals();
+
   const payload = {
     id: quoteState.editingId,
     client_id: clientId,
@@ -574,6 +655,24 @@ async function submitQuote(event) {
     toast(error.message, 'error');
   } finally {
     saveBtn.disabled = false;
+  }
+}
+
+async function convertQuote(quoteId) {
+  const quote = quoteState.quotes.find(q => String(q.id) === String(quoteId));
+  const ok = await uiConfirm({
+    title: 'Convertir en facture ?',
+    text: 'Le devis ' + (quote ? quote.ref : '') + ' sera converti en facture émise (en attente). Le stock réservé sera transféré à la facture.',
+    confirmText: 'Convertir',
+    icon: 'bi-arrow-repeat',
+  });
+  if (!ok) return;
+  try {
+    const data = await api('convert', { method: 'POST', body: JSON.stringify({ id: quoteId }) });
+    toast(data.message || 'Devis converti', 'success');
+    await refreshQuotes();
+  } catch (error) {
+    toast(error.message, 'error');
   }
 }
 
@@ -620,10 +719,12 @@ function attachEvents() {
   }
 
   document.getElementById('quotesTableBody').addEventListener('click', event => {
+    const convertBtn = event.target.closest('[data-convert]');
     const printBtn = event.target.closest('[data-print]');
     const editBtn = event.target.closest('[data-edit]');
     const delBtn = event.target.closest('[data-del]');
-    if (printBtn) printQuote(printBtn.getAttribute('data-print'));
+    if (convertBtn) convertQuote(convertBtn.getAttribute('data-convert'));
+    else if (printBtn) printQuote(printBtn.getAttribute('data-print'));
     else if (editBtn) openEditQuote(editBtn.getAttribute('data-edit'));
     else if (delBtn) deleteQuote(delBtn.getAttribute('data-del'));
   });
@@ -707,13 +808,11 @@ function attachEvents() {
 
   document.getElementById('quoteItemsContainer').addEventListener('input', event => {
     const target = event.target;
-    if (!target.classList.contains('quote-item-qty') && !target.classList.contains('quote-item-price') && !target.classList.contains('quote-item-vat')) return;
-    const index = target.getAttribute('data-index');
-    const qty = parseFloat(document.querySelector(`.quote-item-qty[data-index="${index}"]`)?.value || 0);
-    const price = parseFloat(document.querySelector(`.quote-item-price[data-index="${index}"]`)?.value || 0);
-    const total = qty * price;
-    const totalInput = document.querySelector(`.quote-item-total[data-index="${index}"]`);
-    if (totalInput) totalInput.value = formatCurrency(total);
+    if (!target.classList.contains('quote-item-qty') && !target.classList.contains('quote-item-price') &&
+        !target.classList.contains('quote-item-vat') && !target.classList.contains('quote-item-desc') &&
+        !target.classList.contains('quote-item-product')) return;
+    // Met à jour le state depuis les inputs (corrige le bug « 0 0 0 »)
+    recalcQuoteItemTotals();
   });
 
   document.getElementById('quoteItemsContainer').addEventListener('change', event => {
@@ -725,8 +824,11 @@ function attachEvents() {
       if (product) {
         const priceInput = document.querySelector(`.quote-item-price[data-index="${index}"]`);
         if (priceInput) priceInput.value = product.unit_price || 0;
-        const qtyInput = document.querySelector(`.quote-item-qty[data-index="${index}"]`);
-        if (qtyInput) qtyInput.dispatchEvent(new Event('input'));
+        // Remplit la description avec le nom du produit si la ligne est vide
+        const descInput = document.querySelector(`.quote-item-desc[data-index="${index}"]`);
+        if (descInput && !descInput.value.trim()) descInput.value = product.name || '';
+        // Recalcule le state et les totaux
+        recalcQuoteItemTotals();
       }
     }
   });

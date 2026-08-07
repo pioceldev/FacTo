@@ -2,6 +2,7 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/plan.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -17,6 +18,9 @@ function readBody()
 $action = $_GET['action'] ?? 'list';
 
 $userId = $_SESSION['user_id'] ?? null;
+if ($userId) {
+    $userId = planUserId($pdo, (int) $userId);
+}
 if (!$userId) {
     http_response_code(401);
     echo json_encode(['error' => 'Non autorise']);

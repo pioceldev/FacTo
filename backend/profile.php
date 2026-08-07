@@ -71,8 +71,80 @@ if ($action === 'save_currency') {
         exit;
     }
 
+    // Taux de référence (fixes) pour la conversion automatique des montants
+    // 1 EUR = 1.08 USD (≈ taux moyen) et 1 EUR = 655.957 XOF (taux fixe FCFA)
+    $RATES = ['EUR' => 1.0, 'USD' => 1.08, 'XOF' => 655.957];
+
+    $stmt = $pdo->prepare('SELECT currency FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $oldCurrency = strtoupper((string) $stmt->fetchColumn());
+    if (!isset($RATES[$oldCurrency])) { $oldCurrency = 'EUR'; }
+
+    if ($oldCurrency !== $currency) {
+        $factor = $RATES[$currency] / $RATES[$oldCurrency];
+
+        // Conversion de TOUS les montants de l'utilisateur (transaction pour la cohérence)
+        $pdo->beginTransaction();
+        try {
+            // Produits
+            $pdo->prepare('UPDATE products SET unit_price = ROUND(unit_price * ?, 2), updated_at = NOW() WHERE user_id = ?')->execute([$factor, $userId]);
+            // Dépenses
+            $pdo->prepare('UPDATE expenses SET amount = ROUND(amount * ?, 2) WHERE user_id = ?')->execute([$factor, $userId]);
+            // Paiements reçus
+            $pdo->prepare('UPDATE payments SET amount = ROUND(amount * ?, 2) WHERE user_id = ?')->execute([$factor, $userId]);
+            // Lignes de factures : d'abord le prix, PUIS le total recalculé
+            // (quantité × prix) — en deux requêtes car MySQL évalue le SET de
+            // gauche à droite (une seule requête appliquerait le facteur deux fois)
+            $pdo->prepare('UPDATE invoice_items ii JOIN invoices i ON i.id = ii.invoice_id
+                           SET ii.unit_price = ROUND(ii.unit_price * ?, 2)
+                           WHERE i.user_id = ?')
+                ->execute([$factor, $userId]);
+            $pdo->prepare('UPDATE invoice_items ii JOIN invoices i ON i.id = ii.invoice_id
+                           SET ii.line_total = ROUND(ii.quantity * ii.unit_price, 2)
+                           WHERE i.user_id = ?')
+                ->execute([$userId]);
+            // Factures : montants convertis puis total RECALCULÉ = HT + TVA − remise
+            // (évite des totaux incohérents dus aux arrondis indépendants)
+            $pdo->prepare('UPDATE invoices SET amount = ROUND(amount * ?, 2), vat = ROUND(vat * ?, 2),
+                           discount = ROUND(discount * ?, 2), updated_at = NOW() WHERE user_id = ?')
+                ->execute([$factor, $factor, $factor, $userId]);
+            $pdo->prepare('UPDATE invoices SET total = ROUND(amount + vat - discount, 2), updated_at = NOW() WHERE user_id = ?')
+                ->execute([$userId]);
+            // Lignes de devis : même logique en deux étapes
+            $pdo->prepare('UPDATE quote_items qi JOIN quotes q ON q.id = qi.quote_id
+                           SET qi.unit_price = ROUND(qi.unit_price * ?, 2)
+                           WHERE q.user_id = ?')
+                ->execute([$factor, $userId]);
+            $pdo->prepare('UPDATE quote_items qi JOIN quotes q ON q.id = qi.quote_id
+                           SET qi.line_total = ROUND(qi.quantity * qi.unit_price, 2)
+                           WHERE q.user_id = ?')
+                ->execute([$userId]);
+            // Devis : montants convertis puis total RECALCULÉ = HT + TVA
+            $pdo->prepare('UPDATE quotes SET amount = ROUND(amount * ?, 2), vat = ROUND(vat * ?, 2), updated_at = NOW() WHERE user_id = ?')
+                ->execute([$factor, $factor, $userId]);
+            $pdo->prepare('UPDATE quotes SET total = ROUND(amount + vat, 2), updated_at = NOW() WHERE user_id = ?')
+                ->execute([$userId]);
+
+            $pdo->prepare('UPDATE users SET currency = ?, updated_at = NOW() WHERE id = ?')->execute([$currency, $userId]);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors de la conversion de la devise']);
+            exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Devise changée : ' . $oldCurrency . ' → ' . $currency . ' (tous les montants ont été convertis automatiquement)',
+            'currency' => $currency,
+            'converted' => true,
+        ]);
+        exit;
+    }
+
     $pdo->prepare('UPDATE users SET currency = ?, updated_at = NOW() WHERE id = ?')->execute([$currency, $userId]);
-    echo json_encode(['success' => true, 'message' => 'Devise enregistrée : ' . $currency, 'currency' => $currency]);
+    echo json_encode(['success' => true, 'message' => 'Devise enregistrée : ' . $currency, 'currency' => $currency, 'converted' => false]);
     exit;
 }
 

@@ -126,6 +126,131 @@
       </div>
     </div>
 
+    <!-- Statistiques globales -->
+    <section class="admin__stats-section" style="margin-bottom:16px;">
+      <header class="admin__stats-hero">
+        <div class="admin__stats-hero__left">
+          <div class="admin__stats-hero__icon"><i class="bi bi-bar-chart-line"></i></div>
+          <div>
+            <h2 class="admin__stats-hero__title">Statistiques globales</h2>
+            <p class="admin__stats-hero__subtitle">Vue d'ensemble de tous les modules de la plateforme</p>
+          </div>
+        </div>
+        <div class="admin__stats-hero__right">
+          <span class="admin__stats-hero__hint"><i class="bi bi-info-circle"></i> Montants en devises mixtes (€/$/FCFA)</span>
+          <span class="admin__stats-hero__badge" id="statsUpdatedAt"><i class="bi bi-clock-history"></i> Chargement…</span>
+        </div>
+      </header>
+      <div class="admin__stats-hero__line"></div>
+
+      <!-- Compteurs par module -->
+      <div class="admin__module-stats" id="moduleStats">
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+        <div class="skeleton skeleton-card" style="height:88px;"></div>
+      </div>
+
+      <!-- Graphiques répartitions -->
+      <div class="admin__stats-grid">
+        <div class="admin__sub-card admin__sub-card--wide">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-graph-up-arrow"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Revenus & utilisateurs</div>
+              <div class="admin__sub-card-sub">Évolution sur 12 mois</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:280px;"><canvas id="adminSeriesChart"></canvas></div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-crown"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Abonnements</div>
+              <div class="admin__sub-card-sub">Répartition des plans</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:240px;"><canvas id="adminPlansChart"></canvas></div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-receipt"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Statut des factures</div>
+              <div class="admin__sub-card-sub">Répartition par état</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:240px;"><canvas id="adminInvoiceStatusChart"></canvas></div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-wallet2"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Dépenses par catégorie</div>
+              <div class="admin__sub-card-sub">Montants totaux</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:240px;"><canvas id="adminExpensesChart"></canvas></div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-credit-card"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Méthodes de paiement</div>
+              <div class="admin__sub-card-sub">Répartition des transactions</div>
+            </div>
+          </div>
+          <div class="chart-container" style="height:240px;"><canvas id="adminPaymentsChart"></canvas></div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-exclamation-triangle"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Alertes stock bas</div>
+              <div class="admin__sub-card-sub">Produits sous le seuil</div>
+            </div>
+          </div>
+          <div id="lowStockList">
+            <div class="skeleton skeleton-text" style="height:36px; margin:8px 0;"></div>
+            <div class="skeleton skeleton-text" style="height:36px; margin:8px 0;"></div>
+          </div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-trophy"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Top 5 clients</div>
+              <div class="admin__sub-card-sub">Chiffre d'affaires payé</div>
+            </div>
+          </div>
+          <div id="topClientsList">
+            <div class="skeleton skeleton-text" style="height:36px; margin:8px 0;"></div>
+          </div>
+        </div>
+        <div class="admin__sub-card">
+          <div class="admin__sub-card-head">
+            <span class="admin__sub-card-icon"><i class="bi bi-box-seam"></i></span>
+            <div>
+              <div class="admin__sub-card-title">Top 5 produits</div>
+              <div class="admin__sub-card-sub">Quantités vendues</div>
+            </div>
+          </div>
+          <div id="topProductsList">
+            <div class="skeleton skeleton-text" style="height:36px; margin:8px 0;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Companies Table -->
     <div class="admin__card" style="margin-bottom:16px;">
       <div class="admin__card-header">
@@ -198,6 +323,8 @@
 
   let adminChart = null;
   let chartData = { mrr: [], users: [] };
+  // Registre des graphiques de la section « Statistiques globales »
+  const globalCharts = { series: null, plans: null, invoiceStatus: null, expenses: null, payments: null };
   let allCompanies = [];
   let companyPage = 0;
   const PAGE_SIZE = 10;
@@ -289,6 +416,225 @@
         }
       }
     });
+  }
+
+  /* ===== Statistiques globales ===== */
+  const MODULE_META = [
+    { key: 'users', label: 'Utilisateurs', icon: 'bi-people', color: '#6366f1' },
+    { key: 'clients', label: 'Clients', icon: 'bi-building', color: '#0ea5e9' },
+    { key: 'products', label: 'Produits', icon: 'bi-box-seam', color: '#f97316' },
+    { key: 'suppliers', label: 'Fournisseurs', icon: 'bi-truck', color: '#14b8a6' },
+    { key: 'stock', label: 'Références en stock', icon: 'bi-layers', color: '#8b5cf6' },
+    { key: 'invoices', label: 'Factures', icon: 'bi-receipt', color: '#ef4444' },
+    { key: 'quotes', label: 'Devis', icon: 'bi-file-text', color: '#f59e0b' },
+    { key: 'payments', label: 'Paiements', icon: 'bi-credit-card', color: '#10b981' },
+    { key: 'expenses', label: 'Dépenses', icon: 'bi-wallet2', color: '#f43f5e' },
+    { key: 'subscriptions', label: 'Abonnements', icon: 'bi-crown', color: '#f97316' },
+    { key: 'tickets', label: 'Tickets support', icon: 'bi-headset', color: '#0ea5e9' },
+    { key: 'referrals', label: 'Parrainages', icon: 'bi-gift', color: '#8b5cf6' }
+  ];
+
+  async function loadGlobalStats() {
+    try {
+      const data = await fetchJSON('backend/admin.php?action=stats');
+      const s = data.stats;
+      if (!s) throw new Error('Réponse stats vide');
+      renderModuleCards(s);
+      renderSeriesChart(s.series || []);
+      renderPlansChart(s.plans || []);
+      renderInvoiceStatusChart(s.invoice_status || []);
+      renderExpensesChart(s.expenses_by_cat || []);
+      renderPaymentsChart(s.payment_method || []);
+      renderLowStock(s.low_stock || []);
+      renderTopLists(s.top_clients || [], s.top_products || []);
+      $('statsUpdatedAt').innerHTML = '<i class="bi bi-clock-history"></i> Actualisé à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      $('moduleStats').innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:var(--gray-500);">Statistiques indisponibles : ' + e.message + '</div>';
+    }
+  }
+
+  function renderModuleCards(s) {
+    const c = s.counts || {};
+    const a = s.amounts || {};
+    // Répartition des statuts de devis pour enrichir la carte « Devis »
+    const qs = (s.quote_status || []).reduce((acc, x) => { acc[x.label] = x.value; return acc; }, {});
+    const cards = MODULE_META.map(m => {
+      let value = fmtInt(c[m.key] ?? 0);
+      let sub = '';
+      if (m.key === 'stock') { value = fmtInt(c.stock_units ?? 0) + ' u.'; sub = fmtInt(c.low_stock ?? 0) + ' en alerte · ' + fmtEUR(a.stock_value ?? 0) + ' de stock'; }
+      if (m.key === 'invoices') sub = fmtEUR(a.revenue_total ?? 0) + ' encaissés · ' + fmtEUR(a.revenue_pending ?? 0) + ' en attente';
+      if (m.key === 'payments') sub = fmtEUR(a.payments_total ?? 0) + ' encaissés';
+      if (m.key === 'expenses') sub = fmtEUR(a.expenses_total ?? 0) + ' au total';
+      if (m.key === 'subscriptions') sub = fmtXOF(a.mrr_total ?? 0) + ' MRR';
+      if (m.key === 'tickets') sub = fmtInt(c.tickets_open ?? 0) + ' ouverts';
+      if (m.key === 'quotes') {
+        const parts = [];
+        if (qs['Accepté']) parts.push(fmtInt(qs['Accepté']) + ' acceptés');
+        if (qs['Envoyé']) parts.push(fmtInt(qs['Envoyé']) + ' envoyés');
+        sub = parts.join(' · ');
+      }
+      return `
+        <div class="admin__module-stat" style="--mc:${m.color};">
+          <span class="admin__module-stat__accent"></span>
+          <div class="admin__module-stat__icon"><i class="bi ${m.icon}"></i></div>
+          <div class="admin__module-stat__body">
+            <div class="admin__module-stat__value">${value}</div>
+            <div class="admin__module-stat__label">${m.label}</div>
+            ${sub ? `<div class="admin__module-stat__sub">${sub}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    $('moduleStats').innerHTML = cards;
+  }
+
+  function renderSeriesChart(series) {
+    const ctx = $('adminSeriesChart');
+    if (!ctx) return;
+    if (globalCharts.series) globalCharts.series.destroy();
+    const labels = series.map(d => d.month);
+    globalCharts.series = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Revenus (€)', data: series.map(d => Number(d.revenue)), backgroundColor: 'rgba(249,115,22,0.75)', borderRadius: 6 },
+          { label: 'Utilisateurs', data: series.map(d => Number(d.users)), backgroundColor: 'rgba(99,102,241,0.75)', borderRadius: 6 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: v => fmtInt(v) } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  /* Affiche un message à la place du graphique sans détruire le canvas */
+  function showEmptyChart(ctxId, key, message) {
+    const ctx = $(ctxId);
+    if (!ctx) return;
+    ctx.style.display = 'none';
+    const parent = ctx.parentElement;
+    let overlay = parent.querySelector('.chart-empty-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'chart-empty-overlay';
+      parent.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    overlay.textContent = message;
+  }
+
+  function renderDoughnut(key, ctxId, labels, values, palette) {
+    const ctx = $(ctxId);
+    if (!ctx) return;
+    if (globalCharts[key]) globalCharts[key].destroy();
+    if (!labels.length) {
+      showEmptyChart(ctxId, key, 'Aucune donnée');
+      return;
+    }
+    ctx.style.display = '';
+    const overlay = ctx.parentElement.querySelector('.chart-empty-overlay');
+    if (overlay) overlay.style.display = 'none';
+    globalCharts[key] = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: palette.slice(0, labels.length), borderWidth: 2, borderColor: '#fff' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  const PALETTE = ['#f97316', '#6366f1', '#10b981', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#ec4899', '#f43f5e'];
+
+  function renderPlansChart(plans) {
+    renderDoughnut('plans', 'adminPlansChart', plans.map(p => p.label), plans.map(p => p.value), PALETTE);
+  }
+  function renderInvoiceStatusChart(status) {
+    renderDoughnut('invoiceStatus', 'adminInvoiceStatusChart', status.map(p => p.label), status.map(p => p.value), PALETTE);
+  }
+  function renderPaymentsChart(methods) {
+    renderDoughnut('payments', 'adminPaymentsChart', methods.map(p => p.label), methods.map(p => p.value), PALETTE);
+  }
+
+  function renderExpensesChart(cats) {
+    const ctx = $('adminExpensesChart');
+    if (!ctx) return;
+    if (globalCharts.expenses) globalCharts.expenses.destroy();
+    if (!cats.length) {
+      showEmptyChart('adminExpensesChart', 'expenses', 'Aucune dépense');
+      return;
+    }
+    ctx.style.display = '';
+    const overlay = ctx.parentElement.querySelector('.chart-empty-overlay');
+    if (overlay) overlay.style.display = 'none';
+    globalCharts.expenses = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: cats.map(c => c.label),
+        datasets: [{ label: 'Montant (€)', data: cats.map(c => Number(c.value)), backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 6 }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { callback: v => fmtEUR(v) } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function renderLowStock(items) {
+    const el = $('lowStockList');
+    if (!el) return;
+    if (!items.length) {
+      el.innerHTML = '<div style="color:var(--gray-400);font-size:.85rem;text-align:center;padding:20px;"><i class="bi bi-check-circle" style="color:var(--success);"></i> Aucun produit en alerte de stock</div>';
+      return;
+    }
+    el.innerHTML = items.map(i => {
+      const pct = i.reorder > 0 ? Math.min(100, Math.round((i.value / i.reorder) * 100)) : 100;
+      return `
+        <div class="admin__lowstock">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="admin__lowstock-name">${esc(i.label)}</span>
+            <span class="admin__lowstock-qty">${fmtInt(i.value)} / seuil ${fmtInt(i.reorder)}</span>
+          </div>
+          <div class="admin__lowstock-bar"><div style="width:${Math.max(6, pct)}%;"></div></div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderTopLists(clients, products) {
+    const cEl = $('topClientsList');
+    const pEl = $('topProductsList');
+    if (!cEl || !pEl) return;
+    cEl.innerHTML = clients.length ? clients.map((c, i) => `
+      <div class="admin__rank">
+        <span class="admin__rank-num">${i + 1}</span>
+        <span class="admin__rank-name">${esc(c.label)}</span>
+        <span class="admin__rank-value">${fmtEUR(c.value)}</span>
+      </div>`).join('') : '<div style="color:var(--gray-400);font-size:.85rem;text-align:center;padding:20px;">Aucun encaissement</div>';
+    pEl.innerHTML = products.length ? products.map((p, i) => `
+      <div class="admin__rank">
+        <span class="admin__rank-num">${i + 1}</span>
+        <span class="admin__rank-name">${esc(p.label)}</span>
+        <span class="admin__rank-value">${fmtInt(p.value)} vendus</span>
+      </div>`).join('') : '<div style="color:var(--gray-400);font-size:.85rem;text-align:center;padding:20px;">Aucune vente</div>';
+  }
+
+  /* Échappement HTML pour toutes les données injectées (anti-XSS) */
+  function esc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   function planBadge(plan) {
@@ -458,8 +804,8 @@
   }
 
   function bindEvents() {
-    $('btnRefresh').addEventListener('click', () => { loadOverview(); loadChart(); loadCompanies(); loadLogs(); toast('Données actualisées', 'success'); });
-    $('btnRefresh2').addEventListener('click', () => { loadOverview(); loadChart(); loadCompanies(); loadLogs(); toast('Données actualisées', 'success'); });
+    $('btnRefresh').addEventListener('click', () => { loadOverview(); loadChart(); loadGlobalStats(); loadCompanies(); loadLogs(); toast('Données actualisées', 'success'); });
+    $('btnRefresh2').addEventListener('click', () => { loadOverview(); loadChart(); loadGlobalStats(); loadCompanies(); loadLogs(); toast('Données actualisées', 'success'); });
     $('btnExportCsv').addEventListener('click', exportCSV);
     $('toggleMrr').addEventListener('click', () => { $('toggleMrr').classList.add('active'); $('toggleUsers').classList.remove('active'); renderChart('mrr'); });
     $('toggleUsers').addEventListener('click', () => { $('toggleUsers').classList.add('active'); $('toggleMrr').classList.remove('active'); renderChart('users'); });
@@ -479,6 +825,7 @@
     bindEvents();
     loadOverview();
     loadChart();
+    loadGlobalStats();
     loadCompanies();
     loadLogs();
   });

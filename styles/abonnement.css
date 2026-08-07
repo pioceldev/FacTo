@@ -96,6 +96,35 @@
   color: var(--gray-700);
 }
 
+.plan-current__quota {
+  margin-bottom: 12px;
+}
+
+.plan-current__quota-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+}
+
+.plan-current__quota-label {
+  color: var(--gray-600);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plan-current__quota-label i {
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.plan-current__quota-value {
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
 /* Action cards */
 .action-card {
   background: #fff;

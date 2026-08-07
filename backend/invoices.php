@@ -2,6 +2,7 @@
 require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
 require __DIR__ . '/csrf.php';
+require __DIR__ . '/plan.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -12,13 +13,24 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $pdo = getPDO();
-$userId = $_SESSION['user_id'];
+$userId = planUserId($pdo, (int) $_SESSION['user_id']);
 
 // Ensure discount column exists (best-effort, MySQL 5.7 compatible)
 try {
     $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'invoices' AND COLUMN_NAME = 'discount'");
     if (!(int) $stmt->fetchColumn()) {
         $pdo->exec('ALTER TABLE invoices ADD COLUMN discount DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER vat');
+    }
+} catch (Exception $e) {
+    // ignore
+}
+
+// Ensure stock_deducted column exists : indique si la facture a déduit le stock
+// (brouillons et annulées : 0 — factures émises/payées : 1)
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'invoices' AND COLUMN_NAME = 'stock_deducted'");
+    if (!(int) $stmt->fetchColumn()) {
+        $pdo->exec("ALTER TABLE invoices ADD COLUMN stock_deducted TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
     }
 } catch (Exception $e) {
     // ignore
@@ -31,38 +43,67 @@ function respond($data, int $code = 200)
     exit;
 }
 
-function invoiceQuota($planName)
+/* ============================================================
+   GESTION DU STOCK LIÉ AUX FACTURES
+   Le stock physique (table stock.quantity) EST la source de vérité :
+   - il est diminué quand une facture est émise (statut différent de
+     brouillon/annulée) ;
+   - il est remis automatiquement si la facture est modifiée, annulée
+     ou supprimée ;
+   - la quantité facturée ne peut jamais dépasser le stock restant.
+   Toute validation + déduction se fait DANS la même transaction.
+   ============================================================ */
+
+// Stock restant (physique) d'un produit
+function availableStock(PDO $pdo, int $userId, int $productId): float
 {
-    $name = strtolower(trim((string) $planName));
-    if ($name === 'free') return 10;
-    if ($name === 'standard') return 100;
-    return 999999; // Premium : illimité
+    $stmt = $pdo->prepare('SELECT COALESCE(quantity, 0) FROM stock WHERE product_id = ? AND user_id = ?');
+    $stmt->execute([$productId, $userId]);
+    return (float) $stmt->fetchColumn();
 }
 
-function getPlanName(PDO $pdo, int $userId)
+// Vérifie qu'aucune ligne ne dépasse le stock restant. Retourne null si OK,
+// sinon ['error' => message].
+function validateStockLines(PDO $pdo, int $userId, array $lines): ?array
 {
-    $stmt = $pdo->prepare('SELECT plan_name FROM subscriptions WHERE user_id = ? AND status = "active" ORDER BY renews_at DESC, id DESC LIMIT 1');
-    $stmt->execute([$userId]);
-    return $stmt->fetchColumn() ?: 'Free';
+    foreach ($lines as $line) {
+        $pid = (int) ($line['product_id'] ?? 0);
+        $qty = (float) ($line['quantity'] ?? 0);
+        if ($pid <= 0 || $qty <= 0) continue;
+
+        $available = availableStock($pdo, $userId, $pid);
+        if ($qty > $available + 0.0001) {
+            $name = '';
+            $stmt = $pdo->prepare('SELECT name FROM products WHERE id = ? AND user_id = ?');
+            $stmt->execute([$pid, $userId]);
+            $name = (string) $stmt->fetchColumn();
+            return [
+                'error' => 'Stock insuffisant pour "' . ($name ?: 'produit #' . $pid) . '" : ' .
+                           rtrim(rtrim(number_format($qty, 2, ',', ' '), '0'), ',') . ' demandé(s), ' .
+                           rtrim(rtrim(number_format($available, 2, ',', ' '), '0'), ',') . ' restant(s).',
+                'product' => $name,
+            ];
+        }
+    }
+    return null;
 }
 
-function getMonthlyInvoiceCount(PDO $pdo, int $userId)
+// Ajuste le stock physique : $sign = -1 pour déduire, +1 pour remettre.
+function adjustStock(PDO $pdo, int $userId, array $lines, float $sign): void
 {
-    // Les brouillons et les factures annulées ne comptent pas dans le quota.
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM invoices WHERE user_id = ? AND created_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01") AND status NOT IN ("brouillon", "annulee")');
-    $stmt->execute([$userId]);
-    return (int) $stmt->fetchColumn();
+    foreach ($lines as $line) {
+        $pid = (int) ($line['product_id'] ?? 0);
+        $qty = (float) ($line['quantity'] ?? 0);
+        if ($pid <= 0 || $qty <= 0) continue;
+        $stmt = $pdo->prepare('UPDATE stock SET quantity = GREATEST(0, quantity + ?), updated_at = NOW() WHERE product_id = ? AND user_id = ?');
+        $stmt->execute([$sign * $qty, $pid, $userId]);
+    }
 }
 
 function usageInfo(PDO $pdo, int $userId)
 {
-    $plan = getPlanName($pdo, $userId);
-    $count = getMonthlyInvoiceCount($pdo, $userId);
-    return [
-        'plan' => $plan,
-        'invoice_count_month' => $count,
-        'invoice_limit' => invoiceQuota($plan),
-    ];
+    // Quotas centralisés dans plan.php (Free : 3 factures/mois, 3 devis/mois, 10 produits)
+    return planUsage($pdo, $userId);
 }
 
 function getInvoiceStats(PDO $pdo, int $userId)
@@ -325,7 +366,13 @@ if ($action === 'clients') {
 if ($action === 'products') {
     $stmt = $pdo->prepare('SELECT id, name, sku, unit_price, vat_rate FROM products WHERE user_id = ? AND is_active = 1 ORDER BY name');
     $stmt->execute([$userId]);
-    respond(['products' => $stmt->fetchAll()]);
+    $products = $stmt->fetchAll();
+    // Stock disponible pour chaque produit (pour le formulaire de facture)
+    foreach ($products as &$p) {
+        $p['stock_quantity'] = availableStock($pdo, $userId, (int) $p['id']);
+    }
+    unset($p);
+    respond(['products' => $products]);
 }
 
 // ============================================================
@@ -361,9 +408,9 @@ if ($action === 'create') {
     }
 
     $usage = usageInfo($pdo, $userId);
-    if ($usage['invoice_limit'] < 999999 && $usage['invoice_count_month'] >= $usage['invoice_limit']) {
+    if ($usage['invoice_limit'] < 999999 && $usage['invoice_count'] >= $usage['invoice_limit']) {
         respond([
-            'error' => 'Quota de factures mensuel atteint (' . $usage['invoice_limit'] . '). Passez à un plan supérieur pour continuer.',
+            'error' => 'Quota de factures mensuel atteint (' . $usage['invoice_limit'] . '). Passez au plan Business pour continuer.',
             'usage' => $usage,
         ], 403);
     }
@@ -378,6 +425,14 @@ if ($action === 'create') {
 
     $pdo->beginTransaction();
     try {
+        // La quantité facturée ne peut pas dépasser le stock restant
+        // (validation atomique avec la déduction, dans la transaction)
+        $stockErr = validateStockLines($pdo, $userId, $parsed['lines']);
+        if ($stockErr) {
+            $pdo->rollBack();
+            respond(['error' => $stockErr['error']], 409);
+        }
+
         $ref = nextInvoiceRef($pdo, $userId);
         $issuedAt = in_array($status, ['en_attente', 'payee'], true) ? date('Y-m-d H:i:s') : null;
         $paidAt = $status === 'payee' ? date('Y-m-d H:i:s') : null;
@@ -403,6 +458,12 @@ if ($action === 'create') {
         $invoiceId = (int) $pdo->lastInsertId();
 
         insertItems($pdo, $invoiceId, $parsed['lines']);
+
+        // Déduction automatique du stock dès que la facture est émise (non brouillon)
+        if ($status !== 'brouillon' && $status !== 'annulee') {
+            adjustStock($pdo, $userId, $parsed['lines'], -1);
+            $pdo->prepare('UPDATE invoices SET stock_deducted = 1 WHERE id = ?')->execute([$invoiceId]);
+        }
 
         if ($status === 'payee' && $paymentMethod !== '') {
             recordPayment($pdo, $userId, $invoiceId, $parsed['total'], $paymentMethod);
@@ -443,12 +504,12 @@ if ($action === 'update') {
     // Quota vérifié aussi en édition : si le quota est atteint, on n'autorise que
     // la modification d'une facture de ce mois qui compte déjà dans le quota.
     $usage = usageInfo($pdo, $userId);
-    if ($usage['invoice_limit'] < 999999 && $usage['invoice_count_month'] >= $usage['invoice_limit']) {
+    if ($usage['invoice_limit'] < 999999 && $usage['invoice_count'] >= $usage['invoice_limit']) {
         $createdThisMonth = (strtotime((string) $current['created_at']) ?: 0) >= strtotime(date('Y-m-01'));
         $countsTowardQuota = $createdThisMonth && !in_array($current['status'], ['brouillon', 'annulee'], true);
         if (!$countsTowardQuota) {
             respond([
-                'error' => 'Quota de factures mensuel atteint (' . $usage['invoice_limit'] . '). Passez à un plan supérieur pour continuer.',
+                'error' => 'Quota de factures mensuel atteint (' . $usage['invoice_limit'] . '). Passez au plan Business pour continuer.',
                 'usage' => $usage,
             ], 403);
         }
@@ -469,6 +530,8 @@ if ($action === 'update') {
         respond(['error' => $parsed['error']], 422);
     }
 
+    $wasDeducted = (int) ($current['stock_deducted'] ?? 0) === 1;
+
     $status = normalizeStatus($body['status'] ?? $current['status']);
     $paymentMethod = trim((string) ($body['payment_method'] ?? ''));
 
@@ -488,6 +551,22 @@ if ($action === 'update') {
 
     $pdo->beginTransaction();
     try {
+        // Remise de l'ancien stock uniquement si on remplace les lignes OU si la
+        // facture repasse en brouillon/annulée (sinon rien ne change au stock).
+        if ($wasDeducted && ($parsed !== null || $status === 'brouillon' || $status === 'annulee')) {
+            adjustStock($pdo, $userId, $current['items'], 1);
+        }
+
+        // Validation après remise de l'ancien stock : les nouvelles quantités ne
+        // peuvent pas dépasser le stock restant (atomique, dans la transaction).
+        if ($parsed !== null) {
+            $stockErr = validateStockLines($pdo, $userId, $parsed['lines']);
+            if ($stockErr) {
+                $pdo->rollBack();
+                respond(['error' => $stockErr['error']], 409);
+            }
+        }
+
         $stmt = $pdo->prepare(
             'UPDATE invoices SET client_id = ?, amount = ?, vat = ?, discount = ?, total = ?, status = ?, due_date = ?, issued_at = ?, paid_at = ?, notes = ?, updated_at = NOW() WHERE id = ? AND user_id = ?'
         );
@@ -510,6 +589,19 @@ if ($action === 'update') {
             $pdo->prepare('DELETE FROM invoice_items WHERE invoice_id = ?')->execute([$invoiceId]);
             insertItems($pdo, $invoiceId, $parsed['lines']);
         }
+
+        // Re-déduction avec les nouvelles quantités si la facture reste émise
+        if ($parsed !== null) {
+            if ($status !== 'brouillon' && $status !== 'annulee') {
+                adjustStock($pdo, $userId, $parsed['lines'], -1);
+                $pdo->prepare('UPDATE invoices SET stock_deducted = 1 WHERE id = ?')->execute([$invoiceId]);
+            } else {
+                $pdo->prepare('UPDATE invoices SET stock_deducted = 0 WHERE id = ?')->execute([$invoiceId]);
+            }
+        } elseif ($status === 'brouillon' || $status === 'annulee') {
+            $pdo->prepare('UPDATE invoices SET stock_deducted = 0 WHERE id = ?')->execute([$invoiceId]);
+        }
+        // else : items non envoyés et facture émise => le stock_deducted reste inchangé
 
         // Paiement enregistré si marquée payée lors de cette mise à jour
         if ($status === 'payee' && !$wasPaid && $paymentMethod !== '') {
@@ -547,17 +639,45 @@ if ($action === 'status') {
     $newStatus = normalizeStatus($body['status'] ?? '');
     $paymentMethod = trim((string) ($body['payment_method'] ?? ''));
 
-    if ($newStatus === 'payee') {
-        $paidAt = $current['paid_at'] ?: date('Y-m-d H:i:s');
-        if (!$current['paid_at'] && $paymentMethod !== '') {
-            recordPayment($pdo, $userId, $invoiceId, (float) $current['total'], $paymentMethod);
-        }
-    } else {
-        $paidAt = null;
-    }
+    // Gestion du stock lors d'un changement de statut (atomique) :
+    //  - passage brouillon -> émis : on déduit le stock (avec validation)
+    //  - passage émis -> brouillon/annulée : on remet le stock
+    $wasDeducted = (int) ($current['stock_deducted'] ?? 0) === 1;
+    $isEmis = !in_array($newStatus, ['brouillon', 'annulee'], true);
 
-    $stmt = $pdo->prepare('UPDATE invoices SET status = ?, paid_at = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
-    $stmt->execute([$newStatus, $paidAt, $invoiceId, $userId]);
+    $pdo->beginTransaction();
+    try {
+        if (!$wasDeducted && $isEmis) {
+            // Validation avant déduction (le stock physique est la référence)
+            $stockErr = validateStockLines($pdo, $userId, $current['items']);
+            if ($stockErr) {
+                $pdo->rollBack();
+                respond(['error' => $stockErr['error']], 409);
+            }
+            adjustStock($pdo, $userId, $current['items'], -1);
+            $pdo->prepare('UPDATE invoices SET stock_deducted = 1 WHERE id = ?')->execute([$invoiceId]);
+        } elseif ($wasDeducted && !$isEmis) {
+            // Remise du stock et marquage : la facture ne déduit plus
+            adjustStock($pdo, $userId, $current['items'], 1);
+            $pdo->prepare('UPDATE invoices SET stock_deducted = 0 WHERE id = ?')->execute([$invoiceId]);
+        }
+
+        if ($newStatus === 'payee') {
+            $paidAt = $current['paid_at'] ?: date('Y-m-d H:i:s');
+            if (!$current['paid_at'] && $paymentMethod !== '') {
+                recordPayment($pdo, $userId, $invoiceId, (float) $current['total'], $paymentMethod);
+            }
+        } else {
+            $paidAt = null;
+        }
+
+        $stmt = $pdo->prepare('UPDATE invoices SET status = ?, paid_at = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+        $stmt->execute([$newStatus, $paidAt, $invoiceId, $userId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        respond(['error' => 'Erreur lors du changement de statut'], 500);
+    }
 
     if ($newStatus === 'payee') {
         notify($pdo, $userId, 'Paiement reçu', 'La facture ' . $current['ref'] . ' a été marquée comme payée.', 'paiement');
@@ -585,8 +705,19 @@ if ($action === 'delete') {
         respond(['error' => 'Facture introuvable'], 404);
     }
 
-    $stmt = $pdo->prepare('DELETE FROM invoices WHERE id = ? AND user_id = ?');
-    $stmt->execute([$invoiceId, $userId]);
+    // Remise du stock + suppression atomiques
+    $pdo->beginTransaction();
+    try {
+        if ((int) ($current['stock_deducted'] ?? 0) === 1) {
+            adjustStock($pdo, $userId, $current['items'], 1);
+        }
+        $stmt = $pdo->prepare('DELETE FROM invoices WHERE id = ? AND user_id = ?');
+        $stmt->execute([$invoiceId, $userId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        respond(['error' => 'Erreur lors de la suppression de la facture'], 500);
+    }
 
     notify($pdo, $userId, 'Facture supprimée', 'La facture ' . $current['ref'] . ' a été supprimée.', 'paiement');
 

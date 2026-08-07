@@ -105,11 +105,35 @@
 </div>
 <div class="plan-current__usage">
 <div class="plan-current__usage-header">
-<span class="plan-current__usage-label">Utilisation des factures</span>
-<span id="subscriptionUsageCount" style="font-size:.8rem;font-weight:600;">0 / 0</span>
+<span class="plan-current__usage-label"><i class="bi bi-lightning-charge-fill"></i> Utilisation de votre plan</span>
+<span id="subscriptionUsageCount" style="font-size:.8rem;font-weight:600;">—</span>
 </div>
-<div class="progress"><div id="subscriptionUsageBar" class="progress-bar" style="width:0%;"></div></div>
-<p style="font-size:.75rem;color:var(--gray-400);margin-top:6px;font-style:italic;">Votre quota se réinitialise le 1er de chaque mois.</p>
+
+<div class="plan-current__quota">
+<div class="plan-current__quota-row">
+<div class="plan-current__quota-label"><i class="bi bi-receipt"></i> Factures / mois</div>
+<div class="plan-current__quota-value" id="quotaInvoices">—</div>
+</div>
+<div class="progress"><div id="usageBarInvoices" class="progress-bar" style="width:0%;"></div></div>
+</div>
+
+<div class="plan-current__quota">
+<div class="plan-current__quota-row">
+<div class="plan-current__quota-label"><i class="bi bi-file-text"></i> Devis / mois</div>
+<div class="plan-current__quota-value" id="quotaQuotes">—</div>
+</div>
+<div class="progress"><div id="usageBarQuotes" class="progress-bar" style="width:0%;"></div></div>
+</div>
+
+<div class="plan-current__quota">
+<div class="plan-current__quota-row">
+<div class="plan-current__quota-label"><i class="bi bi-box-seam"></i> Produits au total</div>
+<div class="plan-current__quota-value" id="quotaProducts">—</div>
+</div>
+<div class="progress"><div id="usageBarProducts" class="progress-bar" style="width:0%;"></div></div>
+</div>
+
+<p style="font-size:.75rem;color:var(--gray-400);margin-top:6px;font-style:italic;">Factures et devis se réinitialisent le 1er de chaque mois. Les produits sont comptés au total.</p>
 </div>
 <div class="plan-current__timer" style="margin-top:18px;padding:18px;border-radius:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.12);">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">

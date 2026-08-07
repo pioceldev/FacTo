@@ -142,6 +142,111 @@ try {
             ]);
             break;
 
+        case 'stats':
+            $q = function (string $sql) use ($pdo) {
+                return (int) $pdo->query($sql)->fetchColumn();
+            };
+            $qFloat = function (string $sql) use ($pdo) {
+                return (float) $pdo->query($sql)->fetchColumn();
+            };
+
+            // ---- Compteurs par module ----
+            $counts = [
+                'users'            => $q('SELECT COUNT(*) FROM users'),
+                'clients'          => $q('SELECT COUNT(*) FROM clients'),
+                'products'         => $q('SELECT COUNT(*) FROM products'),
+                'suppliers'        => $q('SELECT COUNT(*) FROM suppliers'),
+                'stock'            => $q('SELECT COUNT(*) FROM stock'),
+                'stock_units'      => $q('SELECT COALESCE(SUM(quantity), 0) FROM stock'),
+                'low_stock'        => $q('SELECT COUNT(*) FROM stock WHERE quantity <= reorder_level AND reorder_level > 0'),
+                'invoices'         => $q('SELECT COUNT(*) FROM invoices'),
+                'quotes'           => $q('SELECT COUNT(*) FROM quotes'),
+                'payments'         => $q('SELECT COUNT(*) FROM payments'),
+                'expenses'         => $q('SELECT COUNT(*) FROM expenses'),
+                'subscriptions'    => $q('SELECT COUNT(*) FROM subscriptions'),
+                'tickets'          => $q('SELECT COUNT(*) FROM support_tickets'),
+                'tickets_open'     => $q("SELECT COUNT(*) FROM support_tickets WHERE status NOT IN ('closed', 'resolu')"),
+                'notifications'    => $q('SELECT COUNT(*) FROM notifications'),
+                'referrals'        => $q('SELECT COUNT(*) FROM referrals'),
+            ];
+
+            // ---- Répartitions ----
+            $repart = function (string $sql) use ($pdo) {
+                $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+                $out = [];
+                foreach ($rows as $r) {
+                    $out[] = ['label' => $r['label'], 'value' => (int) $r['value']];
+                }
+                return $out;
+            };
+
+            $invoiceStatus = $repart("SELECT CASE WHEN status IN ('payee','payée') THEN 'Payée' WHEN status IN ('en_attente','en attente') THEN 'En attente' WHEN status IN ('en_retard','en retard') THEN 'En retard' WHEN status = 'brouillon' THEN 'Brouillon' WHEN status IN ('annulee','annulée') THEN 'Annulée' ELSE status END AS label, COUNT(*) AS value FROM invoices GROUP BY label ORDER BY value DESC");
+            $quoteStatus = $repart("SELECT CASE WHEN status IN ('accepte','accepté') THEN 'Accepté' WHEN status IN ('envoye','envoyé') THEN 'Envoyé' WHEN status = 'brouillon' THEN 'Brouillon' WHEN status IN ('refuse','refusé') THEN 'Refusé' WHEN status = 'expire' THEN 'Expiré' ELSE status END AS label, COUNT(*) AS value FROM quotes GROUP BY label ORDER BY value DESC");
+            $planStats = $repart("SELECT COALESCE(NULLIF(plan_name, ''), 'Aucun') AS label, COUNT(*) AS value FROM subscriptions GROUP BY label ORDER BY value DESC");
+            $expenseByCat = [];
+            $expStmt = $pdo->query("SELECT COALESCE(NULLIF(category, ''), 'Autres') AS label, SUM(amount) AS value FROM expenses GROUP BY label ORDER BY value DESC LIMIT 8");
+            foreach ($expStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $expenseByCat[] = ['label' => $r['label'], 'value' => round((float) $r['value'], 2)];
+            }
+            $paymentMethod = $repart("SELECT COALESCE(NULLIF(payment_method, ''), 'Autre') AS label, COUNT(*) AS value FROM payments GROUP BY label ORDER BY value DESC");
+
+            // ---- Montants ----
+            $amounts = [
+                'revenue_total'      => $qFloat("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('payee', 'payée')"),
+                'revenue_pending'    => $qFloat("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('en_attente', 'en_retard') AND status NOT IN ('payee', 'payée')"),
+                'revenue_this_month' => $qFloat("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('payee', 'payée') AND DATE_FORMAT(COALESCE(paid_at, created_at), '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')"),
+                'expenses_total'     => $qFloat('SELECT COALESCE(SUM(amount), 0) FROM expenses'),
+                'payments_total'     => $qFloat("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'paid'"),
+                'mrr_total'          => $qFloat("SELECT COALESCE(SUM(price), 0) FROM subscriptions WHERE status = 'active'"),
+                'stock_value'        => $qFloat('SELECT COALESCE(SUM(s.quantity * p.unit_price), 0) FROM stock s LEFT JOIN products p ON p.id = s.product_id'),
+            ];
+
+            // ---- Top clients / produits / dépenses par mois ----
+            $topClients = [];
+            $tcStmt = $pdo->query("SELECT c.name AS label, SUM(i.total) AS value FROM invoices i JOIN clients c ON c.id = i.client_id WHERE i.status IN ('payee', 'payée') GROUP BY c.id, c.name ORDER BY value DESC LIMIT 5");
+            foreach ($tcStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $topClients[] = ['label' => $r['label'], 'value' => round((float) $r['value'], 2)];
+            }
+            $topProducts = [];
+            $tpStmt = $pdo->query("SELECT p.name AS label, SUM(ii.quantity) AS value FROM invoice_items ii JOIN products p ON p.id = ii.product_id JOIN invoices i ON i.id = ii.invoice_id AND i.status NOT IN ('brouillon', 'annulee', 'annulée') GROUP BY p.id, p.name ORDER BY value DESC LIMIT 5");
+            foreach ($tpStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $topProducts[] = ['label' => $r['label'], 'value' => (int) $r['value']];
+            }
+            $lowStockItems = [];
+            $lsStmt = $pdo->query("SELECT p.name AS label, s.quantity AS value, s.reorder_level FROM stock s JOIN products p ON p.id = s.product_id WHERE s.quantity <= s.reorder_level AND s.reorder_level > 0 ORDER BY s.quantity ASC LIMIT 8");
+            foreach ($lsStmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $lowStockItems[] = ['label' => $r['label'], 'value' => (int) $r['value'], 'reorder' => (int) $r['reorder_level']];
+            }
+
+            // ---- Série 12 mois (revenus + utilisateurs) ----
+            $series = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $month = date('Y-m', strtotime("-$i months"));
+                $revStmt = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM invoices WHERE status IN ('payee', 'payée') AND DATE_FORMAT(paid_at, '%Y-%m') = :m");
+                $revStmt->execute([':m' => $month]);
+                $usrStmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE DATE_FORMAT(created_at, '%Y-%m') = :m");
+                $usrStmt->execute([':m' => $month]);
+                $series[] = ['month' => $month, 'revenue' => (float) $revStmt->fetchColumn(), 'users' => (int) $usrStmt->fetchColumn()];
+            }
+
+            echo json_encode([
+                'success' => true,
+                'stats' => [
+                    'counts'     => $counts,
+                    'amounts'    => $amounts,
+                    'series'     => $series,
+                    'invoice_status' => $invoiceStatus,
+                    'quote_status'   => $quoteStatus,
+                    'plans'          => $planStats,
+                    'expenses_by_cat'=> $expenseByCat,
+                    'payment_method' => $paymentMethod,
+                    'top_clients'    => $topClients,
+                    'top_products'   => $topProducts,
+                    'low_stock'      => $lowStockItems,
+                ],
+            ]);
+            break;
+
         case 'activity_logs':
             $limit = max(1, min(200, (int)($_GET['limit'] ?? 20)));
             $stmt = $pdo->prepare("

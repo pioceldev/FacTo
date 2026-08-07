@@ -152,3 +152,401 @@
   font-weight: 500;
   font-size: 0.85rem;
 }
+
+/* ============================================
+   STATISTIQUES GLOBALES (administration)
+   ============================================ */
+
+.admin__stats-section {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 100%);
+  border: 1px solid var(--gray-200);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.08);
+}
+
+/* --- En-tête de section --- */
+.admin__stats-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.admin__stats-hero__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--gray-200) 40%, transparent 100%);
+}
+
+.admin__stats-hero__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin__stats-hero__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--gray-900);
+  background: linear-gradient(135deg, #111827, #374151);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  box-shadow: 0 8px 16px -6px rgba(16, 24, 40, 0.35);
+  flex-shrink: 0;
+}
+
+.admin__stats-hero__title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.admin__stats-hero__subtitle {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  margin: 2px 0 0;
+}
+
+.admin__stats-hero__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin__stats-hero__hint {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.admin__stats-hero__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+
+/* --- Cartes compteurs par module --- */
+.admin__module-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.admin__module-stat {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.admin__module-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -8px rgba(16, 24, 40, 0.14);
+  border-color: var(--mc);
+  border-color: color-mix(in srgb, var(--mc) 40%, #fff);
+}
+
+.admin__module-stat__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mc);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.admin__module-stat:hover .admin__module-stat__accent {
+  opacity: 1;
+}
+
+.admin__module-stat__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f5f5f6;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin__module-stat:hover .admin__module-stat__icon {
+  background: var(--mc);
+  background: color-mix(in srgb, var(--mc) 12%, #fff);
+  color: var(--mc);
+}
+
+.admin__module-stat__body {
+  min-width: 0;
+}
+
+.admin__module-stat__value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.admin__module-stat__label {
+  font-size: 0.7rem;
+  color: var(--gray-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin__module-stat__sub {
+  font-size: 0.68rem;
+  color: var(--gray-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Grille des graphiques --- */
+.admin__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.admin__sub-card {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin__sub-card:hover {
+  border-color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 30%, #fff);
+  box-shadow: 0 10px 24px -10px rgba(16, 24, 40, 0.12);
+}
+
+.admin__sub-card:hover .admin__sub-card-icon {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.admin__sub-card--wide {
+  grid-column: span 2;
+}
+
+.admin__sub-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.admin__sub-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: #f5f5f6;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin__sub-card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  line-height: 1.2;
+}
+
+.admin__sub-card-sub {
+  font-size: 0.7rem;
+  color: var(--gray-400);
+}
+
+.admin__sub-card .chart-container {
+  flex: 1;
+}
+
+/* Message « Aucune donnée » sur un graphique (sans détruire le canvas) */
+.chart-empty-overlay {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 120px;
+  color: var(--gray-400);
+  font-size: 0.85rem;
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  border-radius: var(--radius-md);
+  z-index: 1;
+}
+
+.chart-container {
+  position: relative;
+}
+
+/* Alertes stock bas */
+.admin__lowstock {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.admin__lowstock:last-child {
+  border-bottom: none;
+}
+
+.admin__lowstock-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.admin__lowstock-qty {
+  font-size: 0.72rem;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.admin__lowstock-bar {
+  height: 6px;
+  background: var(--gray-100);
+  border-radius: 999px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.admin__lowstock-bar div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--danger), #f97316);
+  border-radius: 999px;
+}
+
+/* Top clients / produits */
+.admin__rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.admin__rank:last-child {
+  border-bottom: none;
+}
+
+.admin__rank-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin__rank-name {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin__rank-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .admin__module-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .admin__stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin__sub-card--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 992px) {
+  .admin__module-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin__stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin__sub-card--wide {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin__module-stats {
+    grid-template-columns: 1fr;
+  }
+  .admin__stats-section {
+    padding: 16px;
+  }
+}

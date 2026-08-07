@@ -2,6 +2,7 @@
 require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
 require __DIR__ . '/csrf.php';
+require __DIR__ . '/plan.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -12,7 +13,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $pdo = getPDO();
-$userId = $_SESSION['user_id'];
+$userId = planUserId($pdo, (int) $_SESSION['user_id']);
 
 function respond($data, int $code = 200)
 {
@@ -88,6 +89,7 @@ if ($action === 'list') {
             'active' => (int) ($stats['active'] ?? 0),
             'total_value' => (float) ($stats['total_value'] ?? 0),
         ],
+        'usage' => planUsage($pdo, $userId),
         'pagination' => [
             'page' => $page,
             'per_page' => $perPage,
@@ -141,6 +143,15 @@ if ($action === 'create') {
         respond(['error' => 'Le taux de TVA doit être entre 0 et 100'], 422);
     }
 
+    // Quota produits (plan Free : 10 au total en base)
+    $usage = planUsage($pdo, $userId);
+    if ($usage['product_limit'] < 999999 && $usage['product_count'] >= $usage['product_limit']) {
+        respond([
+            'error' => 'Quota de produits atteint (' . $usage['product_limit'] . '). Passez au plan Business pour ajouter plus de produits.',
+            'usage' => $usage,
+        ], 403);
+    }
+
     // Duplication SKU
     if ($sku !== '') {
         $dup = $pdo->prepare('SELECT 1 FROM products WHERE user_id = ? AND sku = ? AND id != ? LIMIT 1');
@@ -161,6 +172,7 @@ if ($action === 'create') {
         'success' => true,
         'message' => 'Produit ' . $name . ' créé',
         'product' => ['id' => $productId, 'name' => $name],
+        'usage' => planUsage($pdo, $userId),
     ], 201);
 }
 

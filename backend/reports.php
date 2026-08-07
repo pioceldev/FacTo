@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
+require __DIR__ . '/plan.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -11,7 +12,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $pdo = getPDO();
-$userId = $_SESSION['user_id'];
+$userId = planUserId($pdo, (int) $_SESSION['user_id']);
 $action = $_GET['action'] ?? 'overview';
 
 try {

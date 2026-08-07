@@ -9,6 +9,7 @@ const invoiceState = {
   pagination: { page: 1, per_page: 15, total: 0, pages: 0 },
   filters: { status: 'all', q: '', client_id: '', page: 1 },
   editingId: null,
+  editingItems: [],
   detail: null,
   issuer: null,
 };
@@ -270,7 +271,7 @@ function renderQuota() {
   if (!usage || !badge || !banner) return;
 
   const limit = usage.invoice_limit || 0;
-  const count = usage.invoice_count_month || 0;
+  const count = usage.invoice_count || usage.invoice_count_month || 0;
 
   if (limit >= 999999) {
     badge.style.display = 'none';
@@ -298,15 +299,19 @@ function addItemRow(data) {
   const row = document.createElement('div');
   row.className = 'invoice-item-row';
 
-  const productOptions = invoiceState.products.map(p =>
-    `<option value="${p.id}">${esc(p.name)}</option>`
-  ).join('');
+  const productOptions = invoiceState.products.map(p => {
+    const stock = p.stock_quantity != null ? ` — Stock dispo : ${p.stock_quantity}` : '';
+    return `<option value="${p.id}">${esc(p.name)}${stock}</option>`;
+  }).join('');
 
   row.innerHTML = `
-    <select class="invoice-item-row__product">
-      <option value="">— Produit / direct —</option>
-      ${productOptions}
-    </select>
+    <div class="invoice-item-row__product-wrap">
+      <select class="invoice-item-row__product">
+        <option value="">— Produit / direct —</option>
+        ${productOptions}
+      </select>
+      <small class="invoice-item-row__stock"></small>
+    </div>
     <input class="invoice-item-row__desc" type="text" placeholder="Désignation">
     <input class="invoice-item-row__qty" type="number" min="0" step="0.01" value="1">
     <input class="invoice-item-row__price" type="number" min="0" step="0.01" value="0">
@@ -327,7 +332,37 @@ function addItemRow(data) {
   }
 
   container.appendChild(row);
+  updateRowStockInfo(row);
   recalcTotals();
+}
+
+/* Affiche le stock disponible du produit sélectionné sous le sélecteur */
+function updateRowStockInfo(row) {
+  const select = row.querySelector('.invoice-item-row__product');
+  const badge = row.querySelector('.invoice-item-row__stock');
+  if (!select || !badge) return;
+  const productId = select.value;
+  const qty = parseFloat(row.querySelector('.invoice-item-row__qty').value) || 0;
+  const product = invoiceState.products.find(p => String(p.id) === productId);
+
+  if (!product) {
+    badge.textContent = '';
+    badge.className = 'invoice-item-row__stock';
+    return;
+  }
+  let available = product.stock_quantity != null ? Number(product.stock_quantity) : null;
+  if (available == null) {
+    badge.textContent = '';
+    badge.className = 'invoice-item-row__stock';
+    return;
+  }
+  // En édition, la facture courante a déjà réservé ses quantités : on les
+  // réintègre pour afficher le stock réellement utilisable.
+  available += ownReservedQty(productId);
+
+  const over = qty > available;
+  badge.textContent = `Stock dispo : ${available}${over ? ` — dépassé de ${Math.max(0, qty - available)} !` : ''}`;
+  badge.className = 'invoice-item-row__stock' + (over ? ' is-over' : ' is-ok');
 }
 
 function collectItems() {
@@ -351,6 +386,31 @@ function collectItems() {
     });
   });
   return items;
+}
+
+/* Quantité déjà réservée par la facture en cours d'édition (pour ne pas se
+   bloquer soi-même : le serveur restaure puis revalide dans la transaction). */
+function ownReservedQty(productId) {
+  if (!invoiceState.editingId) return 0;
+  return (invoiceState.editingItems || [])
+    .filter(i => String(i.product_id || '') === String(productId))
+    .reduce((s, i) => s + (Number(i.quantity) || 0), 0);
+}
+
+/* Valide côté client que les quantités ne dépassent pas le stock disponible
+   (en tenant compte de la réservation de la facture en cours d'édition).
+   Retourne un message d'erreur ou null si tout est OK. */
+function validateItemsStock(items) {
+  for (const item of items) {
+    if (!item.product_id) continue;
+    const product = invoiceState.products.find(p => String(p.id) === String(item.product_id));
+    if (!product || product.stock_quantity == null) continue;
+    const available = Number(product.stock_quantity) + ownReservedQty(item.product_id);
+    if (item.quantity > available + 0.0001) {
+      return `Stock insuffisant pour « ${product.name} » : ${item.quantity} demandé(s), ${available} disponible(s).`;
+    }
+  }
+  return null;
 }
 
 function recalcTotals() {
@@ -411,6 +471,7 @@ function openEditInvoice(invoiceId) {
     .then(data => {
       const inv = data.invoice;
       invoiceState.editingId = inv.id;
+      invoiceState.editingItems = (inv.items || []).map(i => ({ product_id: i.product_id, quantity: Number(i.quantity) || 0 }));
 
       document.getElementById('invoiceModalTitle').textContent = 'Modifier ' + inv.ref;
       document.getElementById('invoiceId').value = inv.id;
@@ -457,6 +518,14 @@ async function submitInvoice(event) {
   }
   if (!document.getElementById('invoiceDueDate').value) {
     toast('La date d\'échéance est requise.', 'error');
+    saveBtn.disabled = false;
+    return;
+  }
+
+  // Blocage client si une quantité dépasse le stock disponible
+  const stockError = validateItemsStock(items);
+  if (stockError) {
+    toast(stockError, 'error');
     saveBtn.disabled = false;
     return;
   }
@@ -785,6 +854,9 @@ function attachEvents() {
         desc.value = 'Prestation / article';
       }
     }
+    if (event.target.classList.contains('invoice-item-row__qty')) {
+      updateRowStockInfo(row);
+    }
     recalcTotals();
   });
 
@@ -797,6 +869,7 @@ function attachEvents() {
         row.querySelector('.invoice-item-row__desc').value = product.name || '';
         row.querySelector('.invoice-item-row__price').value = product.unit_price || 0;
         row.querySelector('.invoice-item-row__vat').value = product.vat_rate || 0;
+        updateRowStockInfo(row);
         recalcTotals();
       }
     }

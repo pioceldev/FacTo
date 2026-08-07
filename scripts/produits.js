@@ -3,6 +3,7 @@
 const productState = {
   products: [],
   stats: null,
+  usage: null,
   pagination: { page: 1, per_page: 15, total: 0, pages: 0 },
   filters: { q: '', active_only: '1', page: 1 },
   editingId: null,
@@ -77,6 +78,7 @@ async function refreshProducts() {
     const data = await api('list&' + params.toString());
     productState.products = data.products || [];
     productState.stats = data.stats || null;
+    productState.usage = data.usage || null;
     productState.pagination = data.pagination || productState.pagination;
   } catch (error) {
     toast(error.message, 'error');
@@ -86,6 +88,7 @@ async function refreshProducts() {
   renderTable();
   renderPagination();
   renderSearchClear();
+  renderProductQuota();
 }
 
 function renderStats() {
@@ -158,6 +161,33 @@ function renderTable() {
   }).join('');
 }
 
+/* ============ QUOTA PRODUITS (plan Free : 10 au total) ============ */
+function renderProductQuota() {
+  const badge = document.getElementById('productQuotaBadge');
+  const banner = document.getElementById('productQuotaBanner');
+  const usage = productState.usage;
+  if (!usage || !badge || !banner) return;
+
+  const limit = usage.product_limit || 0;
+  const count = usage.product_count || 0;
+
+  if (limit >= 999999) {
+    badge.style.display = 'none';
+    banner.style.display = 'none';
+    return;
+  }
+
+  const remaining = Math.max(0, limit - count);
+  badge.style.display = 'inline-flex';
+  badge.className = 'badge-soft ' + (remaining === 0 ? 'badge-soft-danger' : remaining <= 2 ? 'badge-soft-warning' : 'badge-soft-secondary');
+  badge.innerHTML = `<i class="bi bi-box-seam"></i> ${count}/${limit} produits`;
+
+  banner.style.display = remaining === 0 ? 'flex' : 'none';
+  banner.innerHTML = remaining === 0
+    ? `<i class="bi bi-exclamation-triangle-fill"></i> <span>Quota de produits atteint (${limit}). Passez au plan Business pour ajouter plus de produits.</span> <a href="choix-abonnement.html">Passer au plan Business →</a>`
+    : '';
+}
+
 function renderSearchClear() {
   const info = document.getElementById('productTableInfo');
   if (!info) return;
@@ -199,6 +229,13 @@ function getModal(id) {
 
 function openNewProduct(event) {
   if (event) event.preventDefault();
+  const usage = productState.usage;
+  const limit = (usage && usage.product_limit) || 0;
+  const count = (usage && usage.product_count) || 0;
+  if (limit < 999999 && count >= limit) {
+    toast('Quota de produits atteint (' + limit + '). Passez au plan Business pour ajouter plus de produits.', 'error');
+    return;
+  }
   productState.editingId = null;
   document.getElementById('productModalTitle').textContent = 'Nouveau produit';
   document.getElementById('productId').value = '';

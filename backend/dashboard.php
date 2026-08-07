@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/db.php';
 require __DIR__ . '/init.php';
+require __DIR__ . '/plan.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -11,10 +12,13 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $pdo = getPDO();
-$userId = $_SESSION['user_id'];
+$sessionUserId = (int) $_SESSION['user_id'];
+// Les statistiques portent sur l'entreprise (le propriétaire en cas de membre),
+// mais le profil affiché reste celui de l'utilisateur connecté.
+$userId = planUserId($pdo, $sessionUserId);
 
 $stmt = $pdo->prepare('SELECT id, name, email, created_at FROM users WHERE id = ?');
-$stmt->execute([$userId]);
+$stmt->execute([$sessionUserId]);
 $user = $stmt->fetch();
 
 if (!$user) {
