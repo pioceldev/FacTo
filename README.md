@@ -283,14 +283,6 @@ FEDAPAY_ENABLED=false
 2. Remplir le formulaire (email, mot de passe, nom, entreprise)
 3. Cliquer "Créer mon compte"
 
-### Connexion
-1. Aller sur `http://localhost/FacTo/connexion.html`
-2. Saisir email et mot de passe
-3. Cliquer "Se connecter"
-
-### Compte de test (développement)
-- **Email** : `test@exemple.fr`
-- **Mot de passe** : `Test1234`
 
 ### Inscription
 > ⚠️ L'inscription démarre toujours avec le **plan gratuit**. Les plans payants
@@ -351,13 +343,7 @@ CRUD complet pour gérer les fournisseurs.
 - Statut des factures (donut)
 - Méthodes de paiement (barres)
 
-### ⚙️ Administration
-- Tableau de bord admin avec stats plateforme (revenus, utilisateurs, factures)
-- Gestion des entreprises (recherche, pagination)
-- Croissance des utilisateurs
-- 🔒 **Accès réservé au rôle administrateur** (l'API renvoie 403 aux autres)
 
----
 
 ## 🐳 Docker
 
@@ -368,13 +354,6 @@ CRUD complet pour gérer les fournisseurs.
 docker-compose up -d
 ```
 
-### Accéder aux services
-
-| Service | URL |
-|---------|-----|
-| Application | http://localhost:8080 |
-| phpMyAdmin | http://localhost:8081 |
-| MySQL | localhost:3306 |
 
 ### Arrêter
 
@@ -386,102 +365,8 @@ docker-compose down
 
 Créer un fichier `.env` à la racine :
 
-```env
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=facto
-MYSQL_USER=facto
-MYSQL_PASSWORD=facto
-```
 
----
 
-## 🔒 Sécurité
-
-- [x] Protection CSRF sur toutes les mutations (token 24 h)
-- [x] Rate limiting sur l'authentification (login, mot de passe oublié, reset)
-- [x] Admin API protégée par le rôle administrateur
-- [x] Plan gratuit forcé à l'inscription (pas d'auto-attribution de plans payants)
-- [x] Pages privées protégées côté serveur (gate.php + .htaccess)
-- [x] Sessions sécurisées (HttpOnly, SameSite)
-- [x] Passwords hashés (password_hash)
-- [x] Validation des entrées côté serveur
-- [x] Prepared statements (protection SQL injection)
-- [x] Logging structuré
-
-### À faire en production
-- [ ] Activer HTTPS (Let's Encrypt)
-- [ ] Configurer un WAF (Web Application Firewall)
-- [ ] Limiter l'accès IP à l'admin
-- [ ] Activer le CSP (Content Security Policy)
-- [ ] Configurer des sauvegardes automatiques
-
----
-
-## 🚀 Déploiement
-
-### Production (serveur Linux)
-
-```bash
-# 1. Cloner le dépôt
-git clone https://github.com/votre-repo/facto.git
-cd facto
-
-# 2. Installer les dépendances PHP
-composer install --optimize-autoloader --no-dev
-
-# 3. Configurer la base de données
-mysql -u root -p facto < backend/database.sql
-
-# 4. Configurer le fichier config.php
-cp backend/config.example.php backend/config.php
-# Éditer backend/config.php avec les identifiants de production
-# (penser à définir APP_DEBUG=false en production)
-
-# 5. Configurer le serveur web (Nginx/Apache)
-# Voir le fichier nginx.conf.example (à créer)
-
-# 6. Définir les permissions
-chmod -R 755 backend/
-chmod -R 775 logs/
-chown -R www-data:www-data logs/
-
-# 7. Activer HTTPS
-sudo certbot --nginx -d votre-domaine.com
-```
-
-### Variables d'environnement production
-
-```env
-APP_DEBUG=false
-DB_HOST=localhost
-DB_NAME=facto
-DB_USER=facto_prod
-DB_PASS=mot_de_passe_securise
-FEDAPAY_ENABLED=true
-FEDAPAY_SECRET_KEY=fn_live_votre_cle
-FEDAPAY_PUBLIC_KEY=fn_public_votre_cle
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_USER=apikey
-SMTP_PASS=votre_cle_sendgrid
-```
-
----
-
-## 🧪 Tests
-
-### Tests automatisés (PHPUnit)
-
-```bash
-php tests/bootstrap.php
-# ou, si PHPUnit est installé :
-composer test
-```
-
-### Smoke test de bout en bout (WAMP)
-
-Le script `tests/e2e-smoke.sh` vérifie les flux de création complets
-(inscription → connexion → CSRF → client, produit, facture, devis,
 paiement, dépense, stock → rapports, admin, abonnement) :
 
 ```bash
@@ -523,24 +408,4 @@ node tests/csrf-harness.js
 | `test` | Ajout de tests |
 | `chore` | Tâche de maintenance |
 
----
 
-## 📄 Licence
-
-Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 📞 Support
-
-- **Email** : support@facto.local
-- **Documentation** : [Wiki du projet](https://github.com/votre-repo/facto/wiki)
-- **Issues** : [GitHub Issues](https://github.com/votre-repo/facto/issues)
-
----
-
-<p align="center">
-  <b>FacTo</b> — Gérez votre entreprise simplement.
-  <br>
-  <sub>Construit avec ❤️ en Côte d'Ivoire 🇨🇮</sub>
-</p>
